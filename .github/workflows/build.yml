@@ -50,7 +50,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64 #,linux/arm64
           load: true
           cache-from: type=registry,ref=ghcr.io/openaleph/ingest-file:cache
           cache-to: type=registry,ref=ghcr.io/openaleph/ingest-file:cache,mode=max
