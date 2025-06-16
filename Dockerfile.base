@@ -8,7 +8,7 @@ LABEL org.opencontainers.image.source="https://github.com/openaleph/ingest-file-
 # Enable non-free archive for `unrar`.
 RUN echo "deb http://http.us.debian.org/debian bookworm non-free" >/etc/apt/sources.list.d/nonfree.list
 RUN apt-get -qq -y update \
-    && apt-get -qq -y install build-essential locales ca-certificates \
+    && apt-get -qq -y install build-essential locales ca-certificates git \
     # python deps (mostly to install their dependencies)
     python3-pip python3-dev python3-pil \
     # tesseract
@@ -115,6 +115,8 @@ ENV LANG='en_US.UTF-8' \
     TZ='UTC' \
     OMP_THREAD_LIMIT='1' \
     OPENBLAS_NUM_THREADS='1'
+
+ENV LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libgomp.so.1"
 
 # tesseract 5
 ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata

@@ -14,10 +14,12 @@ services:
     build:
       context: .
       dockerfile_inline: |
-        FROM ghcr.io/openaleph/ingest-file
+        FROM ghcr.io/openaleph/ingest-file:latest
         COPY requirements-dev.txt /ingestors/requirements-dev.txt
+        USER 0
         RUN pip3 install -r /ingestors/requirements-dev.txt
-    image: ghcr.io/openaleph/ingest-file
+        USER app
+    image: ghcr.io/openaleph/ingest-file:dev
     hostname: ingest
     tmpfs:
       - /tmp:mode=777

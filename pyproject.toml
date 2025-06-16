@@ -1,6 +1,6 @@
 [project]
 name = "ingestors"
-version = "3.22.0"
+version = "3.22.2"
 description = "Ingestors extract the contents of mixed unstructured documents into structured (followthemoney) data. "
 authors = [
     { name = "Friedrich Lindenberg", email = "friedrich@pudo.org" },
@@ -24,6 +24,7 @@ dependencies = [
     "dbf (>=0.99.10,<0.100.0)",
     "pymediainfo (>=7.0.1,<8.0.0)",
     "python-magic (>=0.4.27,<0.5.0)",
+    "py7zr (==1.0.0)",
     "rarfile (>=4.2,<5.0)",
     "xlrd (>=2.0.2,<3.0.0)",
     "openpyxl (>=3.1.5,<4.0.0)",
@@ -49,7 +50,6 @@ dependencies = [
     "boto3 (>=1.11.9,<2.0.0)",
     "grpcio (>=1.32.0,<2.0.0)",
     "google-cloud-storage (>=1.31.0,<3.0.0)",
-    "py7zr (==1.0.0)",
     "servicelayer @ git+https://github.com/openaleph/servicelayer.git@main",
 ]
 
