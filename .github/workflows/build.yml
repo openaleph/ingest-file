@@ -52,7 +52,7 @@ jobs:
           context: .
           platforms: linux/amd64 #,linux/arm64
           load: true
-          # cache-from: type=registry,ref=ghcr.io/openaleph/ingest-file:cache
+          cache-from: type=registry,ref=ghcr.io/openaleph/ingest-file:cache
           cache-to: type=registry,ref=ghcr.io/openaleph/ingest-file:cache,mode=max
 
       - name: Start services
@@ -79,5 +79,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # cache-from: type=registry,ref=ghcr.io/openaleph/ingest-file:cache
+          cache-from: type=registry,ref=ghcr.io/openaleph/ingest-file:cache
           cache-to: type=registry,ref=ghcr.io/openaleph/ingest-file:cache,mode=max
