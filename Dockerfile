@@ -2,9 +2,8 @@ FROM ghcr.io/openaleph/ingest-file-base:latest
 
 COPY . /ingestors
 WORKDIR /ingestors
-RUN pip3 install -r /ingestors/requirements.txt
-RUN pip3 install --no-cache-dir --config-settings editable_mode=compat --use-pep517 /ingestors
-RUN chown -R app:app /ingestors
+RUN pip3 install --no-cache-dir -r /ingestors/requirements.txt
+RUN pip3 install --no-cache-dir /ingestors
 
 ENV ARCHIVE_TYPE=file \
     ARCHIVE_PATH=/data \
