@@ -6,12 +6,13 @@ import subprocess
 from followthemoney.helpers import entity_filename
 from prometheus_client import Counter
 
+from ingestors.exc import ProcessingException
+from ingestors.settings import Settings
 from ingestors.support.cache import CacheSupport
 from ingestors.support.temp import TempFileSupport
-from ingestors.exc import ProcessingException
-from ingestors import settings
 
 log = logging.getLogger(__name__)
+settings = Settings()
 
 
 PDF_CACHE_ACCESSED = Counter(
@@ -45,7 +46,7 @@ class DocumentConvertSupport(CacheSupport, TempFileSupport):
         return pdf_file
 
     def _document_to_pdf(
-        self, unique_tmpdir, file_path, entity, timeout=settings.CONVERT_TIMEOUT
+        self, unique_tmpdir, file_path, entity, timeout=settings.convert_timeout
     ):
         """Converts an office document to PDF."""
         file_name = entity_filename(entity)

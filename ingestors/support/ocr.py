@@ -1,18 +1,39 @@
-import time
 import logging
 import threading
+import time
+from functools import cache
 from hashlib import sha1
+from io import BytesIO
+
+from languagecodes import list_to_alpha3 as alpha3
 from normality import stringify
 from PIL import Image
-from io import BytesIO
-from languagecodes import list_to_alpha3 as alpha3
 
-from ingestors import settings
+from ingestors.settings import Settings
 from ingestors.support.cache import CacheSupport
 from ingestors.util import temp_locale
 
 log = logging.getLogger(__name__)
 TESSERACT_LOCALE = "C"
+
+
+@cache
+def get_ocr_service() -> "GoogleOCRService | LocalOCRService":
+    settings = Settings()
+    if settings.ocr_vision_api:
+        return GoogleOCRService()
+    return LocalOCRService()
+
+
+@cache
+def get_ocr_supported():
+    with temp_locale(TESSERACT_LOCALE):
+        # Tesseract language types:
+        from tesserocr import get_languages
+
+        _, ocr_supported = get_languages()
+        log.info("OCR languages: %r", ocr_supported)
+        return ocr_supported
 
 
 class OCRSupport(CacheSupport):
@@ -32,13 +53,8 @@ class OCRSupport(CacheSupport):
             log.info("OCR: %s chars cached", len(text))
             return stringify(text)
 
-        if not hasattr(settings, "_ocr_service"):
-            if settings.OCR_VISION_API:
-                settings._ocr_service = GoogleOCRService()
-            else:
-                settings._ocr_service = LocalOCRService()
-
-        text = settings._ocr_service.extract_text(data, languages=languages)
+        ocr_service = get_ocr_service()
+        text = ocr_service.extract_text(data, languages=languages)
         if text is not None:
             self.tags.set(key, text)
             log.info("OCR: %s chars (from %s bytes)", len(text), len(data))
@@ -54,14 +70,7 @@ class LocalOCRService(object):
         self.tl = threading.local()
 
     def language_list(self, languages):
-        if not hasattr(settings, "ocr_supported"):
-            with temp_locale(TESSERACT_LOCALE):
-                # Tesseract language types:
-                from tesserocr import get_languages
-
-                _, settings.ocr_supported = get_languages()
-                # log.info("OCR languages: %r", settings.ocr_supported)
-        models = [c for c in alpha3(languages) if c in settings.ocr_supported]
+        models = [c for c in alpha3(languages) if c in get_ocr_supported()]
         if len(models) > self.MAX_MODELS:
             log.warning("Too many models, limit: %s", self.MAX_MODELS)
             models = models[: self.MAX_MODELS]
@@ -69,7 +78,7 @@ class LocalOCRService(object):
         return "+".join(sorted(set(models)))
 
     def configure_engine(self, languages):
-        from tesserocr import PyTessBaseAPI, PSM, OEM
+        from tesserocr import OEM, PSM, PyTessBaseAPI
 
         if not hasattr(self.tl, "api") or self.tl.api is None:
             log.info("Configuring OCR engine (%s)", languages)
