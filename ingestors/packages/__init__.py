@@ -1,15 +1,16 @@
 import bz2
 import gzip
-import py7zr
 import shutil
 import tarfile
 from pathlib import PurePath
+
+import py7zr
 from py7zr.exceptions import ArchiveError
 
+from ingestors.exc import ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.package import PackageSupport
 from ingestors.support.shell import ShellSupport
-from ingestors.exc import ProcessingException
 
 
 class SevenZipIngestor(PackageSupport, Ingestor, ShellSupport):
@@ -27,7 +28,7 @@ class SevenZipIngestor(PackageSupport, Ingestor, ShellSupport):
             )
 
         try:
-            with py7zr.SevenZipFile(str(pure_file_path), mode='r') as extractor:
+            with py7zr.SevenZipFile(str(pure_file_path), mode="r") as extractor:
                 extractor.extractall(path=temp_dir)
         except ArchiveError as e:
             raise ProcessingException(f"Error: {e}")
