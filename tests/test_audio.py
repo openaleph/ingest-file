@@ -1,23 +1,14 @@
 # -*- coding: utf-8 -*-
 import datetime
-from unittest import mock
 
-from .support import TestCase, TranscriptionSupport_
+from tests.support import TestCase
 
 
 class AudioIngestorTest(TestCase):
     def test_audio(self):
         fixture_path, entity = self.fixture("memo.m4a")
 
-        # Mock the transcription class because running the code takes a very long time
-        patcher = mock.patch(
-            "ingestors.support.transcription.TranscriptionSupport",
-            new=TranscriptionSupport_,
-        )
-        patcher.start()
         self.manager.ingest(fixture_path, entity)
-        patcher.stop()
-
         self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)
         self.assertEqual(entity.first("title"), "Core Media Audio")
         self.assertEqual(entity.first("generator"), "com.apple.VoiceMemos (iOS 11.4)")
