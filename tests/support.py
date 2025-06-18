@@ -1,20 +1,21 @@
 from __future__ import absolute_import
 
+import shutil
 import types
 import unittest
 from tempfile import mkdtemp
 
 from ftmstore import get_dataset
-from ftmstore import settings as ftmstore_settings
-from servicelayer import settings as service_settings
-from servicelayer.archive import init_archive
+from ftmstore import settings as fts
+from procrastinate.testing import InMemoryConnector
+from servicelayer import settings as sls
 from servicelayer.archive.util import ensure_path
-from servicelayer.cache import get_fakeredis
-from servicelayer.jobs import Job, Stage
 from servicelayer.tags import Tags
 
-from ingestors.manager import Manager
-from ingestors.worker import OP_INGEST
+from ingestors.manager import OP_INGEST, Manager, get_archive
+from ingestors.tasks import app
+
+TEST_DATASET = "test"
 
 
 def emit_entity(self, entity, fragment=None):
@@ -22,34 +23,31 @@ def emit_entity(self, entity, fragment=None):
     self.writer.put(entity.to_dict(), fragment=fragment)
 
 
-def queue_entity(self, entity):
-    self.ingest_entity(entity)
-
-
 class TestCase(unittest.TestCase):
     def setUp(self):
+        self.tmp_dir = mkdtemp()
+        # clear cached func calls
+        get_archive.cache_clear()
+        get_dataset.cache_clear()
         # Force tests to use fake configuration
-        service_settings.REDIS_URL = None
-        service_settings.ARCHIVE_TYPE = "file"
-        service_settings.ARCHIVE_PATH = mkdtemp()
-        ftmstore_settings.DATABASE_URI = "sqlite://"
-        conn = get_fakeredis()
-        job = Job.create(conn, "test")
-        stage = Stage(job, OP_INGEST)
-        dataset = get_dataset(job.dataset.name, origin=OP_INGEST)
+        self.assertIsInstance(app.connector, InMemoryConnector)
+        sls.REDIS_URL = None
+        sls.ARCHIVE_TYPE = "file"
+        sls.ARCHIVE_PATH = self.tmp_dir
+        # fts.DATABASE_URI = "sqlite://?mode=memory&cache=shared&check_same_thread=false"
+        fts.DATABASE_URI = f"sqlite:///{self.tmp_dir}/store.db"
+        sls.TAGS_DATABASE_URI = fts.DATABASE_URI
         Tags("ingest_cache").delete()
-        self.manager = Manager(dataset, stage, {})
-        self.manager.entities = []
+        self.manager = Manager(app, TEST_DATASET, {})
         self.manager.emit_entity = types.MethodType(emit_entity, self.manager)
-        self.manager.queue_entity = types.MethodType(queue_entity, self.manager)
-        self.archive = init_archive()
-        self.manager._archive = self.archive
+        self.manager.entities = []
+        self.dataset = get_dataset(TEST_DATASET)
 
     def fixture(self, fixture_path):
         """Returns a fixture path and a dummy entity"""
         # clear out entities
+        self.dataset.delete()
         self.manager.entities = []
-        self.manager.dataset.delete()
         cur_path = ensure_path(__file__).parent
         cur_path = cur_path.joinpath("fixtures")
         path = cur_path.joinpath(fixture_path)
@@ -67,17 +65,19 @@ class TestCase(unittest.TestCase):
         return path, entity
 
     def get_emitted(self, schema=None):
-        entities = list(self.manager.dataset.iterate())
+        entities = list(self.dataset.iterate())
         if schema is not None:
             entities = [e for e in entities if e.schema.is_a(schema)]
         return entities
 
     def get_emitted_by_id(self, id):
-        return self.manager.dataset.get(id)
+        return self.dataset.get(id)
 
     def assertSuccess(self, entity):
         self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)
 
-
-class TranscriptionSupport_:
-    pass
+    def tearDown(self) -> None:
+        # clean up processing queue
+        self.manager.app.run_worker(queues=[OP_INGEST], wait=False)
+        # remove tmp dir
+        shutil.rmtree(self.tmp_dir)

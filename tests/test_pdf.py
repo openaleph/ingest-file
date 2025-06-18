@@ -27,7 +27,7 @@ class PDFIngestorTest(TestCase):
             "Ingestors extract useful information" " in a structured standard format",
             self.manager.entities[0].first("bodyText"),
         )
-        entities = list(self.manager.dataset.iterate(entity_id=entity.id))
+        entities = list(self.dataset.iterate(entity_id=entity.id))
         self.assertEqual(len(entities), 1)
         text = entities[0].first("indexText")
         self.assertIn("Ingestors extract useful information", text)

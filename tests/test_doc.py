@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 
-from .support import TestCase
+from tests.support import TestCase
 
 
 class DocumentIngestorTest(TestCase):
@@ -19,13 +19,11 @@ class DocumentIngestorTest(TestCase):
         self.manager.ingest(fixture_path, entity)
 
         self.assertEqual(len(self.get_emitted()), 3)
-        self.assertEqual(
-            len(list(self.manager.dataset.iterate(entity_id=entity.id))), 1
-        )
+        self.assertEqual(len(list(self.dataset.iterate(entity_id=entity.id))), 1)
         self.assertTrue(
             any(
                 "The Level 3 Bookmark" in x
-                for x in self.manager.dataset.get(entity_id=entity.id).get("indexText")
+                for x in self.dataset.get(entity_id=entity.id).get("indexText")
             )
         )
         self.assertIn(
