@@ -1,12 +1,13 @@
 import csv
 import logging
-from pantomime.types import CSV
 from collections import OrderedDict
+
 from followthemoney.types import registry
 from followthemoney.util import sanitize_text
+from rigour.mime.types import CSV
 
-from ingestors.support.temp import TempFileSupport
 from ingestors.support.encoding import EncodingSupport
+from ingestors.support.temp import TempFileSupport
 
 log = logging.getLogger(__name__)
 

@@ -5,9 +5,9 @@ from functools import cache
 from hashlib import sha1
 from io import BytesIO
 
-from languagecodes import list_to_alpha3 as alpha3
 from normality import stringify
 from PIL import Image
+from rigour.langs import list_to_alpha3 as alpha3
 
 from ingestors.settings import Settings
 from ingestors.support.cache import CacheSupport

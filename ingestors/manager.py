@@ -15,9 +15,9 @@ from ftmstore import get_dataset
 from ftmstore.utils import safe_fragment
 from normality import stringify
 from openaleph_procrastinate import defer
-from pantomime import normalize_mimetype
 from procrastinate import App
 from prometheus_client import Counter, Histogram
+from rigour.mime import normalize_mimetype
 from servicelayer.archive import init_archive
 from servicelayer.archive.archive import Archive
 from servicelayer.archive.util import ensure_path
