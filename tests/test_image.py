@@ -79,17 +79,15 @@ class ImageIngestorTest(TestCase):
 
             # Does either the bodyText prop or the indexText prop contain
             # the text resulted from OCR?
-            # FIXME
-            if test_image_type != "gif":
-                try:
-                    self.assertIn(
-                        test_data[test_image_type]["content"],
-                        image_entity.first("bodyText"),
-                        f"Test failed for {test_data[test_image_type]['file']}",
-                    )
-                except TypeError:
-                    self.assertIn(
-                        test_data[test_image_type]["content"],
-                        image_entity.first("indexText"),
-                        f"Test failed for {test_data[test_image_type]['file']}",
-                    )
+            try:
+                self.assertIn(
+                    test_data[test_image_type]["content"],
+                    image_entity.first("bodyText"),
+                    f"Test failed for {test_data[test_image_type]['file']}",
+                )
+            except TypeError:
+                self.assertIn(
+                    test_data[test_image_type]["content"],
+                    image_entity.first("indexText"),
+                    f"Test failed for {test_data[test_image_type]['file']}",
+                )
