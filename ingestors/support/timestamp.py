@@ -1,7 +1,9 @@
 import logging
+from datetime import date, datetime
+
 from banal import ensure_list
+from dateparser import parse
 from normality import stringify
-from datetime import datetime, date
 
 log = logging.getLogger(__name__)
 
@@ -34,5 +36,9 @@ class TimestampSupport(object):
                 return datetime.strptime(text, fmt)
             except Exception:
                 pass
+        # fallback
+        parsed = parse(raw)
+        if parsed is not None:
+            return parsed
         log.warning("Could not parse timestamp: %r", raw)
         return raw
