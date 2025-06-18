@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:10.0
+    image: postgres:17
     environment:
       POSTGRES_USER: ingest
       POSTGRES_PASSWORD: ingest
@@ -12,8 +12,7 @@ services:
 
   ingest-file:
     build:
-      context: .
-    # image: ghcr.io/openaleph/ingest-file
+      dockerfile: Dockerfile.test
     hostname: ingest
     tmpfs:
       - /tmp:mode=777
@@ -21,6 +20,8 @@ services:
     environment:
       FTM_STORE_URI: postgresql://ingest:ingest@postgres/ingest
       LOG_FORMAT: TEXT # TEXT or JSON
+      # LD_PRELOAD: /usr/lib/x86_64-linux-gnu/libgomp.so.1
+      LD_PRELOAD: /usr/lib/aarch64-linux-gnu/libgomp.so.1
     volumes:
       - "./ingestors:/ingestors/ingestors"
       - "./tests:/ingestors/tests"

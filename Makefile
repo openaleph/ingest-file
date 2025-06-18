@@ -1,4 +1,4 @@
-INGEST=ghcr.io/investigativedata/ingest-file
+INGEST=ghcr.io/openaleph/ingest-file
 COMPOSE=docker compose
 DOCKER=$(COMPOSE) run --rm ingest-file
 
@@ -9,16 +9,11 @@ all: build shell
 build:
 	$(COMPOSE) build --no-rm --parallel
 
-pull-cache:
-	-docker pull -q $(INGEST):cache
+build-macos:
+	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 $(COMPOSE) build --no-rm --parallel
 
-cached-build: pull-cache
-	docker build --cache-from $(INGEST):cache -t $(INGEST) .
-
-fresh-cache:
-	# re-generate cache images on a daily basis to avoid using
-	# stale docker containers from upstream.
-	docker build --pull --no-cache -t $(INGEST):cache .
+build-base:
+	docker build . -f Dockerfile.base -t ghcr.io/openaleph/ingest-file-base:latest
 
 services:
 	$(COMPOSE) up -d --remove-orphans postgres redis
@@ -35,7 +30,7 @@ format:
 format-check:
 	black --check .
 
-test: services
+test: build services
 	PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 $(DOCKER) pytest --cov=ingestors --cov-report html --cov-report term
 
 restart: build

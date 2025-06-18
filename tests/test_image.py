@@ -1,4 +1,4 @@
-from .support import TestCase
+from tests.support import TestCase
 
 
 class ImageIngestorTest(TestCase):
