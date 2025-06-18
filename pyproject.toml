@@ -41,11 +41,6 @@ dependencies = [
     "prometheus-client (==0.17.1)",
     "sentry_sdk (==2.0.1)",
     # analysis dependencies
-    "countrytagger (>=0.1.2,<0.2.0)",
-    "languagecodes (>=1.1.1,<2.0.0)",
-    "spacy (>=3.8.7,<4.0.0)",
-    "fasttext-numpy2 (>=0.10.4,<0.11.0)",
-    "pantomime (>=0.6.1,<0.7.0)",
     # servicelayer extras requirements
     "boto3 (>=1.11.9,<2.0.0)",
     "grpcio (>=1.32.0,<2.0.0)",

@@ -17,7 +17,7 @@ RUN apt-get -qq -y update \
     libxslt1-dev libpq-dev libldap2-dev libsasl2-dev \
     zlib1g-dev libicu-dev libxml2-dev \
     # package tools
-    unrar p7zip-full \
+    unrar \
     # audio & video metadata
     libmediainfo-dev \
     # image processing, djvu
@@ -116,41 +116,16 @@ ENV LANG='en_US.UTF-8' \
     OMP_THREAD_LIMIT='1' \
     OPENBLAS_NUM_THREADS='1'
 
-ENV LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libgomp.so.1"
-
 # tesseract 5
 ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
 
 RUN groupadd -g 1000 -r app \
     && useradd -m -u 1000 -s /bin/false -g app app
 
-# Download the ftm-typepredict model
-RUN mkdir /models/ && \
-    curl -o "/models/model_type_prediction.ftz" "https://public.data.occrp.org/develop/models/types/type-08012020-7a69d1b.ftz"
-
 RUN pip3 install --no-cache-dir --prefer-binary --upgrade pip
 RUN pip3 install --no-cache-dir --prefer-binary --upgrade setuptools wheel
 
-# Install spaCy
-RUN pip3 install --no-cache-dir spacy
 # Install PyICU
 RUN pip3 install --no-binary=:pyicu: pyicu
 # Install TesserOCR
 RUN pip3 install --no-binary=:tesserocr: tesserocr
-
-# Install default (small) spaCy models
-RUN python3 -m spacy download en_core_web_sm
-RUN python3 -m spacy download de_core_news_sm
-RUN python3 -m spacy download fr_core_news_sm
-RUN python3 -m spacy download es_core_news_sm
-RUN python3 -m spacy download ru_core_news_sm
-RUN python3 -m spacy download pt_core_news_sm
-RUN python3 -m spacy download ro_core_news_sm
-RUN python3 -m spacy download mk_core_news_sm
-RUN python3 -m spacy download el_core_news_sm
-RUN python3 -m spacy download pl_core_news_sm
-RUN python3 -m spacy download it_core_news_sm
-RUN python3 -m spacy download lt_core_news_sm
-RUN python3 -m spacy download nl_core_news_sm
-RUN python3 -m spacy download nb_core_news_sm
-RUN python3 -m spacy download da_core_news_sm
