@@ -18,6 +18,7 @@ repos:
       - id: mixed-line-ending
         args: ["--fix=lf"]
       - id: trailing-whitespace
+        exclude: ".bumpversion.cfg"  # wtf
 
   # - repo: https://github.com/asottile/pyupgrade
   #   rev: v3.10.1
