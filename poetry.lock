@@ -2898,7 +2898,7 @@ django = ["dj-database-url (>=2.3.0,<3.0.0)", "django (>=5.2,<6.0)", "procrastin
 type = "git"
 url = "https://github.com/openaleph/openaleph-procrastinate.git"
 reference = "HEAD"
-resolved_reference = "0f77bf17616b6ad93de5f581dcd345f5e9e2bf01"
+resolved_reference = "c8e6e607c823d27955e8ef2c5d52c60d339c62f4"
 
 [[package]]
 name = "openpyxl"
