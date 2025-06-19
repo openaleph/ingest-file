@@ -27,9 +27,6 @@ class Settings(OpenAlephSettings):
     ocr_vision_api: bool = False
     """Enable (expensive!) Google Cloud API"""
 
-    analyze_entities: bool = True
-    """Disable entity extraction"""
-
 
 settings = Settings()
 

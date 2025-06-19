@@ -38,7 +38,7 @@ def ingest(job: DatasetJob) -> Defers:
         manager.close()
 
     for entity in manager.iterate_emitted():
-        if settings.analyze_entities and entity.schema.is_a("Analyzable"):
+        if settings.analyze.defer and entity.schema.is_a("Analyzable"):
             to_analyze.append(entity)
         else:
             to_index.append(entity)
