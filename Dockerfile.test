@@ -16,5 +16,8 @@ ENV ARCHIVE_TYPE=file \
     REDIS_URL=redis://redis:6379/0 \
     TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
 
+ENV PROCRASTINATE_APP="ingestors.tasks.app"
+
 USER app
-CMD ingestors process
+ENTRYPOINT [ "/ingestors/docker-entrypoint.sh" ]
+CMD ["pytest"]

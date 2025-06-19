@@ -10,18 +10,40 @@ services:
     image: redis:alpine
     command: ["redis-server", "--save", "3600", "10"]
 
+  # geocode:
+  #   image: ghcr.io/openaleph/ftm-geocode
+  #   command: procrastinate worker -q ftm-geocode --concurrency 8
+  #   environment:
+  #     OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
+  #     FTM_STORE_URI: postgresql://ingest:ingest@postgres/ingest
+  #   tmpfs:
+  #     - /tmp:mode=777
+  #   depends_on:
+  #     - postgres
+
+  analyze:
+    image: ghcr.io/openaleph/ftm-analyze
+    command: procrastinate worker -q ftm-analyze --concurrency 8
+    environment:
+      OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
+      FTM_STORE_URI: postgresql://ingest:ingest@postgres/ingest
+    tmpfs:
+      - /tmp:mode=777
+    depends_on:
+      - postgres
+
   ingest-file:
     image: ghcr.io/openaleph/ingest-file:test
     command: bash -c /ingestors/tests/test_e2e.sh
     hostname: ingest
     tmpfs:
       - /tmp:mode=777
-    volumes:
-      - "./ingestors:/ingestors/ingestors"
-      - "./data/archive:/data"
+      - /data:mode=777
     environment:
       OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
+      FTM_STORE_URI: postgresql://ingest:ingest@postgres/ingest
       DEBUG: 0
     depends_on:
       - postgres
       - redis
+      - analyze
