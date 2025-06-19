@@ -39,12 +39,12 @@ pre-commit install
 ## Release procedure
 
 ```bash
+# on main branch
 git pull --rebase
 make build
 make test
-source .env/bin/activate
-bump2version {patch,minor,major} # pick the appropriate one
-git push --atomic origin $(git branch --show-current) $(git describe --tags --abbrev=0)
+poetry run bump2version {patch,minor,major} # pick the appropriate one
+git push
 ```
 
 ## Usage

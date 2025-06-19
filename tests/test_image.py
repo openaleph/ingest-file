@@ -1,5 +1,3 @@
-from unittest import skip
-
 from tests.support import TestCase
 
 
@@ -16,7 +14,6 @@ class ImageIngestorTest(TestCase):
         self.assertIn("TEST", entity.first("bodyText"))
         self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)
 
-    @skip("fix tessearct")
     def test_tesseract_ocr_regression(self):
         """This test is meant to catch a regression in the OCR behaviour
         described in this PR: https://github.com/alephdata/ingest-file/pull/585"""
