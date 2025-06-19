@@ -1,5 +1,6 @@
 INGEST=ghcr.io/openaleph/ingest-file
 COMPOSE=docker compose
+COMPOSE_E2E=docker compose -f docker-compose.e2e.yml
 DOCKER=$(COMPOSE) run --rm ingest-file
 
 .PHONY: build
@@ -11,6 +12,12 @@ build:
 
 build-base:
 	docker build . -f Dockerfile.base -t ghcr.io/openaleph/ingest-file-base:latest
+
+build-cache:
+	docker build . --cache-from ghcr.io/openaleph/ingest-file:cache -t ghcr.io/openaleph/ingest-file:cache
+
+build-test:
+	docker build . -f Dockerfile.test -t ghcr.io/openaleph/ingest-file:test
 
 services:
 	$(COMPOSE) up -d --remove-orphans postgres redis
@@ -29,6 +36,9 @@ format-check:
 
 test: build services
 	PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 $(DOCKER) pytest --cov=ingestors --cov-report html --cov-report term
+
+test-e2e: build services
+	$(COMPOSE_E2E) run --rm ingest-file
 
 restart: build
 	$(COMPOSE) up --force-recreate --no-deps --detach ingest-file
