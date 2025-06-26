@@ -1,5 +1,8 @@
 FROM ghcr.io/openaleph/ingest-file-base:latest
 
+# uncomment when running on Apple Silicon
+# ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1
+
 COPY . /ingestors
 RUN rm -rf /ingestors/tests
 WORKDIR /ingestors
