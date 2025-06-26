@@ -20,7 +20,7 @@ dependencies = [
     "openaleph-procrastinate @ git+https://github.com/openaleph/openaleph-procrastinate.git",
     # ingest dependencies
     "google-cloud-vision (==3.7.2)",
-    "tesserocr (>=2.8.0,<3.0.0)",
+    "tesserocr (==2.6.2)",
     "dbf (>=0.99.10,<0.100.0)",
     "pymediainfo (>=7.0.1,<8.0.0)",
     "python-magic (>=0.4.27,<0.5.0)",
