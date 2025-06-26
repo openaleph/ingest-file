@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from anystore.logging import get_logger
@@ -12,7 +13,6 @@ from servicelayer.archive.util import ensure_path
 from ingestors import __version__
 from ingestors.directory import DirectoryIngestor
 from ingestors.manager import Manager
-from ingestors.settings import Settings
 
 SYSTEM = Info("ingestfile_system", "ingest-file system information")
 SYSTEM.info({"ingestfile_version": __version__})
@@ -20,10 +20,11 @@ SYSTEM.info({"ingestfile_version": __version__})
 app = make_app(__loader__.name)
 sync_app = make_app(__loader__.name, sync=True)
 
+log = logging.getLogger(__name__)
+
 
 @task(app=app)
 def ingest(job: DatasetJob) -> Defers:
-    settings = Settings()
     to_analyze: list[EntityProxy] = []
     to_index: list[EntityProxy] = []
     manager = Manager(sync_app, job.dataset, job.context)
@@ -38,14 +39,16 @@ def ingest(job: DatasetJob) -> Defers:
         manager.close()
 
     for entity in manager.iterate_emitted():
-        if settings.analyze.defer and entity.schema.is_a("Analyzable"):
+        if entity.schema.is_a("Analyzable"):
             to_analyze.append(entity)
         else:
             to_index.append(entity)
 
     job.log.info(f"Emitted {len(manager.emitted)} entities.", emitted=manager.emitted)
-    yield defer.analyze(job.dataset, to_analyze, **job.context)
-    yield defer.index(job.dataset, to_index, **job.context)
+    if to_analyze:
+        yield defer.analyze(job.dataset, to_analyze, **job.context)
+    if to_index:
+        yield defer.index(job.dataset, to_index, **job.context)
 
 
 def ingest_path(dataset: str, path: Path, languages: list[str]):

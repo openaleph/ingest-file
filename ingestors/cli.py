@@ -6,7 +6,7 @@ from anystore.cli import ErrorHandler
 from anystore.logging import configure_logging, get_logger
 from ftmq.io import smart_write_proxies
 from ftmstore import get_dataset
-from openaleph_procrastinate.defer import INGEST_QUEUE
+from openaleph_procrastinate.defer import settings as procrastinate_settings
 from rich.console import Console
 from servicelayer.tags import Tags
 from typing_extensions import Annotated
@@ -71,7 +71,7 @@ def cli_ingest(
 
             db = get_dataset(dataset)
             db.delete()
-            app.run_worker(queues=[INGEST_QUEUE], wait=False)
+            app.run_worker(queues=[procrastinate_settings.ingest_queue], wait=False)
             smart_write_proxies("-", db.iterate())
 
 

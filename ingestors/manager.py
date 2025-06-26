@@ -106,7 +106,8 @@ class Manager:
 
     def make_entity(self, schema, parent=None):
         schema = model.get(schema)
-        assert schema is not None, "Invalid schema"
+        if schema is None:
+            raise ProcessingException("Invalid schema")
         entity = model.make_entity(schema, key_prefix=self.dataset)
         self.make_child(parent, entity)
         return entity
@@ -164,7 +165,7 @@ class Manager:
         return best_cls
 
     def queue_entity(self, entity):
-        job = defer.ingest(self.dataset, entity, **self.context)
+        job = defer.ingest(self.dataset, [entity], **self.context)
         with self.app.open():
             job.defer(app=self.app)
 

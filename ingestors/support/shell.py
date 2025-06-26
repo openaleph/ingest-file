@@ -1,23 +1,24 @@
 import os
+import shutil
 import subprocess
-from servicelayer import env
-from distutils.spawn import find_executable
 
-from ingestors.util import path_string
+from servicelayer import env
+
 from ingestors.exc import ProcessingException
+from ingestors.util import path_string
 
 
 class ShellSupport(object):
     """Provides helpers for shell commands."""
 
-    #: Convertion time before the job gets cancelled.
+    #: Conversion time before the job gets cancelled.
     COMMAND_TIMEOUT = 10 * 60
 
     @classmethod
-    def find_command(self, name):
+    def find_command(cls, name):
         config_name = "%s_BIN" % name
         config_name = config_name.replace("-", "_").upper()
-        return env.get(config_name, find_executable(name))
+        return env.get(config_name, shutil.which(name))
 
     def exec_command(self, command, *args):
         binary = self.find_command(command)
@@ -29,7 +30,7 @@ class ShellSupport(object):
             code = subprocess.call(
                 cmd, timeout=self.COMMAND_TIMEOUT, stdout=open(os.devnull, "wb")
             )
-        except (IOError, OSError) as ose:
+        except OSError as ose:
             raise ProcessingException("Error: %s" % ose) from ose
         except subprocess.TimeoutExpired as timeout:
             raise ProcessingException("Processing timed out.") from timeout
