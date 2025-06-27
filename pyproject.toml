@@ -17,7 +17,7 @@ dependencies = [
     "followthemoney (>=3.8.4,<4.0.0)",
     "followthemoney-store[postgresql] (>=3.1.0,<3.2.0)",
     "pyicu (>=2.15.2,<3.0.0)",
-    "openaleph-procrastinate @ git+https://github.com/openaleph/openaleph-procrastinate.git",
+    "openaleph-procrastinate @ git+https://github.com/openaleph/openaleph-procrastinate.git@v0.0.6",
     # ingest dependencies
     "google-cloud-vision (==3.7.2)",
     "tesserocr (==2.6.2)",

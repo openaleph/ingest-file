@@ -2904,7 +2904,7 @@ tests = ["pytest", "pytest-cov"]
 
 [[package]]
 name = "openaleph-procrastinate"
-version = "0.0.5"
+version = "0.0.6"
 description = "Task queue logic for OpenAleph built upon procrastinate"
 optional = false
 python-versions = ">=3.11,<4"
@@ -2918,7 +2918,7 @@ followthemoney-store = {version = ">=3.1.0,<4.0.0", extras = ["postgresql"]}
 ftmq = ">=0.8.7,<0.9.0"
 procrastinate = ">=3.2.2,<4.0.0"
 pydantic = ">=2.11.7,<3.0.0"
-pydantic-settings = ">=2.9.1,<3.0.0"
+pydantic-settings = ">=2.10.1,<3.0.0"
 
 [package.extras]
 django = ["dj-database-url (>=2.3.0,<3.0.0)", "django (>=5.2,<6.0)", "procrastinate[django] (>=3.1.0,<4.0.0)"]
@@ -2926,8 +2926,8 @@ django = ["dj-database-url (>=2.3.0,<3.0.0)", "django (>=5.2,<6.0)", "procrastin
 [package.source]
 type = "git"
 url = "https://github.com/openaleph/openaleph-procrastinate.git"
-reference = "HEAD"
-resolved_reference = "9b0587da06870b6e98ddae7902961b384af7ab1d"
+reference = "v0.0.6"
+resolved_reference = "f42d8d008b01778e27249c3d80e294bc75f6dfd3"
 
 [[package]]
 name = "openpyxl"
@@ -3925,14 +3925,14 @@ typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
 
 [[package]]
 name = "pydantic-settings"
-version = "2.9.1"
+version = "2.10.1"
 description = "Settings management using Pydantic"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "pydantic_settings-2.9.1-py3-none-any.whl", hash = "sha256:59b4f431b1defb26fe620c71a7d3968a710d719f5f4cdbbdb7926edeb770f6ef"},
-    {file = "pydantic_settings-2.9.1.tar.gz", hash = "sha256:c509bf79d27563add44e8446233359004ed85066cd096d8b510f715e6ef5d268"},
+    {file = "pydantic_settings-2.10.1-py3-none-any.whl", hash = "sha256:a60952460b99cf661dc25c29c0ef171721f98bfcb52ef8d9ea4c943d7c8cc796"},
+    {file = "pydantic_settings-2.10.1.tar.gz", hash = "sha256:06f0062169818d0f5524420a360d632d5857b83cffd4d42fe29597807a1614ee"},
 ]
 
 [package.dependencies]
@@ -5693,4 +5693,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "10c529f6d2daa71708eb8cc10b81b2514adfd7fb45f51fd49e0576ad99aafaab"
+content-hash = "92dc647448c340dea32549bae69e1104982284658a55103efd5f654ccdf4fa47"
