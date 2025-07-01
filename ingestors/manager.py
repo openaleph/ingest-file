@@ -165,9 +165,8 @@ class Manager:
         return best_cls
 
     def queue_entity(self, entity):
-        job = defer.ingest(self.dataset, [entity], **self.context)
         with self.app.open():
-            job.defer(app=self.app)
+            defer.ingest(self.app, self.dataset, [entity], **self.context)
 
     def store(self, file_path, mime_type=None):
         file_path = ensure_path(file_path)

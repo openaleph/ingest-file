@@ -5,7 +5,7 @@ from anystore.logging import get_logger
 from followthemoney.proxy import EntityProxy
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.app import make_app
-from openaleph_procrastinate.model import DatasetJob, Defers
+from openaleph_procrastinate.model import DatasetJob
 from openaleph_procrastinate.tasks import task
 from prometheus_client import Info
 from servicelayer.archive.util import ensure_path
@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 
 @task(app=app)
-def ingest(job: DatasetJob) -> Defers:
+def ingest(job: DatasetJob) -> None:
     to_analyze: list[EntityProxy] = []
     to_index: list[EntityProxy] = []
     manager = Manager(sync_app, job.dataset, job.context)
@@ -46,9 +46,9 @@ def ingest(job: DatasetJob) -> Defers:
 
     job.log.info(f"Emitted {len(manager.emitted)} entities.", emitted=manager.emitted)
     if to_analyze:
-        yield defer.analyze(job.dataset, to_analyze, **job.context)
+        defer.analyze(app, job.dataset, to_analyze, **job.context)
     if to_index:
-        yield defer.index(job.dataset, to_index, **job.context)
+        defer.index(app, job.dataset, to_index, **job.context)
 
 
 def ingest_path(dataset: str, path: Path, languages: list[str]):
