@@ -39,7 +39,6 @@ format-check:
 	black --check .
 
 test: build services
-test: build services
 	PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 $(DOCKER) pytest --cov=ingestors --cov-report html --cov-report term
 
 test-e2e: build services

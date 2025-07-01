@@ -18,6 +18,7 @@ services:
       - /tmp:mode=777
       - /data:mode=777
     environment:
+      OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
       FTM_STORE_URI: postgresql://ingest:ingest@postgres/ingest
       LOG_FORMAT: TEXT # TEXT or JSON
       # LD_PRELOAD: /usr/lib/x86_64-linux-gnu/libgomp.so.1

@@ -27,6 +27,7 @@ services:
     environment:
       OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
       FTM_STORE_URI: postgresql://ingest:ingest@postgres/ingest
+      DEBUG: 0
     tmpfs:
       - /tmp:mode=777
     depends_on:
