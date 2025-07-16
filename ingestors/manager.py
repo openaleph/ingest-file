@@ -99,7 +99,7 @@ class Manager:
         self.dataset = dataset
         self.writer = get_dataset(dataset, OP_INGEST).bulk()
         self.context = context
-        self.ns = Namespace(self.context.get("namespace"))
+        self.ns = Namespace(self.context["namespace"])
         self.work_path = ensure_path(mkdtemp(prefix="ingestor-"))
         self.emitted = set()
         self.archive = get_archive()

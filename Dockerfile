@@ -19,6 +19,5 @@ ENV PROCRASTINATE_APP="ingestors.tasks.app"
 
 RUN chmod +x /ingestors/docker-entrypoint.sh
 
-USER app
 ENTRYPOINT [ "/ingestors/docker-entrypoint.sh" ]
 CMD ["procrastinate", "worker", "-q", "ingest"]
