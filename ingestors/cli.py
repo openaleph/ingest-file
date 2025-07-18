@@ -1,20 +1,21 @@
-import sys
-import click
 import logging
+import sys
 from pprint import pprint
-from ftmstore import get_dataset
-from servicelayer.cache import get_redis, get_fakeredis
-from servicelayer.logs import configure_logging
-from servicelayer.jobs import Job, Dataset
+
+import click
+from ftmq.store.fragments import get_dataset
 from servicelayer import settings as sl_settings
 from servicelayer.archive.util import ensure_path
+from servicelayer.cache import get_fakeredis, get_redis
+from servicelayer.jobs import Dataset, Job
+from servicelayer.logs import configure_logging
 from servicelayer.tags import Tags
 
 from ingestors import settings
-from ingestors.manager import Manager
-from ingestors.directory import DirectoryIngestor
 from ingestors.analysis import Analyzer
-from ingestors.worker import IngestWorker, OP_ANALYZE, OP_INGEST
+from ingestors.directory import DirectoryIngestor
+from ingestors.manager import Manager
+from ingestors.worker import OP_ANALYZE, OP_INGEST, IngestWorker
 
 log = logging.getLogger(__name__)
 STAGES = [OP_ANALYZE, OP_INGEST]
@@ -50,7 +51,8 @@ def killthekitten():
     conn.flushall()
 
 
-def _ingest_path(db, conn, dataset, path, languages=[]):
+def _ingest_path(db, conn, dataset, path, languages=None):
+    languages = languages or []
     context = {"languages": languages}
     job = Job.create(conn, dataset)
     stage = job.get_stage(OP_INGEST)

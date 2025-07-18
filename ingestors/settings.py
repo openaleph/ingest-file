@@ -1,6 +1,5 @@
 from servicelayer import env
 from servicelayer import settings as sls
-from ftmstore import settings as fts
 
 TESTING = False
 
@@ -43,25 +42,12 @@ NER_TYPE_MODEL_PATH = env.get(
     "INGESTORS_TYPE_MODEL_PATH", "/models/model_type_prediction.ftz"
 )
 
-# Use the environment variable set in aleph.env
-fts.DATABASE_URI = env.get(
-    "FTM_STORE_URI", env.get("ALEPH_DATABASE_URI", fts.DATABASE_URI)
-)
-
 # Also store cached values in the SQL database
-sls.TAGS_DATABASE_URI = fts.DATABASE_URI
+sls.TAGS_DATABASE_URI = env.get("FTM_STORE_URI", env.get("ALEPH_DATABASE_URI"))
 
-# ProcessingException is thrown whenever something goes wrong wiht
+# ProcessingException is thrown whenever something goes wrong with
 # parsing a file. Enable this with care, it can easily eat up the
 # Sentry quota of events.
 SENTRY_CAPTURE_PROCESSING_EXCEPTIONS = env.to_bool(
     "SENTRY_CAPTURE_PROCESSING_EXCEPTIONS", False
-)
-
-WHISPER_MODEL = env.get("INGESTORS_WHISPER_MODEL", "ggml-medium-q8_0.bin")
-# "auto" prompts the model to detect the language
-WHISPER_LANGUAGE = env.get("INGESTORS_WHISPER_LANGUAGE", "auto")
-# timeout expressed in seconds
-WHISPER_TRANSCRIPTION_TIMEOUT = env.get(
-    "INGESTORS_WHISPER_TRANSCRIPTION_TIMEOUT", 60 * 60 * 2
 )

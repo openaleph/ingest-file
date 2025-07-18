@@ -1,15 +1,15 @@
+import logging
 import re
 import types
-import logging
-from banal import ensure_list
-from normality import stringify
-from ftmstore.utils import safe_fragment
-from email.utils import parsedate_to_datetime, getaddresses
-from normality import safe_filename, ascii_text
-from followthemoney.types import registry
+from email.utils import getaddresses, parsedate_to_datetime
 
-from ingestors.support.html import HTMLSupport
+from banal import ensure_list
+from followthemoney.types import registry
+from ftmq.store.fragments.utils import safe_fragment
+from normality import ascii_text, safe_filename, stringify
+
 from ingestors.support.cache import CacheSupport
+from ingestors.support.html import HTMLSupport
 from ingestors.support.temp import TempFileSupport
 
 log = logging.getLogger(__name__)
@@ -195,8 +195,8 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
         sender = self.get_header_identities(msg, "Sender", "X-Sender")
         self.apply_identities(entity, sender, "emitters", "sender")
 
-        froms = self.get_header_identities(msg, "From", "X-From")
-        self.apply_identities(entity, froms, "emitters", "from")
+        froms = self.get_header_identities(msg, "From", "X-From")  # codespell:ignore
+        self.apply_identities(entity, froms, "emitters", "from")  # codespell:ignore
 
         tos = self.get_header_identities(msg, "To", "Resent-To")
         self.apply_identities(entity, tos, "recipients", "to")
