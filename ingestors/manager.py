@@ -1,27 +1,27 @@
-import magic
 import logging
-from timeit import default_timer
-from tempfile import mkdtemp
 from datetime import datetime
-from pkg_resources import get_distribution
+from tempfile import mkdtemp
+from timeit import default_timer
 
-from followthemoney import model
+import magic
 from banal import ensure_list
+from followthemoney import model
+from followthemoney.helpers import entity_filename
+from followthemoney.namespace import Namespace
+from ftmq.store.fragments.utils import safe_fragment
 from normality import stringify
 from pantomime import normalize_mimetype
-from ftmstore.utils import safe_fragment
+from pkg_resources import get_distribution
+from prometheus_client import Counter, Histogram
+from sentry_sdk import capture_exception
 from servicelayer.archive import init_archive
 from servicelayer.archive.util import ensure_path
 from servicelayer.extensions import get_extensions
-from sentry_sdk import capture_exception
-from followthemoney.helpers import entity_filename
-from followthemoney.namespace import Namespace
-from prometheus_client import Counter, Histogram
 
-from ingestors.directory import DirectoryIngestor
-from ingestors.exc import ProcessingException, ENCRYPTED_MSG
-from ingestors.util import filter_text, remove_directory
 from ingestors import settings
+from ingestors.directory import DirectoryIngestor
+from ingestors.exc import ENCRYPTED_MSG, ProcessingException
+from ingestors.util import filter_text, remove_directory
 
 log = logging.getLogger(__name__)
 
@@ -68,9 +68,9 @@ class Manager(object):
     """Handles the lifecycle of an ingestor. This can be subclassed to embed it
     into a larger processing framework."""
 
-    #: Indicates that during the processing no errors or failures occured.
+    #: Indicates that during the processing no errors or failures occurred.
     STATUS_SUCCESS = "success"
-    #: Indicates occurance of errors during the processing.
+    #: Indicates occurrence of errors during the processing.
     STATUS_FAILURE = "failure"
 
     MAGIC = magic.Magic(mime=True)

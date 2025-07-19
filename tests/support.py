@@ -3,15 +3,15 @@ from __future__ import absolute_import
 import types
 import unittest
 from tempfile import mkdtemp
-from ftmstore import get_dataset
 
-from servicelayer.cache import get_fakeredis
+from ftmq.store.fragments import get_dataset
+from servicelayer import settings as service_settings
 from servicelayer.archive import init_archive
+from servicelayer.archive.util import ensure_path
+from servicelayer.cache import get_fakeredis
 from servicelayer.jobs import Job, Stage
 from servicelayer.tags import Tags
-from servicelayer.archive.util import ensure_path
-from servicelayer import settings as service_settings
-from ftmstore import settings as ftmstore_settings
+
 from ingestors import settings as ingestors_settings
 from ingestors.manager import Manager
 from ingestors.worker import OP_INGEST
@@ -33,7 +33,6 @@ class TestCase(unittest.TestCase):
         service_settings.REDIS_URL = None
         service_settings.ARCHIVE_TYPE = "file"
         service_settings.ARCHIVE_PATH = mkdtemp()
-        ftmstore_settings.DATABASE_URI = "sqlite://"
         conn = get_fakeredis()
         job = Job.create(conn, "test")
         stage = Stage(job, OP_INGEST)
