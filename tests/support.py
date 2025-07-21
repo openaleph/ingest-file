@@ -38,7 +38,7 @@ class TestCase(unittest.TestCase):
         fts.DATABASE_URI = f"sqlite:///{self.tmp_dir}/store.db"
         sls.TAGS_DATABASE_URI = fts.DATABASE_URI
         Tags("ingest_cache").delete()
-        self.manager = Manager(app, TEST_DATASET, {})
+        self.manager = Manager(app, TEST_DATASET, {"namespace": "test"})
         self.manager.emit_entity = types.MethodType(emit_entity, self.manager)
         self.manager.entities = []
         self.dataset = get_dataset(TEST_DATASET)
