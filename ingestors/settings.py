@@ -1,6 +1,6 @@
-from ftmstore import settings as fts
 from openaleph_procrastinate.settings import OpenAlephSettings
 from pydantic_settings import SettingsConfigDict
+from servicelayer import env
 from servicelayer import settings as sls
 
 
@@ -30,8 +30,12 @@ class Settings(OpenAlephSettings):
 
 settings = Settings()
 
-# Use the environment variable set in current env
-fts.DATABASE_URI = settings.ftm_store_uri
-
 # Also store cached values in the SQL database
-sls.TAGS_DATABASE_URI = fts.DATABASE_URI
+sls.TAGS_DATABASE_URI = env.get("FTM_STORE_URI", env.get("ALEPH_DATABASE_URI"))
+
+# ProcessingException is thrown whenever something goes wrong with
+# parsing a file. Enable this with care, it can easily eat up the
+# Sentry quota of events.
+SENTRY_CAPTURE_PROCESSING_EXCEPTIONS = env.to_bool(
+    "SENTRY_CAPTURE_PROCESSING_EXCEPTIONS", False
+)

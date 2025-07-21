@@ -13,29 +13,73 @@ files = [
 ]
 
 [[package]]
+name = "ahocorasick-rs"
+version = "0.22.2"
+description = "Search a string for multiple substrings at once"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "ahocorasick_rs-0.22.2-cp310-cp310-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:c5a55a11b4aa277ac32c44e34c19facb0a5deae105f8b79fa650cea77f08b3c7"},
+    {file = "ahocorasick_rs-0.22.2-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:4196554d93d32896f47006cecfc9dc7b997ed209f4c99cbca541246a3aa92d18"},
+    {file = "ahocorasick_rs-0.22.2-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:cae97a8e83c5c44ef462b7d5b2352788e1a58d2a01c5e9ca8941e019262ae358"},
+    {file = "ahocorasick_rs-0.22.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e08e67c2676051ee8a7ccb392dcac69c1431961b057060c31e1448bee33e5c29"},
+    {file = "ahocorasick_rs-0.22.2-cp310-cp310-win_amd64.whl", hash = "sha256:8c665b62bcd3851eb010c0560e53fce719d539ffd8ae5c4a9805a9bffbfc2387"},
+    {file = "ahocorasick_rs-0.22.2-cp310-none-win_amd64.whl", hash = "sha256:8a7718970ae5a280c74fd28e7ea8a56b95d3f74f46762747d79b72552682ec96"},
+    {file = "ahocorasick_rs-0.22.2-cp311-cp311-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:908387241a8e551536b6d4b90e4eebb57f61e922500eb5dbdbc3a0eb818faf1c"},
+    {file = "ahocorasick_rs-0.22.2-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:38512ddef71f442542681d2131ff17f23f7f764126ced74a6a5a060c4d0a7319"},
+    {file = "ahocorasick_rs-0.22.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:61b46e1db2092f4814ebeb5898d68dab38a5948a118d60e9c76b5a02c0ec090f"},
+    {file = "ahocorasick_rs-0.22.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a14c32509ab7538f7c3101c75f72cdc0aeae4daf52ec8cb50475fdbe0b8d6034"},
+    {file = "ahocorasick_rs-0.22.2-cp311-cp311-win_amd64.whl", hash = "sha256:25eb0d254c8c1f18650f06518fe06d4391cb5e72c36c1e0ae66317a23701dda3"},
+    {file = "ahocorasick_rs-0.22.2-cp311-none-win_amd64.whl", hash = "sha256:eb2f7ec5ada9bbf3fad4e68e7cb0706bb62414812fbebc6482e836c61841a7fb"},
+    {file = "ahocorasick_rs-0.22.2-cp312-cp312-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:b5d404ceec819d983297816917fec12cca61f6ce825496adec1f701fa14ba0c8"},
+    {file = "ahocorasick_rs-0.22.2-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:a597216caeb8d19b965d7c8c17e417b99c3b95d8c762a9c1065dce1eef562a69"},
+    {file = "ahocorasick_rs-0.22.2-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b0c7b452e499b2b6f3e749bed34c72e12c6ba9256d9af2410a1744f1799dd763"},
+    {file = "ahocorasick_rs-0.22.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4bfff7aabcbd67dde053dc32c537ff69cd208caf5eabec514bc423693e46d54f"},
+    {file = "ahocorasick_rs-0.22.2-cp312-cp312-win_amd64.whl", hash = "sha256:2d1e56949a1c0f8f0012347e366ef4c911a3f40d91fa5a3b04cb0041609e11dd"},
+    {file = "ahocorasick_rs-0.22.2-cp312-none-win_amd64.whl", hash = "sha256:15fa2c214ed2d0aebae2e9a8dfb562c4ffff13737833c395b849812ac49d2fc0"},
+    {file = "ahocorasick_rs-0.22.2-cp313-cp313-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:6a4f9a0df477e6d02b8191a8c9da9582b2f73fe091d940bcac76a85993f5ddf4"},
+    {file = "ahocorasick_rs-0.22.2-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:3bddd6d699a19d3a47f422c65d9e274b95c8e08da6450251d1b311bb109b9359"},
+    {file = "ahocorasick_rs-0.22.2-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:15ec83efcdac05455e59bfb57909d65cdfa834c44af953104fdfca79538e0e8d"},
+    {file = "ahocorasick_rs-0.22.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a805375457fb36af7fbadbb3d503f8d6373d74a0af78d067564eb29b95e6e0ce"},
+    {file = "ahocorasick_rs-0.22.2-cp313-cp313-win_amd64.whl", hash = "sha256:711f9d1d1e3c964b2aec5fb88cc4184957758ea2f8c133d890a1f9bc6d360024"},
+    {file = "ahocorasick_rs-0.22.2-cp313-none-win_amd64.whl", hash = "sha256:53b3b99774a6b1ac1e306da3d9ae986c50582a795dd7372f7747e99615482757"},
+    {file = "ahocorasick_rs-0.22.2-cp39-cp39-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:39b2507c3b02d97a0011d7962fd0733d1c4eb92f3f2da6579186fb9821850bfe"},
+    {file = "ahocorasick_rs-0.22.2-cp39-cp39-macosx_10_12_x86_64.whl", hash = "sha256:020792722cc2f411ccce5bc7f39a7939806a8ca79ce34c032eedfba6fe5a71c9"},
+    {file = "ahocorasick_rs-0.22.2-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c64edb5e3cf579edc8f1bf733363aaa1886462c69e39c18779a33014d53b6b11"},
+    {file = "ahocorasick_rs-0.22.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:098ac8f9cd93da632ebddb5125838921350104a5ef85ec21cece22adcd821e21"},
+    {file = "ahocorasick_rs-0.22.2-cp39-cp39-win_amd64.whl", hash = "sha256:2a834810493dacd24157b877afe989065a3e8b586fdffa970ec8d8ce4d8a8254"},
+    {file = "ahocorasick_rs-0.22.2-cp39-none-win_amd64.whl", hash = "sha256:ef58ffc1a09a42bfb931a0417fdae617824cd4331d7f33de91cf507e6f747ef3"},
+    {file = "ahocorasick_rs-0.22.2.tar.gz", hash = "sha256:87f27a6422dbf94ec0f9fe84ac0188d4a66b5c7b2f5f6deb165f0c5e3db9769c"},
+]
+
+[package.dependencies]
+typing-extensions = {version = ">=4.6.0", markers = "python_version < \"3.12\""}
+
+[[package]]
 name = "aiobotocore"
-version = "2.23.0"
+version = "2.23.1"
 description = "Async client for aws services using botocore and aiohttp"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "aiobotocore-2.23.0-py3-none-any.whl", hash = "sha256:8202cebbf147804a083a02bc282fbfda873bfdd0065fd34b64784acb7757b66e"},
-    {file = "aiobotocore-2.23.0.tar.gz", hash = "sha256:0333931365a6c7053aee292fe6ef50c74690c4ae06bb019afdf706cb6f2f5e32"},
+    {file = "aiobotocore-2.23.1-py3-none-any.whl", hash = "sha256:d81c54d2eae2406ea9a473fea518fed580cf37bc4fc51ce43ba81546e5305114"},
+    {file = "aiobotocore-2.23.1.tar.gz", hash = "sha256:a59f2a78629b97d52f10936b79c73de64e481a8c44a62c1871f088df6c1afc4f"},
 ]
 
 [package.dependencies]
 aiohttp = ">=3.9.2,<4.0.0"
 aioitertools = ">=0.5.1,<1.0.0"
-botocore = ">=1.38.23,<1.38.28"
+botocore = ">=1.38.40,<1.38.47"
 jmespath = ">=0.7.1,<2.0.0"
 multidict = ">=6.0.0,<7.0.0"
 python-dateutil = ">=2.1,<3.0.0"
 wrapt = ">=1.10.10,<2.0.0"
 
 [package.extras]
-awscli = ["awscli (>=1.40.22,<1.40.27)"]
-boto3 = ["boto3 (>=1.38.23,<1.38.28)"]
+awscli = ["awscli (>=1.40.39,<1.40.46)"]
+boto3 = ["boto3 (>=1.38.40,<1.38.47)"]
 httpx = ["httpx (>=0.25.1,<0.29)"]
 
 [[package]]
@@ -191,28 +235,6 @@ frozenlist = ">=1.1.0"
 typing-extensions = {version = ">=4.2", markers = "python_version < \"3.13\""}
 
 [[package]]
-name = "alephclient"
-version = "2.6.0"
-description = "Command-line client for Aleph API"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "alephclient-2.6.0-py2.py3-none-any.whl", hash = "sha256:1ced8e75b1ec9320c2eb0981b20347f0d7564b4a0ebb7884a57c29437bb1f135"},
-    {file = "alephclient-2.6.0.tar.gz", hash = "sha256:5b534f8a1d4bb1cb10c2c555438efec90c2ea213a42b31d4dc0c4a9d12950f7f"},
-]
-
-[package.dependencies]
-banal = ">=1.0.1"
-click = ">=7.0"
-pyyaml = "*"
-requests = ">=2.21.0"
-requests-toolbelt = ">=0.9.1"
-
-[package.extras]
-dev = ["mypy", "pytest", "pytest-mock (>=1.10.0)", "types-requests", "types-setuptools", "wheel"]
-
-[[package]]
 name = "annotated-types"
 version = "0.7.0"
 description = "Reusable constraint types to use with typing.Annotated"
@@ -248,31 +270,33 @@ trio = ["trio (>=0.26.1)"]
 
 [[package]]
 name = "anystore"
-version = "0.3.7"
+version = "0.3.8"
 description = "Store and cache things anywhere"
 optional = false
 python-versions = "<4,>=3.11"
 groups = ["main"]
 files = [
-    {file = "anystore-0.3.7-py3-none-any.whl", hash = "sha256:7ce5fbe55f45bfbedb1b9ddb9cefac2f1f2325d48d952a0988f6a9998d957082"},
-    {file = "anystore-0.3.7.tar.gz", hash = "sha256:32f08fd13072af94c3ed8739b4e2eee53f9b5b54af270b9ddf9c4d37461475ab"},
+    {file = "anystore-0.3.8-py3-none-any.whl", hash = "sha256:00e61efd435750e847605b51041c1250f7bdca3d056d521825ce4a66af10664e"},
+    {file = "anystore-0.3.8.tar.gz", hash = "sha256:d180501c2971a4a5852eb956f56ffeee924f758653dbe246b0fa41ae1c56ce11"},
 ]
 
 [package.dependencies]
 banal = ">=1.0.6,<2.0.0"
 cloudpickle = ">=3.1.0,<4.0.0"
-dateparser = ">=1.2.1,<2.0.0"
+dateparser = ">=1.2.2,<2.0.0"
 fsspec = ">2023.10,<2026"
-httpx = ">=0.28.1"
-orjson = ">=3.9.15"
-pyaml = ">=25.1.0,<26.0.0"
-pydantic = ">=2.11.5,<3.0.0"
+httpx = ">=0.28.1,<0.29.0"
+orjson = ">=3.10.18,<4.0.0"
+pyaml = ">=25.5.0,<26.0.0"
+pydantic = ">=2.11.7,<3.0.0"
 pydantic-settings = ">=2.7.1,<3.0.0"
-rich = ">=13.9.4,<14.0.0"
-rigour = ">=0.12.2"
+rich = ">=10.0.0,<15.0.0"
+rigour = ">=1.0.0,<2.0.0"
 s3fs = ">2023.10,<2026"
-structlog = ">=24.4.0,<25.0.0"
+structlog = ">=22.0.0,<26.0.0"
+tqdm = ">=4.67.1,<5.0.0"
 typer = ">=0.16.0,<0.17.0"
+uuid7 = ">=0.1.0,<0.2.0"
 
 [package.extras]
 redis = ["fakeredis (>=2.26.2,<3.0.0)", "redis (>=4.0.0)"]
@@ -403,18 +427,18 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.38.27"
+version = "1.38.46"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "boto3-1.38.27-py3-none-any.whl", hash = "sha256:95f5fe688795303a8a15e8b7e7f255cadab35eae459d00cc281a4fd77252ea80"},
-    {file = "boto3-1.38.27.tar.gz", hash = "sha256:94bd7fdd92d5701b362d4df100d21e28f8307a67ff56b6a8b0398119cf22f859"},
+    {file = "boto3-1.38.46-py3-none-any.whl", hash = "sha256:9c8e88a32a6465e5905308708cff5b17547117f06982908bdfdb0108b4a65079"},
+    {file = "boto3-1.38.46.tar.gz", hash = "sha256:d1ca2b53138afd0341e1962bd52be6071ab7a63c5b4f89228c5ef8942c40c852"},
 ]
 
 [package.dependencies]
-botocore = ">=1.38.27,<1.39.0"
+botocore = ">=1.38.46,<1.39.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.13.0,<0.14.0"
 
@@ -423,14 +447,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.38.27"
+version = "1.38.46"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "botocore-1.38.27-py3-none-any.whl", hash = "sha256:a785d5e9a5eda88ad6ab9ed8b87d1f2ac409d0226bba6ff801c55359e94d91a8"},
-    {file = "botocore-1.38.27.tar.gz", hash = "sha256:9788f7efe974328a38cbade64cc0b1e67d27944b899f88cb786ae362973133b6"},
+    {file = "botocore-1.38.46-py3-none-any.whl", hash = "sha256:89ca782ffbf2e8769ca9c89234cfa5ca577f1987d07d913ee3c68c4776b1eb5b"},
+    {file = "botocore-1.38.46.tar.gz", hash = "sha256:8798e5a418c27cf93195b077153644aea44cb171fcd56edc1ecebaa1e49e226e"},
 ]
 
 [package.dependencies]
@@ -1159,14 +1183,14 @@ files = [
 
 [[package]]
 name = "distlib"
-version = "0.3.9"
+version = "0.4.0"
 description = "Distribution utilities"
 optional = false
 python-versions = "*"
 groups = ["dev"]
 files = [
-    {file = "distlib-0.3.9-py2.py3-none-any.whl", hash = "sha256:47f8c22fd27c27e25a65601af709b38e4f0a45ea4fc2e710f65755fa8caaaf87"},
-    {file = "distlib-0.3.9.tar.gz", hash = "sha256:a60f20dea646b8a33f3e7772f74dc0b2d0772d2837ee1342a00645c81edf9403"},
+    {file = "distlib-0.4.0-py2.py3-none-any.whl", hash = "sha256:9659f7d87e46584a30b5780e43ac7a2143098441670ff0a49d5f9034c54a6c16"},
+    {file = "distlib-0.4.0.tar.gz", hash = "sha256:feec40075be03a04501a973d81f633735b4b69f98b05450592310c0f401a4e0d"},
 ]
 
 [[package]]
@@ -1344,13 +1368,13 @@ dev = ["black", "bump2version", "mypy", "pytest", "pytest-cov", "pyyaml", "types
 
 [[package]]
 name = "followthemoney"
-version = "3.8.5"
+version = "4.0.3"
 description = "A data model for anti corruption data modeling and analysis."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "followthemoney-3.8.5-py3-none-any.whl", hash = "sha256:6db2c39db40d2c2ecc82352d518133a018ca0ebcad1941fdca5088b6b02a211f"},
+    {file = "followthemoney-4.0.3-py3-none-any.whl", hash = "sha256:259e8c622f6daba37ebda341b68e5b1741cc1822e99a40305bd03e8f0df579ca"},
 ]
 
 [package.dependencies]
@@ -1358,41 +1382,23 @@ babel = ">=2.14.0,<3.0.0"
 banal = ">=1.0.6,<1.1.0"
 click = ">=8.0,<9.0.0"
 countrynames = ">=1.13.0,<2.0.0"
-fingerprints = ">=1.0.1,<2.0.0"
 networkx = ">=2.5,<3.5"
-normality = ">=2.4.0,<3.0.0"
+normality = ">=2.6.1,<3.0.0"
 openpyxl = ">=3.0.5,<4.0.0"
-orjson = ">=3.7,<4.0"
+orjson = ">=3.10.18,<4.0"
 phonenumbers = ">=8.12.22,<10.0.0"
 prefixdate = ">=0.4.0,<1.0.0"
+pydantic = ">=2.11.7,<3.0.0"
 pytz = ">=2021.1"
 pyyaml = ">=5.0.0,<7.0.0"
 rdflib = ">=6.2.0,<7.2.0"
 requests = ">=2.21.0,<3.0.0"
-rigour = ">=0.11.1,<1.0.0"
+rigour = ">=1.0.0,<2.0.0"
 sqlalchemy = {version = ">=2.0.0,<3.0.0", extras = ["mypy"]}
-types-pyyaml = "*"
 
 [package.extras]
 dev = ["build", "bump2version", "coverage (>=4.1)", "flake8 (>=2.6.0)", "mypy", "pip (>=10.0.0)", "pytest", "pytest-cov", "recommonmark (>=0.4.0)", "responses (>=0.9.0)", "transifex-client", "twine", "types-openpyxl", "types-pyyaml", "types-requests", "types-setuptools", "wheel (>=0.29.0)"]
-
-[[package]]
-name = "followthemoney-store"
-version = "3.1.0"
-description = "Store raw and structured FollowTheMoney data from different datasets in a data lake"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "followthemoney-store-3.1.0.tar.gz", hash = "sha256:4c8e05ddbec4eb729670e813f2e0d768c79229fa2bea6458de87897d51cf5908"},
-    {file = "followthemoney_store-3.1.0-py2.py3-none-any.whl", hash = "sha256:93a021f5c822dfcc21e85bf2291494d96f50c53dfceeb9a86418c6a99feaab82"},
-]
-
-[package.dependencies]
-psycopg2-binary = {version = ">=2.7", optional = true, markers = "extra == \"postgresql\""}
-
-[package.extras]
-postgresql = ["psycopg2-binary (>=2.7)"]
+docs = ["mkdocs (>=1.4.0)", "mkdocs-gen-files", "mkdocs-macros-plugin", "mkdocs-material (>=9.0.0)", "mkdocstrings[python]"]
 
 [[package]]
 name = "frozenlist"
@@ -1550,28 +1556,32 @@ tqdm = ["tqdm"]
 
 [[package]]
 name = "ftmq"
-version = "0.8.7"
+version = "4.0.2"
 description = "followthemoney query dsl and io helpers"
 optional = false
 python-versions = "<4,>=3.11"
 groups = ["main"]
 files = [
-    {file = "ftmq-0.8.7-py3-none-any.whl", hash = "sha256:bab6dd9e3b94aa3a5a7870602d943660f09bf05d32726c3c0e89b6b3d8147d6e"},
-    {file = "ftmq-0.8.7.tar.gz", hash = "sha256:f562bea411b0168101725279ec335d5c4b27abdd1d14b6b019a36a94defd6ae4"},
+    {file = "ftmq-4.0.2-py3-none-any.whl", hash = "sha256:09b940e86eca04dd000b013f34b280fc4717b5c970624014725c15627b27f884"},
+    {file = "ftmq-4.0.2.tar.gz", hash = "sha256:57dba8ecce198ecf188bfac5fae7341e7929639430825902898fd1d10b1855b3"},
 ]
 
 [package.dependencies]
-alephclient = ">=2.6.0,<3.0.0"
-anystore = ">=0.3.7,<0.4.0"
+anystore = ">=0.3.8,<0.4.0"
 click = ">=8.2.1,<9.0.0"
 click-default-group = ">=1.2.4,<2.0.0"
-nomenklatura = ">=3.17.3,<4.0.0"
+followthemoney = ">=4.0.3,<5.0.0"
+nomenklatura = ">=4.0.1,<5.0.0"
 orjson = ">=3.10.18,<4.0.0"
+psycopg2 = {version = ">=2.9.10,<3.0.0", optional = true, markers = "extra == \"postgres\""}
 pycountry = ">=24.6.1,<25.0.0"
 pydantic = ">=2.11.3,<3.0.0"
 pyicu = ">=2.15.2,<3.0.0"
+sqlalchemy = {version = ">=2.0.36,<3.0.0", optional = true, markers = "extra == \"postgres\""}
 
 [package.extras]
+aleph = ["alephclient (>=2.6.0,<3.0.0)", "furl (>=2.1.4,<3.0.0)"]
+lake = ["deltalake (>=1.0.2,<2.0.0)", "duckdb (>=1.3.1,<2.0.0)", "pandas (>=2.3.0,<3.0.0)", "pyarrow (>=20.0.0,<21.0.0)"]
 level = ["plyvel (>=1.5.1,<2.0.0)"]
 postgres = ["psycopg2 (>=2.9.10,<3.0.0)", "sqlalchemy (>=2.0.36,<3.0.0)"]
 redis = ["fakeredis (>=2.26.2,<3.0.0)", "redis (>=5.2.1,<6.0.0)"]
@@ -2816,44 +2826,42 @@ files = [
 
 [[package]]
 name = "nomenklatura"
-version = "3.17.5"
+version = "4.0.1"
 description = "Make record linkages in followthemoney data."
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "nomenklatura-3.17.5-py3-none-any.whl", hash = "sha256:9f6e20dbab14935ae08f1481a598a4d317bfc2b5a4391738df99074e1597126d"},
+    {file = "nomenklatura-4.0.1-py3-none-any.whl", hash = "sha256:e0b7840990719c2b903c50db401e32a8c4cff87673c28728fb62b898ab6d71f4"},
 ]
 
 [package.dependencies]
 click = "<9.0.0"
 fingerprints = ">=1.2.0,<2.0.0"
-followthemoney = ">=3.8.1,<4.0.0"
-jellyfish = ">=1.0.0,<2.0.0"
+followthemoney = ">=4.0.0,<5.0.0"
 lxml = ">4.0.0,<7.0.0"
 pydantic = ">2.0.0,<3.0.0"
 rich = ">=13.0.0,<15.0.0"
-rigour = ">=0.10.1,<1.0.0"
+rigour = ">=1.0.0,<2.0.0"
 scikit-learn = "1.7.0"
 shortuuid = ">=1.0.11,<2.0.0"
 sqlalchemy = ">=2.0.0"
-textual = ">=3.0.0,<4.0.0"
+textual = ">=3.0.0,<5.0.0"
 
 [package.extras]
-dev = ["build", "coverage (>=4.1)", "fakeredis", "flake8 (>=2.6.0)", "lxml-stubs", "mypy", "plyvel (<2.0.0)", "psycopg2-binary", "pytest", "pytest-cov", "redis (>5.0.0,<7.0.0)", "requests-mock", "twine", "types-redis", "types-requests", "types-setuptools", "wheel (>=0.29.0)"]
+dev = ["build", "coverage (>=4.1)", "fakeredis", "flake8 (>=2.6.0)", "lxml-stubs", "mypy", "plyvel (<2.0.0)", "psycopg2-binary", "pytest", "pytest-cov", "redis (>5.0.0,<7.0.0)", "requests-mock", "twine", "types-pyyaml", "types-redis", "types-requests", "types-setuptools", "wheel (>=0.29.0)"]
 leveldb = ["plyvel (<2.0.0)"]
 redis = ["redis (>5.0.0,<7.0.0)"]
 
 [[package]]
 name = "normality"
-version = "2.5.0"
+version = "2.6.1"
 description = "Micro-library to normalize text strings"
 optional = false
-python-versions = "*"
+python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "normality-2.5.0-py2.py3-none-any.whl", hash = "sha256:d9f48daf32e351e88b9e372787c1da437df9d0d818aec6e2834b02102378df62"},
-    {file = "normality-2.5.0.tar.gz", hash = "sha256:a55133e972b81c4a3bf8b6dc419f262f94a4fd6f636297046f74d35c93abe153"},
+    {file = "normality-2.6.1-py3-none-any.whl", hash = "sha256:cdbc1edd144b3fba6d2aa457cb6abd123e7f3c6e46960c9b80321cac9caaf494"},
 ]
 
 [package.dependencies]
@@ -2863,7 +2871,7 @@ charset-normalizer = ">=2.0.0"
 text-unidecode = "*"
 
 [package.extras]
-dev = ["mypy", "pyicu (>=1.9.3)", "pytest", "types-chardet"]
+dev = ["build", "mypy", "pyicu (>=1.9.3)", "pytest", "types-chardet", "wheel"]
 icu = ["pyicu (>=1.9.3)"]
 
 [[package]]
@@ -2958,21 +2966,21 @@ tests = ["pytest", "pytest-cov"]
 
 [[package]]
 name = "openaleph-procrastinate"
-version = "0.0.9"
+version = "0.0.11"
 description = "Task queue logic for OpenAleph built upon procrastinate"
 optional = false
 python-versions = "<4,>=3.11"
 groups = ["main"]
 files = [
-    {file = "openaleph_procrastinate-0.0.9-py3-none-any.whl", hash = "sha256:34f95e3e2a5cdacf64aa77bf66b4c67b946d1e79c0b80faa1c05b9989a74dcc5"},
-    {file = "openaleph_procrastinate-0.0.9.tar.gz", hash = "sha256:9942b42f03a52292eb1f9b57c87fb492b97c842dad01d0619ab8efe6bc72e8a8"},
+    {file = "openaleph_procrastinate-0.0.11-py3-none-any.whl", hash = "sha256:b0efa852b85ac9835aedd4f8f9d91da7c02849df619e16ee738f6f49a58f8c8b"},
+    {file = "openaleph_procrastinate-0.0.11.tar.gz", hash = "sha256:550fa2d3f3f697a872974611d70e84ac3726b0d81f16885d4aab3f9c508fac12"},
 ]
 
 [package.dependencies]
-followthemoney = ">=3.8.5,<4.0.0"
-followthemoney-store = {version = ">=3.1.0,<4.0.0", extras = ["postgresql"]}
-ftmq = ">=0.8.7,<0.9.0"
-procrastinate = ">=3.2.2,<4.0.0"
+followthemoney = ">=4.0.3,<5.0.0"
+ftmq = ">=4.0.2,<5.0.0"
+procrastinate = ">=3.4.0,<4.0.0"
+psycopg2-binary = ">=2.9.10,<3.0.0"
 pydantic = ">=2.11.7,<3.0.0"
 pydantic-settings = ">=2.10.1,<3.0.0"
 
@@ -3102,14 +3110,14 @@ files = [
 
 [[package]]
 name = "phonenumbers"
-version = "9.0.9"
+version = "9.0.10"
 description = "Python version of Google's common library for parsing, formatting, storing and validating international phone numbers."
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "phonenumbers-9.0.9-py2.py3-none-any.whl", hash = "sha256:13b91aa153f87675902829b38a556bad54824f9c121b89588bbb5fa8550d97ef"},
-    {file = "phonenumbers-9.0.9.tar.gz", hash = "sha256:c640545019a07e68b0bea57a5fede6eef45c7391165d28935f45615f9a567a5b"},
+    {file = "phonenumbers-9.0.10-py2.py3-none-any.whl", hash = "sha256:13b12d269be1f2b363c9bc2868656a7e2e8b50f1a1cef629c75005da6c374c6b"},
+    {file = "phonenumbers-9.0.10.tar.gz", hash = "sha256:c2d15a6a9d0534b14a7764f51246ada99563e263f65b80b0251d1a760ac4a1ba"},
 ]
 
 [[package]]
@@ -3323,14 +3331,14 @@ dev = ["bump2version", "mypy", "pytest", "pytest-cov", "twine", "wheel (>=0.29.0
 
 [[package]]
 name = "procrastinate"
-version = "3.3.0"
+version = "3.4.0"
 description = "Postgres-based distributed task processing library"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "procrastinate-3.3.0-py3-none-any.whl", hash = "sha256:1f4bb041ae0b028a8105961c548858b45cfb560086537ce605c83edaeafa8fd8"},
-    {file = "procrastinate-3.3.0.tar.gz", hash = "sha256:5e03de136e6ea7a2f97e15d9cfc10727b11a3214086844f31b19706068588eb7"},
+    {file = "procrastinate-3.4.0-py3-none-any.whl", hash = "sha256:dbcca697dc78d8b71873692e3567de482db076bf06f55af775c09aa82a3e1066"},
+    {file = "procrastinate-3.4.0.tar.gz", hash = "sha256:9cd3af413f351c88da40681d3d88b6df8904c8a3423aec87687c0b7eb7d684a4"},
 ]
 
 [package.dependencies]
@@ -3574,6 +3582,26 @@ files = [
 
 [package.dependencies]
 typing-extensions = ">=4.6"
+
+[[package]]
+name = "psycopg2"
+version = "2.9.10"
+description = "psycopg2 - Python-PostgreSQL Database Adapter"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "psycopg2-2.9.10-cp310-cp310-win32.whl", hash = "sha256:5df2b672140f95adb453af93a7d669d7a7bf0a56bcd26f1502329166f4a61716"},
+    {file = "psycopg2-2.9.10-cp310-cp310-win_amd64.whl", hash = "sha256:c6f7b8561225f9e711a9c47087388a97fdc948211c10a4bccbf0ba68ab7b3b5a"},
+    {file = "psycopg2-2.9.10-cp311-cp311-win32.whl", hash = "sha256:47c4f9875125344f4c2b870e41b6aad585901318068acd01de93f3677a6522c2"},
+    {file = "psycopg2-2.9.10-cp311-cp311-win_amd64.whl", hash = "sha256:0435034157049f6846e95103bd8f5a668788dd913a7c30162ca9503fdf542cb4"},
+    {file = "psycopg2-2.9.10-cp312-cp312-win32.whl", hash = "sha256:65a63d7ab0e067e2cdb3cf266de39663203d38d6a8ed97f5ca0cb315c73fe067"},
+    {file = "psycopg2-2.9.10-cp312-cp312-win_amd64.whl", hash = "sha256:4a579d6243da40a7b3182e0430493dbd55950c493d8c68f4eec0b302f6bbf20e"},
+    {file = "psycopg2-2.9.10-cp313-cp313-win_amd64.whl", hash = "sha256:91fd603a2155da8d0cfcdbf8ab24a2d54bca72795b90d2a3ed2b6da8d979dee2"},
+    {file = "psycopg2-2.9.10-cp39-cp39-win32.whl", hash = "sha256:9d5b3b94b79a844a986d029eee38998232451119ad653aea42bb9220a8c5066b"},
+    {file = "psycopg2-2.9.10-cp39-cp39-win_amd64.whl", hash = "sha256:88138c8dedcbfa96408023ea2b0c369eda40fe5d75002c0964c78f46f11fa442"},
+    {file = "psycopg2-2.9.10.tar.gz", hash = "sha256:12ec0b40b0273f95296233e8750441339298e6a572f7039da5b260e3c8b60e11"},
+]
 
 [[package]]
 name = "psycopg2-binary"
@@ -4028,7 +4056,7 @@ version = "2.19.2"
 description = "Pygments is a syntax highlighting package written in Python."
 optional = false
 python-versions = ">=3.8"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "pygments-2.19.2-py3-none-any.whl", hash = "sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b"},
     {file = "pygments-2.19.2.tar.gz", hash = "sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887"},
@@ -4177,24 +4205,25 @@ test = ["coverage[toml] (>=5.2)", "hypothesis", "pytest (>=6.0)", "pytest-benchm
 
 [[package]]
 name = "pytest"
-version = "8.2.0"
+version = "8.4.1"
 description = "pytest: simple powerful testing with Python"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "pytest-8.2.0-py3-none-any.whl", hash = "sha256:1733f0620f6cda4095bbf0d9ff8022486e91892245bb9e7d5542c018f612f233"},
-    {file = "pytest-8.2.0.tar.gz", hash = "sha256:d507d4482197eac0ba2bae2e9babf0672eb333017bcedaa5fb1a3d42c1174b3f"},
+    {file = "pytest-8.4.1-py3-none-any.whl", hash = "sha256:539c70ba6fcead8e78eebbf1115e8b589e7565830d7d006a8723f19ac8a0afb7"},
+    {file = "pytest-8.4.1.tar.gz", hash = "sha256:7c67fd69174877359ed9371ec3af8a3d2b04741818c51e5e99cc1742251fa93c"},
 ]
 
 [package.dependencies]
-colorama = {version = "*", markers = "sys_platform == \"win32\""}
-iniconfig = "*"
-packaging = "*"
-pluggy = ">=1.5,<2.0"
+colorama = {version = ">=0.4", markers = "sys_platform == \"win32\""}
+iniconfig = ">=1"
+packaging = ">=20"
+pluggy = ">=1.5,<2"
+pygments = ">=2.7.2"
 
 [package.extras]
-dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
+dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "requests", "setuptools", "xmlschema"]
 
 [[package]]
 name = "pytest-cov"
@@ -4217,21 +4246,21 @@ testing = ["fields", "hunter", "process-tests", "pytest-xdist", "virtualenv"]
 
 [[package]]
 name = "pytest-env"
-version = "1.1.3"
+version = "1.1.5"
 description = "pytest plugin that allows you to add environment variables."
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "pytest_env-1.1.3-py3-none-any.whl", hash = "sha256:aada77e6d09fcfb04540a6e462c58533c37df35fa853da78707b17ec04d17dfc"},
-    {file = "pytest_env-1.1.3.tar.gz", hash = "sha256:fcd7dc23bb71efd3d35632bde1bbe5ee8c8dc4489d6617fb010674880d96216b"},
+    {file = "pytest_env-1.1.5-py3-none-any.whl", hash = "sha256:ce90cf8772878515c24b31cd97c7fa1f4481cd68d588419fd45f10ecaee6bc30"},
+    {file = "pytest_env-1.1.5.tar.gz", hash = "sha256:91209840aa0e43385073ac464a554ad2947cc2fd663a9debf88d03b01e0cc1cf"},
 ]
 
 [package.dependencies]
-pytest = ">=7.4.3"
+pytest = ">=8.3.3"
 
 [package.extras]
-test = ["covdefaults (>=2.3)", "coverage (>=7.3.2)", "pytest-mock (>=3.12)"]
+testing = ["covdefaults (>=2.3)", "coverage (>=7.6.1)", "pytest-mock (>=3.14)"]
 
 [[package]]
 name = "python-dateutil"
@@ -4759,30 +4788,15 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
-name = "requests-toolbelt"
-version = "1.0.0"
-description = "A utility belt for advanced users of python-requests"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-groups = ["main"]
-files = [
-    {file = "requests-toolbelt-1.0.0.tar.gz", hash = "sha256:7681a0a3d047012b5bdc0ee37d7f8f07ebe76ab08caeccfc3921ce23c88d5bc6"},
-    {file = "requests_toolbelt-1.0.0-py2.py3-none-any.whl", hash = "sha256:cccfdd665f0a24fcf4726e690f65639d272bb0637b9b92dfd91a5568ccf6bd06"},
-]
-
-[package.dependencies]
-requests = ">=2.0.1,<3.0.0"
-
-[[package]]
 name = "rich"
-version = "13.9.4"
+version = "14.0.0"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
 optional = false
 python-versions = ">=3.8.0"
 groups = ["main"]
 files = [
-    {file = "rich-13.9.4-py3-none-any.whl", hash = "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90"},
-    {file = "rich-13.9.4.tar.gz", hash = "sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098"},
+    {file = "rich-14.0.0-py3-none-any.whl", hash = "sha256:1c9491e1951aac09caffd42f448ee3d04e58923ffe14993f6e83068dc395d7e0"},
+    {file = "rich-14.0.0.tar.gz", hash = "sha256:82f1bc23a6a21ebca4ae0c45af9bdbc492ed20231dcb63f297d6d1021a9d5725"},
 ]
 
 [package.dependencies]
@@ -4794,16 +4808,17 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "rigour"
-version = "0.14.3"
+version = "1.0.2"
 description = "Financial crime domain data validation and normalization library."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "rigour-0.14.3-py3-none-any.whl", hash = "sha256:3c161beb586663d752694a66c7a5fcc55c7e3c551ea6bb9f56cb395946a7afdf"},
+    {file = "rigour-1.0.2-py3-none-any.whl", hash = "sha256:c63adf096d18b79aa8f28cc065f0e5d3b726664abbdb57fb95ec0e4d5fbcf1f4"},
 ]
 
 [package.dependencies]
+ahocorasick-rs = ">=0.22.0,<0.23.0"
 babel = ">=2.9.1,<3.0.0"
 banal = ">=1.0.6,<1.1.0"
 fingerprints = ">=1.0.1,<2.0.0"
@@ -4886,14 +4901,14 @@ boto3 = ["aiobotocore[boto3] (>=2.5.4,<3.0.0)"]
 
 [[package]]
 name = "s3transfer"
-version = "0.13.0"
+version = "0.13.1"
 description = "An Amazon S3 Transfer Manager"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "s3transfer-0.13.0-py3-none-any.whl", hash = "sha256:0148ef34d6dd964d0d8cf4311b2b21c474693e57c2e069ec708ce043d2b527be"},
-    {file = "s3transfer-0.13.0.tar.gz", hash = "sha256:f5e6db74eb7776a37208001113ea7aa97695368242b364d73e91c981ac522177"},
+    {file = "s3transfer-0.13.1-py3-none-any.whl", hash = "sha256:a981aa7429be23fe6dfc13e80e4020057cbab622b08c0315288758d67cabc724"},
+    {file = "s3transfer-0.13.1.tar.gz", hash = "sha256:c3fdba22ba1bd367922f27ec8032d6a1cf5f10c934fb5d68cf60fd5a23d936cf"},
 ]
 
 [package.dependencies]
@@ -5324,14 +5339,14 @@ files = [
 
 [[package]]
 name = "textual"
-version = "3.7.1"
+version = "4.0.0"
 description = "Modern Text User Interface framework"
 optional = false
 python-versions = "<4.0.0,>=3.8.1"
 groups = ["main"]
 files = [
-    {file = "textual-3.7.1-py3-none-any.whl", hash = "sha256:ab5d153f4f65e77017977fa150d0376409e0acf5f1d2e25e2e4ab9de6c0d61ff"},
-    {file = "textual-3.7.1.tar.gz", hash = "sha256:a76ba0c8a6c194ef24fd5c3681ebfddca55e7127c064a014128c84fbd7f5d271"},
+    {file = "textual-4.0.0-py3-none-any.whl", hash = "sha256:214051640f890676a670aa7d29cd2a37d27cfe6b2cf866e9d5abc3b6c89c5800"},
+    {file = "textual-4.0.0.tar.gz", hash = "sha256:1cab4ea3cfc0e47ae773405cdd6bc2a17ed76ff7b648379ac8017ea89c5ad28c"},
 ]
 
 [package.dependencies]
@@ -5356,6 +5371,28 @@ files = [
 ]
 
 [[package]]
+name = "tqdm"
+version = "4.67.1"
+description = "Fast, Extensible Progress Meter"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "tqdm-4.67.1-py3-none-any.whl", hash = "sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2"},
+    {file = "tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2"},
+]
+
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
+
+[package.extras]
+dev = ["nbval", "pytest (>=6)", "pytest-asyncio (>=0.24)", "pytest-cov", "pytest-timeout"]
+discord = ["requests"]
+notebook = ["ipywidgets (>=6)"]
+slack = ["slack-sdk"]
+telegram = ["requests"]
+
+[[package]]
 name = "typer"
 version = "0.16.0"
 description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
@@ -5372,18 +5409,6 @@ click = ">=8.0.0"
 rich = ">=10.11.0"
 shellingham = ">=1.3.0"
 typing-extensions = ">=3.7.4.3"
-
-[[package]]
-name = "types-pyyaml"
-version = "6.0.12.20250516"
-description = "Typing stubs for PyYAML"
-optional = false
-python-versions = ">=3.9"
-groups = ["main"]
-files = [
-    {file = "types_pyyaml-6.0.12.20250516-py3-none-any.whl", hash = "sha256:8478208feaeb53a34cb5d970c56a7cd76b72659442e733e268a94dc72b2d0530"},
-    {file = "types_pyyaml-6.0.12.20250516.tar.gz", hash = "sha256:9f21a70216fc0fa1b216a8176db5f9e0af6eb35d2f2932acb87689d03a5bf6ba"},
-]
 
 [[package]]
 name = "typing-extensions"
@@ -5476,15 +5501,27 @@ socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
 zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
+name = "uuid7"
+version = "0.1.0"
+description = "UUID version 7, generating time-sorted UUIDs with 200ns time resolution and 48 bits of randomness"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "uuid7-0.1.0-py2.py3-none-any.whl", hash = "sha256:5e259bb63c8cb4aded5927ff41b444a80d0c7124e8a0ced7cf44efa1f5cccf61"},
+    {file = "uuid7-0.1.0.tar.gz", hash = "sha256:8c57aa32ee7456d3cc68c95c4530bc571646defac01895cfc73545449894a63c"},
+]
+
+[[package]]
 name = "virtualenv"
-version = "20.31.2"
+version = "20.32.0"
 description = "Virtual Python Environment builder"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "virtualenv-20.31.2-py3-none-any.whl", hash = "sha256:36efd0d9650ee985f0cad72065001e66d49a6f24eb44d98980f630686243cf11"},
-    {file = "virtualenv-20.31.2.tar.gz", hash = "sha256:e10c0a9d02835e592521be48b332b6caee6887f332c111aa79a09b9e79efc2af"},
+    {file = "virtualenv-20.32.0-py3-none-any.whl", hash = "sha256:2c310aecb62e5aa1b06103ed7c2977b81e042695de2697d01017ff0f1034af56"},
+    {file = "virtualenv-20.32.0.tar.gz", hash = "sha256:886bf75cadfdc964674e6e33eb74d787dff31ca314ceace03ca5810620f4ecf0"},
 ]
 
 [package.dependencies]
@@ -5741,4 +5778,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "a784887e675d5176d10aceb1d8cd5202fdada820b2910cbe2260ce5ab8421a7c"
+content-hash = "da959c57362bec563d7fdeb91241cf6de35a572a641ab60cbd5da786bc9970b9"

@@ -11,8 +11,8 @@ from followthemoney import model
 from followthemoney.helpers import entity_filename
 from followthemoney.namespace import Namespace
 from followthemoney.proxy import EntityProxy
-from ftmstore import get_dataset
-from ftmstore.utils import safe_fragment
+from ftmq.store.fragments import get_dataset
+from ftmq.store.fragments.utils import safe_fragment
 from normality import stringify
 from openaleph_procrastinate import defer
 from procrastinate import App

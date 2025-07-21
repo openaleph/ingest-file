@@ -5,8 +5,7 @@ import types
 import unittest
 from tempfile import mkdtemp
 
-from ftmstore import get_dataset
-from ftmstore import settings as fts
+from ftmq.store.fragments import get_dataset
 from procrastinate.testing import InMemoryConnector
 from servicelayer import settings as sls
 from servicelayer.archive.util import ensure_path
@@ -34,9 +33,7 @@ class TestCase(unittest.TestCase):
         sls.REDIS_URL = None
         sls.ARCHIVE_TYPE = "file"
         sls.ARCHIVE_PATH = self.tmp_dir
-        # fts.DATABASE_URI = "sqlite://?mode=memory&cache=shared&check_same_thread=false"
-        fts.DATABASE_URI = f"sqlite:///{self.tmp_dir}/store.db"
-        sls.TAGS_DATABASE_URI = fts.DATABASE_URI
+        sls.TAGS_DATABASE_URI = "sqlite:///:memory:"
         Tags("ingest_cache").delete()
         self.manager = Manager(app, TEST_DATASET, {"namespace": "test"})
         self.manager.emit_entity = types.MethodType(emit_entity, self.manager)

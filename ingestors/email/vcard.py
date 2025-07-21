@@ -1,13 +1,14 @@
 import logging
+
 import vobject
-from vobject.base import ParseError
 from banal import ensure_list
 from followthemoney import model
 from followthemoney.util import sanitize_text
+from vobject.base import Component, ContentLine, ParseError
 
+from ingestors.exc import ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.encoding import EncodingSupport
-from ingestors.exc import ProcessingException
 
 log = logging.getLogger(__name__)
 
@@ -17,9 +18,9 @@ class VCardIngestor(Ingestor, EncodingSupport):
     EXTENSIONS = ["vcf", "vcard"]
     SCORE = 10
 
-    def get_field(self, card, field):
-        items = ensure_list(card.contents.get(field))
-        return [i.value for i in items]
+    def get_field(self, card: Component, field: str):
+        items: list[ContentLine] = ensure_list(card.contents.get(field))
+        return [str(i.value) for i in items]
 
     def ingest_card(self, entity, card):
         person = self.manager.make_entity("Person")

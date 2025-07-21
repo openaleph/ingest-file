@@ -5,7 +5,7 @@ import typer
 from anystore.cli import ErrorHandler
 from anystore.logging import configure_logging, get_logger
 from ftmq.io import smart_write_proxies
-from ftmstore import get_dataset
+from ftmq.store.fragments import get_dataset
 from rich.console import Console
 from servicelayer.tags import Tags
 from typing_extensions import Annotated
@@ -60,11 +60,9 @@ def cli_ingest(
     """Queue a local directory for ingest."""
     with ErrorHandler(log):
         if settings.debug:
-            from ftmstore import settings as fts
             from servicelayer import settings as sls
 
-            fts.DATABASE_URI = "sqlite:///debug.sqlite3"
-            sls.TAGS_DATABASE_URI = fts.DATABASE_URI
+            sls.TAGS_DATABASE_URI = "sqlite:///:memory:"
 
         ingest_path(dataset, foreign_id, path, languages or [])
 

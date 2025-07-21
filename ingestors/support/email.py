@@ -5,7 +5,7 @@ from email.utils import getaddresses, parsedate_to_datetime
 
 from banal import ensure_list
 from followthemoney.types import registry
-from ftmstore.utils import safe_fragment
+from ftmq.store.fragments.utils import safe_fragment
 from normality import ascii_text, safe_filename, stringify
 
 from ingestors.support.cache import CacheSupport

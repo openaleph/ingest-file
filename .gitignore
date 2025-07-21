@@ -1,6 +1,7 @@
 data/archive
 data/model_type_prediction.ftz
 debug.sqlite3
+data/servicelayer-archive
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
