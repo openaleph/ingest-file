@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import os
 import shutil
 import types
 import unittest
@@ -33,7 +34,8 @@ class TestCase(unittest.TestCase):
         sls.REDIS_URL = None
         sls.ARCHIVE_TYPE = "file"
         sls.ARCHIVE_PATH = self.tmp_dir
-        sls.TAGS_DATABASE_URI = "sqlite:///:memory:"
+        os.environ["FTM_STORE_URI"] = "sqlite:///file::memory:?cache=shared"
+        sls.TAGS_DATABASE_URI = "sqlite:///file::memory:?cache=shared"
         Tags("ingest_cache").delete()
         self.manager = Manager(app, TEST_DATASET, {"namespace": "test"})
         self.manager.emit_entity = types.MethodType(emit_entity, self.manager)
