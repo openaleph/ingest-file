@@ -1,15 +1,17 @@
 import logging
+
 from followthemoney import model
 from pymediainfo import MediaInfo
 
+from ingestors.exc import ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.timestamp import TimestampSupport
-from ingestors.exc import ProcessingException
+from ingestors.support.transcription import TranscriptionSupport
 
 log = logging.getLogger(__name__)
 
 
-class AudioIngestor(Ingestor, TimestampSupport):
+class AudioIngestor(Ingestor, TimestampSupport, TranscriptionSupport):
     MIME_TYPES = [
         "audio/mpeg",
         "audio/mp3",
@@ -56,6 +58,10 @@ class AudioIngestor(Ingestor, TimestampSupport):
                 entity.add("duration", track.duration)
         except Exception as ex:
             raise ProcessingException(f"Could not read audio: {ex}") from ex
+        try:
+            self.transcribe(self.manager.dataset, entity, self.manager.context)
+        except Exception as ex:
+            log.error(f"Could not queue audio for transcription: {ex}")
 
     @classmethod
     def match(cls, file_path, entity):
