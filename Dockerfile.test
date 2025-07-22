@@ -10,6 +10,7 @@ RUN pip3 install --no-cache-dir /ingestors
 
 RUN pip3 install -r /ingestors/requirements-dev.txt
 RUN chown -R app:app /ingestors
+RUN pip3 install procrastinate=3.2.2
 
 ENV ARCHIVE_TYPE=file \
     ARCHIVE_PATH=/data \

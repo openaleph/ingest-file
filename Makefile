@@ -38,8 +38,8 @@ format:
 format-check:
 	black --check .
 
-test: build services
-	PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 $(DOCKER) pytest --cov=ingestors --cov-report html --cov-report term
+test: build-test services
+	PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 $(COMPOSE) run -e DEBUG=1 --rm ingest-file pytest --cov=ingestors --cov-report html --cov-report term
 
 test-e2e: build services
 	$(COMPOSE_E2E) run --rm ingest-file
