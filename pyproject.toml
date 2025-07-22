@@ -44,7 +44,8 @@ dependencies = [
     "grpcio (>=1.32.0,<2.0.0)",
     "google-cloud-storage (>=1.31.0,<3.0.0)",
     "servicelayer @ git+https://github.com/openaleph/servicelayer.git@main",
-    "openaleph-procrastinate (>=0.0.11,<0.1.0)",
+    "openaleph-procrastinate (>=0.0.12,<0.0.13)",
+    "procrastinate (>=3.4.0,<4.0.0)",
 ]
 
 [project.scripts]
@@ -111,3 +112,4 @@ poetry-plugin-export = ">=1.8"
 
 [tool.pytest_env]
 FTM_STORE_URI = "sqlite:///:memory:"
+DEBUG = 1
