@@ -6,7 +6,7 @@ from anystore.cli import ErrorHandler
 from anystore.logging import configure_logging, get_logger
 from ftmq.io import smart_write_proxies
 from ftmq.store.fragments import get_dataset
-from rich.console import Console
+from rich import print
 from servicelayer.tags import Tags
 from typing_extensions import Annotated
 
@@ -21,15 +21,20 @@ cli = typer.Typer(
     pretty_exceptions_enable=True,
     pretty_exceptions_short=not settings.debug,
 )
-console = Console(stderr=True)
 
 
 @cli.callback(invoke_without_command=True)
 def cli_base(
     version: Annotated[Optional[bool], typer.Option(..., help="Show version")] = False,
+    settings: Annotated[
+        Optional[bool], typer.Option(..., help="Show current settings")
+    ] = False,
 ):
     if version:
         print(__version__)
+        raise typer.Exit()
+    if settings:
+        print(Settings())
         raise typer.Exit()
     configure_logging()
 
@@ -62,7 +67,7 @@ def cli_ingest(
         if settings.debug:
             from servicelayer import settings as sls
 
-            sls.TAGS_DATABASE_URI = "sqlite:///:memory:"
+            sls.TAGS_DATABASE_URI = "sqlite:///:memory:?mode=memory&cache=shared"
 
         ingest_path(dataset, foreign_id, path, languages or [])
 
@@ -86,10 +91,3 @@ def cache_clear(prefix: str = ""):
     """
     with ErrorHandler(log):
         Tags("ingest_cache").delete(prefix=prefix)
-
-
-@cli.command("settings")
-def cli_settings():
-    """Show current configuration"""
-    with ErrorHandler(log):
-        console.print(settings)
