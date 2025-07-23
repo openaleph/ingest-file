@@ -111,5 +111,4 @@ pytest-env = "^1.1.5"
 poetry-plugin-export = ">=1.8"
 
 [tool.pytest_env]
-FTM_STORE_URI = "sqlite:///:memory:"
 DEBUG = 1
