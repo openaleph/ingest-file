@@ -84,10 +84,15 @@ def cli_ingest(
 
 
 @cli.command()
-def cache_clear(prefix: str = ""):
-    """Delete all ingest cache entries.
-
-    Only delete entries with the given prefix (e.g: 'ocr:', 'pdf:').
-    """
+def cache_clear(
+    prefix: Annotated[
+        str,
+        typer.Option(
+            default="",
+            help="Only delete entries with the given prefix (e.g: 'ocr:', 'pdf:').",
+        ),
+    ] = "",
+):
+    """Delete ingest cache entries."""
     with ErrorHandler(log):
         Tags("ingest_cache").delete(prefix=prefix)

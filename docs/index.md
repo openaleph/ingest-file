@@ -9,53 +9,31 @@
 
 ``ingest-file`` extract useful information from documents of different types in a structured standard format. It retains folder structures across directories, compressed archives and emails. The extracted data is formatted as [Follow the Money (FtM)](https://followthemoney.tech) entities, ready for import into [OpenAleph](https://openaleph.org), or processing as an object graph.
 
-## Documentation
+## Supported file types:
 
-https://openaleph.org/docs/lib/ingest-file
+* Plain text
+* Images
+* Web pages, XML documents
+* PDF files
+* Emails (Outlook, plain text)
+* Archive files (ZIP, Rar, etc.)
+* Audio and Video text extraction via [ftm-transcribe](https://github.com/openaleph/ftm-transcribe)
 
-## Development environment
+[See all mime types](./reference/mime.md)
 
-For local development use [poetry](https://python-poetry.org/)
+## Other features:
 
-```bash
-poetry install --with dev --all-extras
-```
-
-### pre-commit
-
-```bash
-pre-commit install
-```
-
-## Release procedure
-
-```bash
-# on main branch
-git pull --rebase
-make build
-make test
-poetry run bump2version {patch,minor,major} # pick the appropriate one
-git push
-```
+* Extendable and composable using classes and mixins.
+* Generates [FollowTheMoney](https://followthemoney.tech) objects to a database as result objects.
+* Queue support for distributed processing based on [procrastinate](https://procrastinate.readthedocs.io/en/stable/)
+* Thoroughly tested.
 
 ## Usage
 
-Ingestors are usually called in the context of Aleph. In order to run them
-stand-alone, you can use the supplied docker compose environment. To enter
-a working container, run:
+- [Setup](./setup.md)
+- [Usage](./usage.md)
+- [Explainer: What exactly does ingest-file do?](./pipeline.md)
 
-```bash
-make build
-make shell
-```
-
-Inside the shell, you will find the `ingestors` command-line tool. During
-development, it is convenient to call its debug mode using files present
-in the user's home directory, which is mounted at `/host`:
-
-```bash
-ingestors debug /host/Documents/sample.xlsx
-```
 
 ## License
 

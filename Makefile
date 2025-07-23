@@ -64,3 +64,7 @@ clean:
 dev:
 	python3 -m pip install --upgrade pip
 	python3 -m pip install -q -r requirements-dev.txt
+
+documentation:
+	mkdocs build
+	aws --profile nbg1 --endpoint-url https://s3.investigativedata.org s3 sync ./site s3://openaleph.org/docs/lib/ingest-file
