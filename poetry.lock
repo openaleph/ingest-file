@@ -2797,13 +2797,13 @@ files = [
 
 [[package]]
 name = "nomenklatura"
-version = "4.0.1"
+version = "4.0.4"
 description = "Make record linkages in followthemoney data."
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "nomenklatura-4.0.1-py3-none-any.whl", hash = "sha256:e0b7840990719c2b903c50db401e32a8c4cff87673c28728fb62b898ab6d71f4"},
+    {file = "nomenklatura-4.0.4-py3-none-any.whl", hash = "sha256:443ab0566aa3a7bca60088a6d679c294101e3a17d220579345f50ff72a88a763"},
 ]
 
 [package.dependencies]
@@ -4759,13 +4759,13 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "rigour"
-version = "1.0.2"
+version = "1.0.4"
 description = "Financial crime domain data validation and normalization library."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "rigour-1.0.2-py3-none-any.whl", hash = "sha256:c63adf096d18b79aa8f28cc065f0e5d3b726664abbdb57fb95ec0e4d5fbcf1f4"},
+    {file = "rigour-1.0.4-py3-none-any.whl", hash = "sha256:2252711172a32c18fd3da961eb4272afb36f7db2e0652a43b48be31af9dd3fa7"},
 ]
 
 [package.dependencies]
