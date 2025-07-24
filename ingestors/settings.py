@@ -24,9 +24,6 @@ class Settings(OpenAlephSettings):
     convert_timeout: int = 300
     """Headless libreoffice document convert timeout in seconds"""
 
-    ocr_vision_api: bool = False
-    """Enable (expensive!) Google Cloud API"""
-
 
 settings = Settings()
 

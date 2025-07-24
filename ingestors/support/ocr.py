@@ -9,7 +9,6 @@ from normality import stringify
 from PIL import Image
 from rigour.langs import list_to_alpha3 as alpha3
 
-from ingestors.settings import Settings
 from ingestors.support.cache import CacheSupport
 from ingestors.util import temp_locale
 
@@ -18,10 +17,7 @@ TESSERACT_LOCALE = "C"
 
 
 @cache
-def get_ocr_service() -> "GoogleOCRService | LocalOCRService":
-    settings = Settings()
-    if settings.ocr_vision_api:
-        return GoogleOCRService()
+def get_ocr_service() -> "LocalOCRService":
     return LocalOCRService()
 
 
@@ -124,29 +120,3 @@ class LocalOCRService(object):
                 return ""
             finally:
                 api.Clear()
-
-
-class GoogleOCRService(object):
-    """Use Google's Vision API to perform OCR. This has very good quality
-    but is quite expensive. For this reason, its use is controlled via a
-    separate configuration variable, OCR_VISION_API, which must be set to
-    'true'. To use the API, you must also have a service account JSON file
-    under GOOGLE_APPLICATION_CREDENTIALS."""
-
-    def __init__(self):
-        import google.auth
-        from google.cloud.vision import ImageAnnotatorClient
-
-        credentials, project_id = google.auth.default()
-        self.client = ImageAnnotatorClient(credentials=credentials)
-        log.info("Using Google Vision API. Charges apply.")
-
-    def extract_text(self, data, languages=None):
-        try:
-            from google.cloud.vision import types
-        except ImportError:
-            from google.cloud.vision_v1 import types
-
-        image = types.Image(content=data)
-        res = self.client.document_text_detection(image)
-        return res.full_text_annotation.text or ""
