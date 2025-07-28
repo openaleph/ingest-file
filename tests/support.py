@@ -6,7 +6,7 @@ import types
 import unittest
 from tempfile import mkdtemp
 
-from ftmq.store.fragments import get_dataset
+from ftmq.store.fragments import get_fragments
 from procrastinate.testing import InMemoryConnector
 from servicelayer import settings as sls
 from servicelayer.archive.util import ensure_path
@@ -28,7 +28,7 @@ class TestCase(unittest.TestCase):
         self.tmp_dir = mkdtemp()
         # clear cached func calls
         get_archive.cache_clear()
-        get_dataset.cache_clear()
+        get_fragments.cache_clear()
         # Force tests to use fake configuration
         self.assertIsInstance(app.connector, InMemoryConnector)
         sls.REDIS_URL = None
@@ -40,7 +40,7 @@ class TestCase(unittest.TestCase):
         self.manager = Manager(app, TEST_DATASET, {"namespace": "test"})
         self.manager.emit_entity = types.MethodType(emit_entity, self.manager)
         self.manager.entities = []
-        self.dataset = get_dataset(TEST_DATASET)
+        self.dataset = get_fragments(TEST_DATASET)
 
     def fixture(self, fixture_path):
         """Returns a fixture path and a dummy entity"""

@@ -11,7 +11,7 @@ from followthemoney import model
 from followthemoney.helpers import entity_filename
 from followthemoney.namespace import Namespace
 from followthemoney.proxy import EntityProxy
-from ftmq.store.fragments import get_dataset
+from ftmq.store.fragments import get_fragments
 from ftmq.store.fragments.utils import safe_fragment
 from normality import stringify
 from openaleph_procrastinate import defer
@@ -97,7 +97,7 @@ class Manager:
     def __init__(self, app: App, dataset: str, context: dict[str, Any]):
         self.app = app
         self.dataset = dataset
-        self.writer = get_dataset(dataset, OP_INGEST).bulk()
+        self.writer = get_fragments(dataset, OP_INGEST).bulk()
         self.context = context
         self.ns = Namespace(self.context["namespace"])
         self.work_path = ensure_path(mkdtemp(prefix="ingestor-"))
@@ -251,5 +251,5 @@ class Manager:
         remove_directory(self.work_path)
 
     def iterate_emitted(self) -> Generator[EntityProxy, None, None]:
-        db = get_dataset(self.dataset)
+        db = get_fragments(self.dataset)
         yield from db.iterate(self.emitted)

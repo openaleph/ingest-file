@@ -5,7 +5,7 @@ import typer
 from anystore.cli import ErrorHandler
 from anystore.logging import configure_logging, get_logger
 from ftmq.io import smart_write_proxies
-from ftmq.store.fragments import get_dataset
+from ftmq.store.fragments import get_fragments
 from rich import print
 from servicelayer.tags import Tags
 from typing_extensions import Annotated
@@ -77,7 +77,7 @@ def cli_ingest(
             from ingestors.tasks import app
 
             defer_settings = DeferSettings()
-            db = get_dataset(dataset)
+            db = get_fragments(dataset)
             db.delete()
             app.run_worker(queues=[defer_settings.ingest.queue], wait=False)
             smart_write_proxies("-", db.iterate())
