@@ -41,8 +41,8 @@ def ingest(job: DatasetJob) -> None:
     for entity in manager.iterate_emitted():
         if entity.schema.is_a("Analyzable"):
             to_analyze.append(entity)
-        else:
-            to_index.append(entity)
+
+        to_index.append(entity)
 
     job.log.info(f"Emitted {len(manager.emitted)} entities.", emitted=manager.emitted)
     if to_analyze:
