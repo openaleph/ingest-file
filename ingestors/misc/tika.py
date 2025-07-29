@@ -16,7 +16,7 @@ def extract_mimetype(result: dict[str, Any]) -> str | None:
 
 
 class TikaIngestor(Ingestor, TikaSupport):
-    SCORE = 1
+    SCORE = -1
 
     def ingest(self, file_path: str, entity: EntityProxy):
         with open(file_path, "rb") as fh:

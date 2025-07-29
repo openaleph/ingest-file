@@ -1,0 +1,56 @@
+# Copyright (C) 2016 WP Rocket
+# This file is distributed under the same license as the WP Rocket package.
+# Translators:
+# Vasilis Manthos <vasilis@wp-media.me>, 2019
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: WP Rocket 3.3.7\n"
+"Report-Msgid-Bugs-To: http://wp-rocket.me/\n"
+"POT-Creation-Date: 2019-08-26 11:14-0400\n"
+"PO-Revision-Date: 2019-08-26 15:14+0000\n"
+"Language-Team: Greek (https://www.transifex.com/wp-media/teams/18133/el/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: el\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 1.8.11\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-KeywordsList: __;_e;_x:1,2c;_ex:1,2c;_n:1,2;_nx:1,2,4c;_n_noop:1,2;_nx_noop:1,2,3c;esc_attr__;esc_html__;esc_attr_e;esc_html_e;esc_attr_x:1,2c;esc_html_x:1,2c\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: assets\n"
+"X-Poedit-SearchPathExcluded-1: src\n"
+"X-Poedit-SearchPathExcluded-2: vendor\n"
+"X-Poedit-SearchPathExcluded-3: node_modules\n"
+"X-Poedit-SearchPathExcluded-4: tests\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Textdomain-Support: yes\n"
+
+#: inc/3rd-party/hosting/flywheel.php:15 inc/3rd-party/hosting/godaddy.php:15
+#: inc/3rd-party/hosting/o2switch.php:15
+#: inc/3rd-party/hosting/pressidium.php:15 inc/3rd-party/hosting/savvii.php:15
+#: inc/3rd-party/hosting/wp-serveur.php:24
+#: inc/3rd-party/hosting/wpengine.php:15
+#, php-format
+msgid ""
+"Your site is hosted on %s, we have enabled Varnish auto-purge for "
+"compatibility."
+msgstr ""
+"Το site σας φιλοξενείται στο %s. Έχουμε ενεργοποιήσει τον αυτόματο καθαρισμό"
+" του Varnish για λόγους συμβατότητας."
+
+#: inc/3rd-party/hosting/kinsta.php:150
+#, php-format
+msgid ""
+"Your installation seems to be missing core Kinsta files managing Cache "
+"clearing and CDN, which will prevent your Kinsta installation and WP Rocket "
+"from working correctly. Please get in touch with Kinsta support through your"
+" %1$sMyKinsta%2$s account to resolve this issue."
+msgstr ""
+"Φαίνεται ότι από την εγκατάστασή σας απουσιάζουν βασικά αρχεία για τη "
+"διαχείριση της εκκαθάρισης της Cache και του CDN. Αυτό θα εμποδίσει την "
+"ταυτόχρονη λειτουργία του WP Rocket με την εγκατάστασή σας στο Kinsta. "
+"Παρακαλώ, επικοινωνήστε με την υποστήριξη του Kinsta μέσω του "
+"%1$sMykinsta%2$s λογαριασμού σας, για να επιλύσετε αυτό το πρόβλημα."
