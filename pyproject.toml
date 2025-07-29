@@ -13,9 +13,9 @@ requires-python = ">=3.11,<3.14"
 dependencies = [
     # base dependencies
     "banal (==1.0.6)",
-    "normality (>=2.6.1,<3.0.0)",
-    "followthemoney (>=4.0.3,<5.0.0)",
-    "ftmq[postgres] (>=4.0.2,<5.0.0)",
+    "normality (>=3.0.1,<4.0.0)",
+    "followthemoney (>=4.1.1,<5.0.0)",
+    "ftmq[postgres] (>=4.1.0,<5.0.0)",
     "pyicu (>=2.15.2,<3.0.0)",
     # ingest dependencies
     "tesserocr (==2.6.2)",
@@ -41,7 +41,7 @@ dependencies = [
     # servicelayer extras requirements
     "boto3 (>=1.11.9,<2.0.0)",
     "servicelayer @ git+https://github.com/openaleph/servicelayer.git@main",
-    "openaleph-procrastinate (>=0.0.12,<0.0.13)",
+    "openaleph-procrastinate (>=0.0.13,<0.0.14)",
     "procrastinate (>=3.4.0,<4.0.0)",
 ]
 
@@ -109,3 +109,5 @@ poetry-plugin-export = ">=1.8"
 
 [tool.pytest_env]
 DEBUG = 1
+OPENALEPH_ANALYZE_DEFER = 0
+OPENALEPH_INDEX_DEFER = 0
