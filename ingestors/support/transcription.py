@@ -1,11 +1,8 @@
-import logging
-
 from followthemoney.proxy import EntityProxy
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.app import make_app
 
-log = logging.getLogger(__name__)
-sync_app = make_app(__loader__.name, sync=True)
+sync_app = make_app(sync=True)
 
 
 class TranscriptionSupport:
