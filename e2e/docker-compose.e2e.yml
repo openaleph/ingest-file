@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ingest
+      POSTGRES_PASSWORD: ingest
+      POSTGRES_DATABASE: ingest
+    ports:
+      - 54321:5432
+    tmpfs:
+      - /var/lib/postgresql/data:mode=777
+
+  redis:
+    image: redis:alpine
+
+  minio:
+    image: quay.io/minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: openaleph
+      MINIO_ROOT_PASSWORD: openaleph
+      MINIO_REGION_NAME: eu-central-1
+    command: server /data --console-address ":9001"
+    tmpfs:
+      - /data:mode=777
+
+
+  # geocode:
+  #   image: ghcr.io/openaleph/ftm-geocode
+  #   command: procrastinate worker -q ftm-geocode --concurrency 8
+  #   environment:
+  #     OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
+  #     FTM_STORE_URI: postgresql://ingest:ingest@postgres/ingest
+  #   tmpfs:
+  #     - /tmp:mode=777
+  #   depends_on:
+  #     - postgres
+
+  analyze:
+    image: ghcr.io/openaleph/ftm-analyze:latest
+    command: procrastinate worker -q analyze --concurrency 8 --one-shot
+    environment:
+      OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
+      FTM_FRAGMENTS_URI: postgresql://ingest:ingest@postgres/ingest
+    tmpfs:
+      - /tmp:mode=777
+    depends_on:
+      - postgres
+
+  ingest-file:
+    image: ghcr.io/openaleph/ingest-file:feat-procrastinate
+    command: procrastinate worker -q ingest --concurrency 8 --one-shot
+    hostname: ingest
+    tmpfs:
+      - /tmp:mode=777
+    environment:
+      OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
+      FTM_FRAGMENTS_URI: postgresql://ingest:ingest@postgres/ingest
+      ARCHIVE_TYPE: s3
+      ARCHIVE_BUCKET: openaleph
+      ARCHIVE_ENDPOINT_URL: http://minio:9000
+      AWS_ACCESS_KEY_ID: openaleph
+      AWS_SECRET_ACCESS_KEY: openaleph
+    depends_on:
+      - minio
+      - postgres
+      - redis
+      - analyze
