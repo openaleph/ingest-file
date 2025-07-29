@@ -26,6 +26,8 @@ from servicelayer.extensions import get_extensions
 from ingestors import __version__
 from ingestors.directory import DirectoryIngestor
 from ingestors.exc import ENCRYPTED_MSG, ProcessingException
+from ingestors.ingestor import Ingestor
+from ingestors.misc.tika import TikaIngestor
 from ingestors.settings import Settings
 from ingestors.util import filter_text, remove_directory
 
@@ -146,7 +148,7 @@ class Manager:
             doc.add("indexText", texts)
             self.emit_entity(doc, fragment=safe_fragment(fragment))
 
-    def auction(self, file_path, entity):
+    def auction(self, file_path, entity) -> type[Ingestor]:
         if not entity.has("mimeType"):
             if file_path.is_dir():
                 entity.add("mimeType", DirectoryIngestor.MIME_TYPE)
@@ -162,6 +164,10 @@ class Manager:
             if score > best_score:
                 best_score = score
                 best_cls = cls
+
+        settings = Settings()
+        if settings.tika_fallback:
+            best_cls = TikaIngestor
 
         if best_cls is None:
             raise ProcessingException("Format not supported")

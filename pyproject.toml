@@ -41,6 +41,7 @@ dependencies = [
     "boto3 (>=1.11.9,<2.0.0)",
     "openaleph-procrastinate (>=5.0.0,<6.0.0)",
     "openaleph-servicelayer (>=1.23.3, <1.24.0)",
+    "tika (>=3.1.0,<4.0.0)",
 ]
 
 [project.scripts]
@@ -87,6 +88,7 @@ svg = "ingestors.media.svg:SVGIngestor"
 audio = "ingestors.media.audio:AudioIngestor"
 video = "ingestors.media.video:VideoIngestor"
 json = "ingestors.misc.jsonfile:JSONIngestor"
+tika = "ingestors.misc.tika:TikaIngestor"
 
 [project.optional-dependencies]
 ocr = ["tesserocr (==2.6.2)"]
@@ -116,3 +118,5 @@ OPENALEPH_ANALYZE_DEFER = 0
 OPENALEPH_INDEX_DEFER = 0
 PROCRASTINATE_DB_URI = "memory://"
 FTM_FRAGMENTS_URI = "sqlite:///ingest_test.db"
+TIKA_PATH = "./contrib"
+INGESTORS_TIKA_FALLBACK = 1

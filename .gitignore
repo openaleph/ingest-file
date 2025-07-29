@@ -3,6 +3,8 @@ data/archive
 data/model_type_prediction.ftz
 debug.sqlite3
 data/servicelayer-archive
+# tika
+contrib/tika-server.jar
 # documentation
 site
 # Byte-compiled / optimized / DLL files
