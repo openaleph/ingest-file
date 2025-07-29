@@ -56,8 +56,9 @@ def cli_ingest(
         str, typer.Option(..., "-d", "--dataset", help="Name of the dataset")
     ],
     foreign_id: Annotated[
-        str, typer.Option(..., "-f", "--foreign-id", help="Foreign ID of the dataset")
-    ],
+        Optional[str],
+        typer.Option(..., "-f", "--foreign-id", help="Foreign ID of the dataset"),
+    ] = None,
     languages: Annotated[
         Optional[list[str]], typer.Option(help="3-letter language code (ISO 639)")
     ] = None,
@@ -69,7 +70,7 @@ def cli_ingest(
 
             sls.TAGS_DATABASE_URI = "sqlite:///:memory:?mode=memory&cache=shared"
 
-        ingest_path(dataset, foreign_id, path, languages or [])
+        ingest_path(dataset, path, languages or [], foreign_id)
 
         if settings.debug:
             from openaleph_procrastinate.settings import DeferSettings

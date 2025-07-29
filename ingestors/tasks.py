@@ -51,8 +51,10 @@ def ingest(job: DatasetJob) -> None:
         defer.index(app, job.dataset, to_index, **job.context)
 
 
-def ingest_path(dataset: str, foreign_id: str, path: Path, languages: list[str]):
-    context = {"languages": languages, "namespace": foreign_id}
+def ingest_path(
+    dataset: str, path: Path, languages: list[str], foreign_id: str | None = None
+):
+    context = {"languages": languages, "namespace": foreign_id or dataset}
     manager = Manager(sync_app, dataset, context)
     path = ensure_path(path)
     log = get_logger(__name__, dataset=dataset, context=context, path=path)
