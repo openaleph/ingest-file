@@ -24,6 +24,9 @@ class Settings(OpenAlephSettings):
     convert_timeout: int = 300
     """Headless libreoffice document convert timeout in seconds"""
 
+    tika_fallback: bool = False
+    """Use Apache Tika as a text extraction fallback"""
+
 
 # Also store cached values in the SQL database
 sls.TAGS_DATABASE_URI = env.get("FTM_STORE_URI", env.get("ALEPH_DATABASE_URI"))

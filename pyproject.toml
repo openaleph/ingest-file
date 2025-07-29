@@ -43,6 +43,7 @@ dependencies = [
     "servicelayer @ git+https://github.com/openaleph/servicelayer.git@main",
     "openaleph-procrastinate (>=0.0.13,<0.0.14)",
     "procrastinate (>=3.4.0,<4.0.0)",
+    "tika (>=3.1.0,<4.0.0)",
 ]
 
 [project.scripts]
@@ -89,6 +90,7 @@ svg = "ingestors.media.svg:SVGIngestor"
 audio = "ingestors.media.audio:AudioIngestor"
 video = "ingestors.media.video:VideoIngestor"
 json = "ingestors.misc.jsonfile:JSONIngestor"
+tika = "ingestors.misc.tika:TikaIngestor"
 
 [build-system]
 requires = ["poetry-core"]
@@ -111,3 +113,5 @@ poetry-plugin-export = ">=1.8"
 DEBUG = 1
 OPENALEPH_ANALYZE_DEFER = 0
 OPENALEPH_INDEX_DEFER = 0
+TIKA_PATH = "./contrib"
+INGESTORS_TIKA_FALLBACK = 1

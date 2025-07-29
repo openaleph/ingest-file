@@ -1,6 +1,10 @@
 import logging
+import typing
 
 from rigour.mime import normalize_extension, normalize_mimetype
+
+if typing.TYPE_CHECKING:
+    from ingestors.manager import Manager
 
 log = logging.getLogger(__name__)
 
@@ -12,7 +16,7 @@ class Ingestor(object):
     EXTENSIONS = []
     SCORE = 3
 
-    def __init__(self, manager):
+    def __init__(self, manager: "Manager"):
         self.manager = manager
 
     def ingest(self, file_path, entity):
