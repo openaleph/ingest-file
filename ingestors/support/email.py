@@ -19,9 +19,11 @@ class EmailIdentity(object):
     def __init__(self, manager, name, email):
         self.email = ascii_text(stringify(email))
         self.name = stringify(name)
+        if not self.name:
+            self.name = None
         if not registry.email.validate(self.email):
             self.email = None
-        if registry.email.validate(self.name):
+        if self.name and registry.email.validate(self.name):
             self.email = self.email or ascii_text(self.name)
             self.name = None
 
