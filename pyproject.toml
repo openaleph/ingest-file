@@ -88,7 +88,6 @@ svg = "ingestors.media.svg:SVGIngestor"
 audio = "ingestors.media.audio:AudioIngestor"
 video = "ingestors.media.video:VideoIngestor"
 json = "ingestors.misc.jsonfile:JSONIngestor"
-tika = "ingestors.misc.tika:TikaIngestor"
 
 [project.optional-dependencies]
 ocr = ["tesserocr (==2.6.2)"]
