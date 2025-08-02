@@ -2637,14 +2637,14 @@ tests = ["pytest", "pytest-cov"]
 
 [[package]]
 name = "openaleph-procrastinate"
-version = "0.0.14"
+version = "0.0.16"
 description = "Task queue logic for OpenAleph built upon procrastinate"
 optional = false
 python-versions = "<4,>=3.11"
 groups = ["main"]
 files = [
-    {file = "openaleph_procrastinate-0.0.14-py3-none-any.whl", hash = "sha256:f76abce6170a75891790436f91236dc1e70003f34b9e793de00acb39978e2bff"},
-    {file = "openaleph_procrastinate-0.0.14.tar.gz", hash = "sha256:67bce2221835acd563446dcf214396e235b3026863535708ec2faea91130f8b3"},
+    {file = "openaleph_procrastinate-0.0.16-py3-none-any.whl", hash = "sha256:d1455d84d1ace966c60c8afc40bb299d649d86edb7063c6b66ef1f335a60fedf"},
+    {file = "openaleph_procrastinate-0.0.16.tar.gz", hash = "sha256:b584e0c0e3da838d46fc391a61a2ce04702d438156a87a5e2d98570e983799af"},
 ]
 
 [package.dependencies]
@@ -2965,14 +2965,14 @@ dev = ["bump2version", "mypy", "pytest", "pytest-cov", "twine", "wheel (>=0.29.0
 
 [[package]]
 name = "procrastinate"
-version = "3.4.0"
+version = "3.5.0"
 description = "Postgres-based distributed task processing library"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "procrastinate-3.4.0-py3-none-any.whl", hash = "sha256:dbcca697dc78d8b71873692e3567de482db076bf06f55af775c09aa82a3e1066"},
-    {file = "procrastinate-3.4.0.tar.gz", hash = "sha256:9cd3af413f351c88da40681d3d88b6df8904c8a3423aec87687c0b7eb7d684a4"},
+    {file = "procrastinate-3.5.0-py3-none-any.whl", hash = "sha256:f0fd516c52f0666371035fce4e3d2dd7487184d6a2035c97cc5ca02536f2a03e"},
+    {file = "procrastinate-3.5.0.tar.gz", hash = "sha256:26c0964a440f07f183ef3fda52850d33a867fe23930dd0d9dcee73faa6d240c0"},
 ]
 
 [package.dependencies]
@@ -5319,4 +5319,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "c205b340e20a53d037446cda401cd803b1ce14b872e1a3740da0c0ccb2be6138"
+content-hash = "7d27fc0e43f70eae34d877631bde7394bc046422e5b4efdc86d23bee97a582a0"

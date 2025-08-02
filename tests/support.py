@@ -40,12 +40,12 @@ class TestCase(unittest.TestCase):
         self.manager = Manager(app, TEST_DATASET, {"namespace": "test"})
         self.manager.emit_entity = types.MethodType(emit_entity, self.manager)
         self.manager.entities = []
-        self.dataset = get_fragments(TEST_DATASET)
+        self.dataset = self.manager.db
 
     def fixture(self, fixture_path):
         """Returns a fixture path and a dummy entity"""
         # clear out entities
-        self.dataset.delete()
+        self.manager.db.delete()
         self.manager.entities = []
         cur_path = ensure_path(__file__).parent
         cur_path = cur_path.joinpath("fixtures")
@@ -64,13 +64,13 @@ class TestCase(unittest.TestCase):
         return path, entity
 
     def get_emitted(self, schema=None):
-        entities = list(self.dataset.iterate())
+        entities = list(self.manager.db.iterate())
         if schema is not None:
             entities = [e for e in entities if e.schema.is_a(schema)]
         return entities
 
     def get_emitted_by_id(self, id):
-        return self.dataset.get(id)
+        return self.manager.db.get(id)
 
     def assertSuccess(self, entity):
         self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)

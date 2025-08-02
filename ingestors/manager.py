@@ -26,6 +26,7 @@ from servicelayer.extensions import get_extensions
 from ingestors import __version__
 from ingestors.directory import DirectoryIngestor
 from ingestors.exc import ENCRYPTED_MSG, ProcessingException
+from ingestors.settings import Settings
 from ingestors.util import filter_text, remove_directory
 
 log = logging.getLogger(__name__)
@@ -95,9 +96,11 @@ class Manager:
     MAGIC = magic.Magic(mime=True)
 
     def __init__(self, app: App, dataset: str, context: dict[str, Any]):
+        settings = Settings()
         self.app = app
         self.dataset = dataset
-        self.writer = get_fragments(dataset, OP_INGEST).bulk()
+        self.db = get_fragments(dataset, OP_INGEST, database_uri=settings.fragments_uri)
+        self.writer = self.db.bulk()
         self.context = context
         self.ns = Namespace(self.context["namespace"])
         self.work_path = ensure_path(mkdtemp(prefix="ingestor-"))
@@ -251,5 +254,4 @@ class Manager:
         remove_directory(self.work_path)
 
     def iterate_emitted(self) -> Generator[EntityProxy, None, None]:
-        db = get_fragments(self.dataset)
-        yield from db.iterate(self.emitted)
+        yield from self.db.iterate(self.emitted)
