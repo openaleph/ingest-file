@@ -14,4 +14,4 @@ psql -c "SELECT COUNT(*) FROM ftm_fixtures" $OPENALEPH_DB_URI
 psql -c "SELECT COUNT(DISTINCT id) FROM ftm_fixtures" $OPENALEPH_DB_URI
 psql -c "SELECT queue_name, task_name, status, COUNT(*) FROM procrastinate_jobs GROUP BY queue_name, task_name, status" $OPENALEPH_DB_URI
 
-docker compose -f docker-compise.e2e.yml down --remove-orphans -v
+docker compose -f docker-compose.e2e.yml down --remove-orphans -v
