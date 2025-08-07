@@ -31,7 +31,7 @@ dependencies = [
     "lxml[html-clean] (>=5.4.0,<6.0.0)",
     "pillow (>=11.2.1,<12.0.0)",
     "pymupdf (>=1.26.1,<2.0.0)",
-    "olefile (>=0.47,<0.48)",
+    "olefile (<0.47)",
     "vobject (>=0.9.9,<0.10.0)",
     "msglite (>=0.30.0,<0.31.0)",
     "icalendar (>=6.3.1,<7.0.0)",
