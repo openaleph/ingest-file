@@ -1,3 +1,4 @@
+contrib/*.bin
 data/archive
 data/model_type_prediction.ftz
 debug.sqlite3
