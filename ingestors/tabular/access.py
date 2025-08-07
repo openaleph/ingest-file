@@ -1,15 +1,16 @@
-import os
-import io
 import csv
+import io
 import logging
+import os
 import subprocess
 from collections import OrderedDict
+
 from followthemoney import model
 
+from ingestors.exc import ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.shell import ShellSupport
 from ingestors.support.table import TableSupport
-from ingestors.exc import ProcessingException
 
 log = logging.getLogger(__name__)
 
@@ -44,14 +45,16 @@ class AccessIngestor(Ingestor, TableSupport, ShellSupport):
         if mdb_export is None:
             raise RuntimeError("mdb-tools is not available")
         args = [mdb_export, "-b", "strip", file_path, table_name]
-        proc = subprocess.Popen(args, stdout=subprocess.PIPE)
-        output = io.TextIOWrapper(proc.stdout, newline=os.linesep)
-        headers = None
-        for row in csv.reader((line for line in output), delimiter=","):
-            if headers is None:
-                headers = row
-                continue
-            yield OrderedDict(zip(headers, row))
+        with subprocess.Popen(args, stdout=subprocess.PIPE) as proc:
+            if proc.stdout is None:
+                raise ProcessingException("Failed to create subprocess stdout pipe")
+            output = io.TextIOWrapper(proc.stdout, newline=os.linesep)
+            headers = None
+            for row in csv.reader((line for line in output), delimiter=","):
+                if headers is None:
+                    headers = row
+                    continue
+                yield OrderedDict(zip(headers, row))
 
     def ingest(self, file_path, entity):
         entity.schema = model.get("Workbook")
