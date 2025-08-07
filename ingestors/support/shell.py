@@ -1,4 +1,3 @@
-import os
 import shutil
 import subprocess
 
@@ -28,7 +27,7 @@ class ShellSupport(object):
         cmd.extend([path_string(a) for a in args])
         try:
             code = subprocess.call(
-                cmd, timeout=self.COMMAND_TIMEOUT, stdout=open(os.devnull, "wb")
+                cmd, timeout=self.COMMAND_TIMEOUT, stdout=subprocess.DEVNULL
             )
         except OSError as ose:
             raise ProcessingException("Error: %s" % ose) from ose
