@@ -1,6 +1,7 @@
 import logging
 import threading
 import time
+from contextlib import contextmanager
 from functools import cache
 from hashlib import sha1
 from io import BytesIO
@@ -88,6 +89,7 @@ class LocalOCRService(object):
 
     def extract_text(self, data, languages=None):
         """Extract text from a binary string of data."""
+        image = None
         try:
             image = Image.open(BytesIO(data))
             image.load()
@@ -95,28 +97,54 @@ class LocalOCRService(object):
             log.error("Cannot open image data using Pillow: %s", exc)
             return ""
 
-        with temp_locale(TESSERACT_LOCALE):
-            languages = self.language_list(languages)
+        try:
+            with temp_locale(TESSERACT_LOCALE):
+                languages = self.language_list(languages)
+                with self.engine(languages) as api:
+                    # TODO: play with contrast and sharpening the images.
+                    start_time = time.time()
+                    api.SetImage(image)
+                    text = api.GetUTF8Text()
+                    confidence = api.MeanTextConf()
+                    end_time = time.time()
+                    duration = end_time - start_time
+                    log.info(
+                        "w: %s, h: %s, l: %s, c: %s, took: %.5f",
+                        image.width,
+                        image.height,
+                        languages,
+                        confidence,
+                        duration,
+                    )
+                    return text
+        except Exception as exc:
+            log.error("OCR error: %s", exc)
+            return ""
+        finally:
+            if image is not None:
+                image.close()
+
+    @contextmanager
+    def engine(self, languages):
+        """Context manager for OCR engine that ensures cleanup."""
+        api = None
+        try:
             api = self.configure_engine(languages)
+            yield api
+        finally:
+            if api is not None:
+                try:
+                    api.Clear()
+                except Exception as exc:
+                    log.warning("Error clearing OCR engine: %s", exc)
+
+    def __del__(self):
+        """Clean up thread-local OCR resources when the service is destroyed."""
+        if hasattr(self.tl, "api") and self.tl.api is not None:
+            log.info("Cleaning up OCR engine for current thread")
             try:
-                # TODO: play with contrast and sharpening the images.
-                start_time = time.time()
-                api.SetImage(image)
-                text = api.GetUTF8Text()
-                confidence = api.MeanTextConf()
-                end_time = time.time()
-                duration = end_time - start_time
-                log.info(
-                    "w: %s, h: %s, l: %s, c: %s, took: %.5f",
-                    image.width,
-                    image.height,
-                    languages,
-                    confidence,
-                    duration,
-                )
-                return text
+                self.tl.api.End()
             except Exception as exc:
-                log.error("OCR error: %s", exc)
-                return ""
+                log.warning("Error cleaning up OCR engine: %s", exc)
             finally:
-                api.Clear()
+                self.tl.api = None

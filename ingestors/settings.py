@@ -1,6 +1,5 @@
 from openaleph_procrastinate.settings import OpenAlephSettings
 from pydantic_settings import SettingsConfigDict
-from servicelayer import env
 from servicelayer import settings as sls
 
 
@@ -25,5 +24,7 @@ class Settings(OpenAlephSettings):
     """Headless libreoffice document convert timeout in seconds"""
 
 
+_settings = OpenAlephSettings()
+
 # Also store cached values in the SQL database
-sls.TAGS_DATABASE_URI = env.get("FTM_STORE_URI", env.get("ALEPH_DATABASE_URI"))
+sls.TAGS_DATABASE_URI = _settings.fragments_uri

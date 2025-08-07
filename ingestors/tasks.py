@@ -1,3 +1,4 @@
+import gc
 import logging
 from pathlib import Path
 
@@ -49,6 +50,9 @@ def ingest(job: DatasetJob) -> None:
         defer.analyze(app, job.dataset, to_analyze, **job.context)
     if to_index:
         defer.index(app, job.dataset, to_index, **job.context)
+
+    # FIXME
+    gc.collect()
 
 
 def ingest_path(
