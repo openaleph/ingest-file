@@ -41,7 +41,7 @@ dependencies = [
     # servicelayer extras requirements
     "boto3 (>=1.11.9,<2.0.0)",
     "servicelayer @ git+https://github.com/openaleph/servicelayer.git@main",
-    "openaleph-procrastinate (>=0.0.23,<0.0.24)",
+    "openaleph-procrastinate (>=0.0.25,<0.0.26)",
 ]
 
 [project.scripts]
