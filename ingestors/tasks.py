@@ -47,9 +47,9 @@ def ingest(job: DatasetJob) -> None:
 
     job.log.info(f"Emitted {len(manager.emitted)} entities.", emitted=manager.emitted)
     if to_analyze:
-        defer.analyze(app, job.dataset, to_analyze, **job.context)
+        defer.analyze(app, job.dataset, to_analyze, batch=job.batch, **job.context)
     if to_index:
-        defer.index(app, job.dataset, to_index, **job.context)
+        defer.index(app, job.dataset, to_index, batch=job.batch, **job.context)
 
     # FIXME
     gc.collect()

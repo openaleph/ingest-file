@@ -268,14 +268,14 @@ trio = ["trio (>=0.26.1)"]
 
 [[package]]
 name = "anystore"
-version = "0.3.9"
+version = "0.3.10"
 description = "Store and cache things anywhere"
 optional = false
 python-versions = "<4,>=3.11"
 groups = ["main"]
 files = [
-    {file = "anystore-0.3.9-py3-none-any.whl", hash = "sha256:4cdd00f877c009c11e54a1ea1800b2f616234dd5ea9f961712b65e561e2d8e9c"},
-    {file = "anystore-0.3.9.tar.gz", hash = "sha256:20ae0aaa2850e8c15c977bf394e57103ca919580f5c731175f8b5daeab811741"},
+    {file = "anystore-0.3.10-py3-none-any.whl", hash = "sha256:caf567b97f02c20b78d7c3bd79d1ffcb04286d5420f4b30c5e6087cc563d5423"},
+    {file = "anystore-0.3.10.tar.gz", hash = "sha256:c05723ae8ad53bab06d7eb1c0587a656d3603bf80d0f10aa80d3a19e0af764e0"},
 ]
 
 [package.dependencies]
@@ -321,7 +321,7 @@ version = "5.0.1"
 description = "Timeout context manager for asyncio programs"
 optional = false
 python-versions = ">=3.8"
-groups = ["main"]
+groups = ["main", "dev"]
 markers = "python_full_version <= \"3.11.2\""
 files = [
     {file = "async_timeout-5.0.1-py3-none-any.whl", hash = "sha256:39e3809566ff85354557ec2398b55e096c8364bacac9405a7a1fa429e77fe76c"},
@@ -1192,14 +1192,14 @@ files = [
 
 [[package]]
 name = "fakeredis"
-version = "2.31.0"
+version = "2.30.3"
 description = "Python implementation of redis API, can be used for testing purposes."
 optional = false
 python-versions = ">=3.7"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
-    {file = "fakeredis-2.31.0-py3-none-any.whl", hash = "sha256:2584e57d93df4eb8e87931b29279902826d3caf77d06911106df4e066c2ad198"},
-    {file = "fakeredis-2.31.0.tar.gz", hash = "sha256:2942a7e7900fd9076ff9e608b9190a87315ac5a325a9ab8bfe288a2d985ecd23"},
+    {file = "fakeredis-2.30.3-py3-none-any.whl", hash = "sha256:56a6b082e8ff17434a5ae22e4efd12ae2bb9b363b477d8f166a790407ba65a7e"},
+    {file = "fakeredis-2.30.3.tar.gz", hash = "sha256:eac5aaced57e7dbe3e005eb4f82032978a7f100273b26158cbbcfa7c386ca7ec"},
 ]
 
 [package.dependencies]
@@ -1529,18 +1529,18 @@ tqdm = ["tqdm"]
 
 [[package]]
 name = "ftmq"
-version = "4.1.3"
+version = "4.1.4"
 description = "followthemoney query dsl and io helpers"
 optional = false
 python-versions = "<4,>=3.11"
 groups = ["main"]
 files = [
-    {file = "ftmq-4.1.3-py3-none-any.whl", hash = "sha256:a4da4c4a87890069f290a3460fb1b8063fc5dc13e5cbb082759803640dab1efd"},
-    {file = "ftmq-4.1.3.tar.gz", hash = "sha256:691940dd7972b3d2b86efcec7f51d0aec348761647f91fe63e8a2a7f031c29ce"},
+    {file = "ftmq-4.1.4-py3-none-any.whl", hash = "sha256:422c99fb4f1bcd8496347e5b39b8615672f9190aef5ad4e4f4bce1b10f581c07"},
+    {file = "ftmq-4.1.4.tar.gz", hash = "sha256:80f41f6d366c51447f0c49a888f63bc2853856fc17c5d619fd0ac94f95729649"},
 ]
 
 [package.dependencies]
-anystore = ">=0.3.9,<0.4.0"
+anystore = ">=0.3.10,<0.4.0"
 click = ">=8.2.1,<9.0.0"
 click-default-group = ">=1.2.4,<2.0.0"
 followthemoney = ">=4.1.2,<5.0.0"
@@ -2747,21 +2747,22 @@ files = [
 
 [[package]]
 name = "openaleph-procrastinate"
-version = "0.0.25"
+version = "0.0.26"
 description = "Task queue logic for OpenAleph built upon procrastinate"
 optional = false
 python-versions = "<4,>=3.11"
 groups = ["main"]
 files = [
-    {file = "openaleph_procrastinate-0.0.25-py3-none-any.whl", hash = "sha256:c391c0ffb8424922fba62b25ece411196e05adcc577c2ede1cf663926c4d6c6f"},
-    {file = "openaleph_procrastinate-0.0.25.tar.gz", hash = "sha256:8caa3e728368b18cf4aa21712ca5010507eafea3041c1814991a9cb3347e210d"},
+    {file = "openaleph_procrastinate-0.0.26-py3-none-any.whl", hash = "sha256:f8d33b504701deff8060b2950de62a665e513a14f1093bf7b3d2e6344078855f"},
+    {file = "openaleph_procrastinate-0.0.26.tar.gz", hash = "sha256:3a0bb1c87d4b687fe02d5d67190d4853c3da53b81d7c199548cad45c941e3c62"},
 ]
 
 [package.dependencies]
+anystore = ">=0.3.10,<0.4.0"
 followthemoney = ">=4.1.2,<5.0.0"
-ftmq = ">=4.1.1,<5.0.0"
-procrastinate = ">=3.2.2"
-psycopg2-binary = ">=2.9.10,<3.0.0"
+ftmq = ">=4.1.4,<5.0.0"
+procrastinate = ">=3.5.1,<4.0.0"
+psycopg = ">=3.2.9,<4.0.0"
 pydantic = ">=2.11.7,<3.0.0"
 pydantic-settings = ">=2.10.1,<3.0.0"
 
@@ -3316,84 +3317,6 @@ files = [
     {file = "psycopg2-2.9.10-cp39-cp39-win32.whl", hash = "sha256:9d5b3b94b79a844a986d029eee38998232451119ad653aea42bb9220a8c5066b"},
     {file = "psycopg2-2.9.10-cp39-cp39-win_amd64.whl", hash = "sha256:88138c8dedcbfa96408023ea2b0c369eda40fe5d75002c0964c78f46f11fa442"},
     {file = "psycopg2-2.9.10.tar.gz", hash = "sha256:12ec0b40b0273f95296233e8750441339298e6a572f7039da5b260e3c8b60e11"},
-]
-
-[[package]]
-name = "psycopg2-binary"
-version = "2.9.10"
-description = "psycopg2 - Python-PostgreSQL Database Adapter"
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "psycopg2-binary-2.9.10.tar.gz", hash = "sha256:4b3df0e6990aa98acda57d983942eff13d824135fe2250e6522edaa782a06de2"},
-    {file = "psycopg2_binary-2.9.10-cp310-cp310-macosx_12_0_x86_64.whl", hash = "sha256:0ea8e3d0ae83564f2fc554955d327fa081d065c8ca5cc6d2abb643e2c9c1200f"},
-    {file = "psycopg2_binary-2.9.10-cp310-cp310-macosx_14_0_arm64.whl", hash = "sha256:3e9c76f0ac6f92ecfc79516a8034a544926430f7b080ec5a0537bca389ee0906"},
-    {file = "psycopg2_binary-2.9.10-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2ad26b467a405c798aaa1458ba09d7e2b6e5f96b1ce0ac15d82fd9f95dc38a92"},
-    {file = "psycopg2_binary-2.9.10-cp310-cp310-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:270934a475a0e4b6925b5f804e3809dd5f90f8613621d062848dd82f9cd62007"},
-    {file = "psycopg2_binary-2.9.10-cp310-cp310-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:48b338f08d93e7be4ab2b5f1dbe69dc5e9ef07170fe1f86514422076d9c010d0"},
-    {file = "psycopg2_binary-2.9.10-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7f4152f8f76d2023aac16285576a9ecd2b11a9895373a1f10fd9db54b3ff06b4"},
-    {file = "psycopg2_binary-2.9.10-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:32581b3020c72d7a421009ee1c6bf4a131ef5f0a968fab2e2de0c9d2bb4577f1"},
-    {file = "psycopg2_binary-2.9.10-cp310-cp310-musllinux_1_2_i686.whl", hash = "sha256:2ce3e21dc3437b1d960521eca599d57408a695a0d3c26797ea0f72e834c7ffe5"},
-    {file = "psycopg2_binary-2.9.10-cp310-cp310-musllinux_1_2_ppc64le.whl", hash = "sha256:e984839e75e0b60cfe75e351db53d6db750b00de45644c5d1f7ee5d1f34a1ce5"},
-    {file = "psycopg2_binary-2.9.10-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:3c4745a90b78e51d9ba06e2088a2fe0c693ae19cc8cb051ccda44e8df8a6eb53"},
-    {file = "psycopg2_binary-2.9.10-cp310-cp310-win32.whl", hash = "sha256:e5720a5d25e3b99cd0dc5c8a440570469ff82659bb09431c1439b92caf184d3b"},
-    {file = "psycopg2_binary-2.9.10-cp310-cp310-win_amd64.whl", hash = "sha256:3c18f74eb4386bf35e92ab2354a12c17e5eb4d9798e4c0ad3a00783eae7cd9f1"},
-    {file = "psycopg2_binary-2.9.10-cp311-cp311-macosx_12_0_x86_64.whl", hash = "sha256:04392983d0bb89a8717772a193cfaac58871321e3ec69514e1c4e0d4957b5aff"},
-    {file = "psycopg2_binary-2.9.10-cp311-cp311-macosx_14_0_arm64.whl", hash = "sha256:1a6784f0ce3fec4edc64e985865c17778514325074adf5ad8f80636cd029ef7c"},
-    {file = "psycopg2_binary-2.9.10-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b5f86c56eeb91dc3135b3fd8a95dc7ae14c538a2f3ad77a19645cf55bab1799c"},
-    {file = "psycopg2_binary-2.9.10-cp311-cp311-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:2b3d2491d4d78b6b14f76881905c7a8a8abcf974aad4a8a0b065273a0ed7a2cb"},
-    {file = "psycopg2_binary-2.9.10-cp311-cp311-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:2286791ececda3a723d1910441c793be44625d86d1a4e79942751197f4d30341"},
-    {file = "psycopg2_binary-2.9.10-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:512d29bb12608891e349af6a0cccedce51677725a921c07dba6342beaf576f9a"},
-    {file = "psycopg2_binary-2.9.10-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:5a507320c58903967ef7384355a4da7ff3f28132d679aeb23572753cbf2ec10b"},
-    {file = "psycopg2_binary-2.9.10-cp311-cp311-musllinux_1_2_i686.whl", hash = "sha256:6d4fa1079cab9018f4d0bd2db307beaa612b0d13ba73b5c6304b9fe2fb441ff7"},
-    {file = "psycopg2_binary-2.9.10-cp311-cp311-musllinux_1_2_ppc64le.whl", hash = "sha256:851485a42dbb0bdc1edcdabdb8557c09c9655dfa2ca0460ff210522e073e319e"},
-    {file = "psycopg2_binary-2.9.10-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:35958ec9e46432d9076286dda67942ed6d968b9c3a6a2fd62b48939d1d78bf68"},
-    {file = "psycopg2_binary-2.9.10-cp311-cp311-win32.whl", hash = "sha256:ecced182e935529727401b24d76634a357c71c9275b356efafd8a2a91ec07392"},
-    {file = "psycopg2_binary-2.9.10-cp311-cp311-win_amd64.whl", hash = "sha256:ee0e8c683a7ff25d23b55b11161c2663d4b099770f6085ff0a20d4505778d6b4"},
-    {file = "psycopg2_binary-2.9.10-cp312-cp312-macosx_12_0_x86_64.whl", hash = "sha256:880845dfe1f85d9d5f7c412efea7a08946a46894537e4e5d091732eb1d34d9a0"},
-    {file = "psycopg2_binary-2.9.10-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:9440fa522a79356aaa482aa4ba500b65f28e5d0e63b801abf6aa152a29bd842a"},
-    {file = "psycopg2_binary-2.9.10-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e3923c1d9870c49a2d44f795df0c889a22380d36ef92440ff618ec315757e539"},
-    {file = "psycopg2_binary-2.9.10-cp312-cp312-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:7b2c956c028ea5de47ff3a8d6b3cc3330ab45cf0b7c3da35a2d6ff8420896526"},
-    {file = "psycopg2_binary-2.9.10-cp312-cp312-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:f758ed67cab30b9a8d2833609513ce4d3bd027641673d4ebc9c067e4d208eec1"},
-    {file = "psycopg2_binary-2.9.10-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8cd9b4f2cfab88ed4a9106192de509464b75a906462fb846b936eabe45c2063e"},
-    {file = "psycopg2_binary-2.9.10-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:6dc08420625b5a20b53551c50deae6e231e6371194fa0651dbe0fb206452ae1f"},
-    {file = "psycopg2_binary-2.9.10-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:d7cd730dfa7c36dbe8724426bf5612798734bff2d3c3857f36f2733f5bfc7c00"},
-    {file = "psycopg2_binary-2.9.10-cp312-cp312-musllinux_1_2_ppc64le.whl", hash = "sha256:155e69561d54d02b3c3209545fb08938e27889ff5a10c19de8d23eb5a41be8a5"},
-    {file = "psycopg2_binary-2.9.10-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:c3cc28a6fd5a4a26224007712e79b81dbaee2ffb90ff406256158ec4d7b52b47"},
-    {file = "psycopg2_binary-2.9.10-cp312-cp312-win32.whl", hash = "sha256:ec8a77f521a17506a24a5f626cb2aee7850f9b69a0afe704586f63a464f3cd64"},
-    {file = "psycopg2_binary-2.9.10-cp312-cp312-win_amd64.whl", hash = "sha256:18c5ee682b9c6dd3696dad6e54cc7ff3a1a9020df6a5c0f861ef8bfd338c3ca0"},
-    {file = "psycopg2_binary-2.9.10-cp313-cp313-macosx_12_0_x86_64.whl", hash = "sha256:26540d4a9a4e2b096f1ff9cce51253d0504dca5a85872c7f7be23be5a53eb18d"},
-    {file = "psycopg2_binary-2.9.10-cp313-cp313-macosx_14_0_arm64.whl", hash = "sha256:e217ce4d37667df0bc1c397fdcd8de5e81018ef305aed9415c3b093faaeb10fb"},
-    {file = "psycopg2_binary-2.9.10-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:245159e7ab20a71d989da00f280ca57da7641fa2cdcf71749c193cea540a74f7"},
-    {file = "psycopg2_binary-2.9.10-cp313-cp313-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:3c4ded1a24b20021ebe677b7b08ad10bf09aac197d6943bfe6fec70ac4e4690d"},
-    {file = "psycopg2_binary-2.9.10-cp313-cp313-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:3abb691ff9e57d4a93355f60d4f4c1dd2d68326c968e7db17ea96df3c023ef73"},
-    {file = "psycopg2_binary-2.9.10-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8608c078134f0b3cbd9f89b34bd60a943b23fd33cc5f065e8d5f840061bd0673"},
-    {file = "psycopg2_binary-2.9.10-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:230eeae2d71594103cd5b93fd29d1ace6420d0b86f4778739cb1a5a32f607d1f"},
-    {file = "psycopg2_binary-2.9.10-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:bb89f0a835bcfc1d42ccd5f41f04870c1b936d8507c6df12b7737febc40f0909"},
-    {file = "psycopg2_binary-2.9.10-cp313-cp313-musllinux_1_2_ppc64le.whl", hash = "sha256:f0c2d907a1e102526dd2986df638343388b94c33860ff3bbe1384130828714b1"},
-    {file = "psycopg2_binary-2.9.10-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:f8157bed2f51db683f31306aa497311b560f2265998122abe1dce6428bd86567"},
-    {file = "psycopg2_binary-2.9.10-cp313-cp313-win_amd64.whl", hash = "sha256:27422aa5f11fbcd9b18da48373eb67081243662f9b46e6fd07c3eb46e4535142"},
-    {file = "psycopg2_binary-2.9.10-cp38-cp38-macosx_12_0_x86_64.whl", hash = "sha256:eb09aa7f9cecb45027683bb55aebaaf45a0df8bf6de68801a6afdc7947bb09d4"},
-    {file = "psycopg2_binary-2.9.10-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b73d6d7f0ccdad7bc43e6d34273f70d587ef62f824d7261c4ae9b8b1b6af90e8"},
-    {file = "psycopg2_binary-2.9.10-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:ce5ab4bf46a211a8e924d307c1b1fcda82368586a19d0a24f8ae166f5c784864"},
-    {file = "psycopg2_binary-2.9.10-cp38-cp38-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:056470c3dc57904bbf63d6f534988bafc4e970ffd50f6271fc4ee7daad9498a5"},
-    {file = "psycopg2_binary-2.9.10-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:73aa0e31fa4bb82578f3a6c74a73c273367727de397a7a0f07bd83cbea696baa"},
-    {file = "psycopg2_binary-2.9.10-cp38-cp38-musllinux_1_2_aarch64.whl", hash = "sha256:8de718c0e1c4b982a54b41779667242bc630b2197948405b7bd8ce16bcecac92"},
-    {file = "psycopg2_binary-2.9.10-cp38-cp38-musllinux_1_2_i686.whl", hash = "sha256:5c370b1e4975df846b0277b4deba86419ca77dbc25047f535b0bb03d1a544d44"},
-    {file = "psycopg2_binary-2.9.10-cp38-cp38-musllinux_1_2_ppc64le.whl", hash = "sha256:ffe8ed017e4ed70f68b7b371d84b7d4a790368db9203dfc2d222febd3a9c8863"},
-    {file = "psycopg2_binary-2.9.10-cp38-cp38-musllinux_1_2_x86_64.whl", hash = "sha256:8aecc5e80c63f7459a1a2ab2c64df952051df196294d9f739933a9f6687e86b3"},
-    {file = "psycopg2_binary-2.9.10-cp39-cp39-macosx_12_0_x86_64.whl", hash = "sha256:7a813c8bdbaaaab1f078014b9b0b13f5de757e2b5d9be6403639b298a04d218b"},
-    {file = "psycopg2_binary-2.9.10-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d00924255d7fc916ef66e4bf22f354a940c67179ad3fd7067d7a0a9c84d2fbfc"},
-    {file = "psycopg2_binary-2.9.10-cp39-cp39-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:7559bce4b505762d737172556a4e6ea8a9998ecac1e39b5233465093e8cee697"},
-    {file = "psycopg2_binary-2.9.10-cp39-cp39-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:e8b58f0a96e7a1e341fc894f62c1177a7c83febebb5ff9123b579418fdc8a481"},
-    {file = "psycopg2_binary-2.9.10-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6b269105e59ac96aba877c1707c600ae55711d9dcd3fc4b5012e4af68e30c648"},
-    {file = "psycopg2_binary-2.9.10-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:79625966e176dc97ddabc142351e0409e28acf4660b88d1cf6adb876d20c490d"},
-    {file = "psycopg2_binary-2.9.10-cp39-cp39-musllinux_1_2_i686.whl", hash = "sha256:8aabf1c1a04584c168984ac678a668094d831f152859d06e055288fa515e4d30"},
-    {file = "psycopg2_binary-2.9.10-cp39-cp39-musllinux_1_2_ppc64le.whl", hash = "sha256:19721ac03892001ee8fdd11507e6a2e01f4e37014def96379411ca99d78aeb2c"},
-    {file = "psycopg2_binary-2.9.10-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:7f5d859928e635fa3ce3477704acee0f667b3a3d3e4bb109f2b18d4005f38287"},
-    {file = "psycopg2_binary-2.9.10-cp39-cp39-win32.whl", hash = "sha256:3216ccf953b3f267691c90c6fe742e45d890d8272326b4a8b20850a03d05b7b8"},
-    {file = "psycopg2_binary-2.9.10-cp39-cp39-win_amd64.whl", hash = "sha256:30e34c4e97964805f715206c7b789d54a78b70f3ff19fbe590104b71c45600e5"},
 ]
 
 [[package]]
@@ -4336,7 +4259,7 @@ version = "4.6.0"
 description = "Python client for Redis database and key-value store"
 optional = false
 python-versions = ">=3.7"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "redis-4.6.0-py3-none-any.whl", hash = "sha256:e2b03db868160ee4591de3cb90d40ebb50a90dd302138775937f6a42b7ed183c"},
     {file = "redis-4.6.0.tar.gz", hash = "sha256:585dc516b9eb042a619ef0a39c3d7d55fe81bdb4df09a52c9cdde0d07bf1aa7d"},
@@ -4841,7 +4764,7 @@ version = "2.4.0"
 description = "Sorted Containers -- Sorted List, Sorted Dict, Sorted Set"
 optional = false
 python-versions = "*"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"},
     {file = "sortedcontainers-2.4.0.tar.gz", hash = "sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88"},
@@ -4954,38 +4877,38 @@ typing = ["mypy (>=1.4)", "rich", "twisted"]
 
 [[package]]
 name = "tesserocr"
-version = "2.6.2"
+version = "2.8.0"
 description = "A simple, Pillow-friendly, Python wrapper around tesseract-ocr API using Cython"
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "tesserocr-2.6.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e66ba562a0168ca3c1317daf6658548d979750ef4ee47de00724b8e0e0251fac"},
-    {file = "tesserocr-2.6.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:d2033ce4e76bf8b1a818deb87184301f997ee8e0f0830527821c75ff9d73087e"},
-    {file = "tesserocr-2.6.2-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:0584eeafce957606ee969e31eef3e24de1ed8f3d905a8f4de9173d7ce189093b"},
-    {file = "tesserocr-2.6.2-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:bfb45e80232656080fc41e451786841f181af57dd84c9356d7498a4368472a98"},
-    {file = "tesserocr-2.6.2-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:902150c089fd2cdda97f0039b4530eb43f1a0f1255dc3b9a9207bf94830e7292"},
-    {file = "tesserocr-2.6.2-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:c00485b8442f857c9845d0566236d1c3ff83c9862ea42504a66437a27bf16789"},
-    {file = "tesserocr-2.6.2-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:4092a38f8219abd9f33c7b8866b957acefe6f9becdbc0944b0a75e7ca2ee818e"},
-    {file = "tesserocr-2.6.2-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:ab3de303d6e09f8989ad07475460a5badad1db3ad8db5dc2b44d395eca772280"},
-    {file = "tesserocr-2.6.2-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:6f4edd93abf60d685bbef56359c7b3ad89538c4f3e5c0d3940d22129a1697b26"},
-    {file = "tesserocr-2.6.2-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:76113c9b0c5e19292b15353471eda24b88c60eb8855e6252913a1e920e46ce16"},
-    {file = "tesserocr-2.6.2-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:c047c239f1dc741e18d96ebb961fd697b33d23e3e01323fb97a5a75c12cd0768"},
-    {file = "tesserocr-2.6.2-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:3fc9cd002ee17b5a9976deb5898f693a093a868b7cf70b489a1465025a7f71da"},
-    {file = "tesserocr-2.6.2-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:97c591d62e47739d03cb484a2acfa291e8111a0cb5d5deb54a36311a3a124cea"},
-    {file = "tesserocr-2.6.2-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:7278e94d835337c208d79804c418914879c7089f047c4e3fe869c942de951911"},
-    {file = "tesserocr-2.6.2-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:9c7afd39c438f0e41887adf34d5e96f3f368e1c1f7bbb1bf3462c8a6f7e53f14"},
-    {file = "tesserocr-2.6.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:d3acf3a0139c86b523b1a8ea40262e24ce4989d221bcf8554d6539a16e658e08"},
-    {file = "tesserocr-2.6.2-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:d409b97d0fd5e67debc6ee6b47547ebad87fd61996e5ef3fc143465fa6412c48"},
-    {file = "tesserocr-2.6.2-cp38-cp38-manylinux_2_28_aarch64.whl", hash = "sha256:05add129e6594b8755ce2f0698ab5c86403545dd599071c00b8a1dbf1ffc9e36"},
-    {file = "tesserocr-2.6.2-cp38-cp38-manylinux_2_28_x86_64.whl", hash = "sha256:c31bc7be7711194d6b447110dc7d42d90e0c637d1a4243c95f0537116ab623d0"},
-    {file = "tesserocr-2.6.2-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:3acf8bbee449bfd6f4c724c83c9535d28ff4ea9a83d2f8c81413c29ed6e8eb0d"},
-    {file = "tesserocr-2.6.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:fe08813c0ef5b2708533b861114618bf4cb3642be65613da2b1b9faec4eb3c0a"},
-    {file = "tesserocr-2.6.2-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:be7595dcdd54c12730c13c64683161994534c6c8764a64e4985874b2498446cb"},
-    {file = "tesserocr-2.6.2-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:05222b8bd4b18c2cdfd4c0753c3ac021370c99122f6ed9bc32b15b6deff0ec63"},
-    {file = "tesserocr-2.6.2-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:fae7e1daf58d1fb29498e671f1f4a0cdf0f709da9d59e613b4d78f9fa65f02ec"},
-    {file = "tesserocr-2.6.2-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:91dbfeb72bd35e8ed667b554f9021b8a4efc765b5965f81e7d3592bcac5609a2"},
-    {file = "tesserocr-2.6.2.tar.gz", hash = "sha256:45525fa1c1a356f9d155a9de91b3759ca444084afd853544f5a29aa858b30390"},
+    {file = "tesserocr-2.8.0-cp310-cp310-macosx_13_0_x86_64.whl", hash = "sha256:b5d5dcabe688bf7bb76f87eef05783aa1d305c9566b7f6f6735a12f224ca379b"},
+    {file = "tesserocr-2.8.0-cp310-cp310-macosx_15_0_arm64.whl", hash = "sha256:55d0e018d34054fa7f875cd126abaf423de4069fde49d638a399de530949055b"},
+    {file = "tesserocr-2.8.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:ad52bb2b1d48b7db6fed379a6805c2437432374fab98b0ab5071ff3fc81efaf2"},
+    {file = "tesserocr-2.8.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:4ac659c3207fd3c0e43081a51e486e3d42259abd20bbaed6cd2ee4cd332a78c0"},
+    {file = "tesserocr-2.8.0-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:c47c69177e948f567f818dec308717a679bdd3941fd5d3fc6cd9ecf93fe165a4"},
+    {file = "tesserocr-2.8.0-cp311-cp311-macosx_13_0_x86_64.whl", hash = "sha256:88876546ddadc9590800df5dec7f2acbd35a423f0803ca2f17a93567aabbd877"},
+    {file = "tesserocr-2.8.0-cp311-cp311-macosx_15_0_arm64.whl", hash = "sha256:09d8c55838a0085662d2a07a40843a6bbbd6baf44b45eda01df307cdac17089c"},
+    {file = "tesserocr-2.8.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:e89b4928eefcea953ad70ed03fb344568d1a574347d1f0d18699d01a020a7c7e"},
+    {file = "tesserocr-2.8.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:4636a86269e97d60731a1edd16d29cb2c79a28cc91594d7f0af31ee65f72f4ae"},
+    {file = "tesserocr-2.8.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:9dbe02605da205ce253524c4ca681a519a55258906ff8ca585f9df7bb1e78616"},
+    {file = "tesserocr-2.8.0-cp312-cp312-macosx_13_0_x86_64.whl", hash = "sha256:7a0b03d46a0ad2265b83f461ca305a6e5aaac2626853a82012c6198bb4105d66"},
+    {file = "tesserocr-2.8.0-cp312-cp312-macosx_15_0_arm64.whl", hash = "sha256:c9acde3d66d6ef40f95e4cef424b24acbf90e278396827fc064915c665c6548d"},
+    {file = "tesserocr-2.8.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:426dfff81bae757faa25477feaf783f6f5bcdb94ae6a95f4fe24eda97f4825c0"},
+    {file = "tesserocr-2.8.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:7cb74e1ce1bc038a5cc6db90e5a79cb55d6db1b7e6fe7a0d9eb30475fdfd9036"},
+    {file = "tesserocr-2.8.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:9ad1a2900424994ca5caa2470be04bd1c6ee3f0674b0050a34b556f6ba7d2ed5"},
+    {file = "tesserocr-2.8.0-cp313-cp313-macosx_13_0_x86_64.whl", hash = "sha256:44b3396d52379155fd838931b78b044129c7c77a8f02a92574cde626cff9b4a8"},
+    {file = "tesserocr-2.8.0-cp313-cp313-macosx_15_0_arm64.whl", hash = "sha256:1edd2302f4a91b5491a4ce3f63e612441adf92fd81b339b85cbedb3b5b40f206"},
+    {file = "tesserocr-2.8.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:b0dd849ce77373f9ac4b54d345b4d7115414e525e57a158e948887d744c6f909"},
+    {file = "tesserocr-2.8.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:9ce710a73308964f2ac53f94b4980d2791bb67a82863bb7ef0ca445c1b325aa4"},
+    {file = "tesserocr-2.8.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:a7a36af39aaf29a152c629cf62457192944f8854fbdd28395ef92d283e800662"},
+    {file = "tesserocr-2.8.0-cp39-cp39-macosx_13_0_x86_64.whl", hash = "sha256:f83344e350062d7db8625aa21695d34949a25e1f144788996a0e1e91dc53ca45"},
+    {file = "tesserocr-2.8.0-cp39-cp39-macosx_15_0_arm64.whl", hash = "sha256:10fa0125d57c9edc93a7f35673f6b977e0fc0deb123d62b158c93fd8ca4c1c2c"},
+    {file = "tesserocr-2.8.0-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:efef77ed8702d56a3dc7ba5dba37ce13beecd24128042ad41cbc20c50bb5e23e"},
+    {file = "tesserocr-2.8.0-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:b41a78eaa35c90d61facd07dca96443e7dc1f0604ae955843be916e2f9a225af"},
+    {file = "tesserocr-2.8.0-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:317931096378a1dd056500d9c3a489aa0e4546e4d7792a6ffa1a31c0902ab365"},
+    {file = "tesserocr-2.8.0.tar.gz", hash = "sha256:be518d1b1b5ff54c11aada1e0fd12942509ea70581e0a8b39a2a473a0b2dbd36"},
 ]
 
 [[package]]
@@ -5443,4 +5366,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "aae7f5758dd1a5c5fa68bf0aeea190b3a2538cdd1a09243616ec0655417c4762"
+content-hash = "5ca79b5ef910b4ef57bdb56f1175104717ec867dec97ed4230f1df9254731820"
