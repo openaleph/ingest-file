@@ -116,6 +116,14 @@ ENV LANG='en_US.UTF-8' \
     OMP_THREAD_LIMIT='1' \
     OPENBLAS_NUM_THREADS='1'
 
+# force compile tesserocr 2.6.2 with C++ 14
+# to make it compatible with Tesseract 5
+RUN pip download --no-binary=:all: "tesserocr==2.6.2" \
+    && tar -xzf tesserocr-2.6.2.tar.gz \
+    && sed -i "s/-std=c++11/-std=c++14/" tesserocr-2.6.2/setup.py \
+    && cd tesserocr-2.6.2 \
+    && CXXFLAGS="-std=c++14" pip install --no-cache-dir .
+
 # tesseract 5
 ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
 
