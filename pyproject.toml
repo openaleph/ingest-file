@@ -17,8 +17,6 @@ dependencies = [
     "followthemoney (>=4.1.1,<5.0.0)",
     "ftmq[postgres] (>=4.1.1,<5.0.0)",
     "pyicu (>=2.15.2,<3.0.0)",
-    # ingest dependencies
-    "tesserocr (==2.6.2)",
     "dbf (>=0.99.10,<0.100.0)",
     "pymediainfo (>=7.0.1,<8.0.0)",
     "python-magic (>=0.4.27,<0.5.0)",
@@ -36,12 +34,12 @@ dependencies = [
     "msglite (>=0.30.0,<0.31.0)",
     "icalendar (>=6.3.1,<7.0.0)",
     "cryptography (>=45.0.4,<46.0.0)",
-    "prometheus-client (==0.17.1)",
+    "prometheus-client (>=0.20.0,<0.21.0)",
     "sentry_sdk (==2.0.1)",
     # servicelayer extras requirements
     "boto3 (>=1.11.9,<2.0.0)",
-    "servicelayer @ git+https://github.com/openaleph/servicelayer.git@main",
     "openaleph-procrastinate (>=0.0.26,<0.0.27)",
+    "openaleph-servicelayer (>=1.23.3, <1.24.0)",
 ]
 
 [project.scripts]
