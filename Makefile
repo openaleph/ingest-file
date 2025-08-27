@@ -18,7 +18,7 @@ build-cache:
 	docker build . --cache-from ghcr.io/openaleph/ingest-file:cache -t ghcr.io/openaleph/ingest-file:cache
 
 build-test:
-	docker build . -f Dockerfile.test -t ghcr.io/openaleph/ingest-file:test
+	$(COMPOSE) build test-ingest-file
 
 build-macos:
 	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 $(COMPOSE) build --no-rm --parallel
@@ -39,7 +39,7 @@ format-check:
 	black --check .
 
 test: build-test services
-	PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 $(COMPOSE) run -e DEBUG=1 --rm ingest-file pytest --cov=ingestors --cov-report html --cov-report term
+	PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 $(COMPOSE) run --rm test-ingest-file pytest
 
 test-e2e: build services
 	$(COMPOSE_E2E) run --rm ingest-file
