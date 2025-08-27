@@ -38,7 +38,7 @@ format:
 format-check:
 	black --check .
 
-test: services
+test: build-test services
 	PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 $(COMPOSE) run --rm test-ingest-file pytest
 
 test-e2e: build services
