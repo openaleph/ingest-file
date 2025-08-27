@@ -17,6 +17,8 @@ dependencies = [
     "followthemoney (>=4.1.1,<5.0.0)",
     "ftmq[postgres] (>=4.1.1,<5.0.0)",
     "pyicu (>=2.15.2,<3.0.0)",
+    # ingest dependencies
+    "tesserocr (==2.6.2)",
     "dbf (>=0.99.10,<0.100.0)",
     "pymediainfo (>=7.0.1,<8.0.0)",
     "python-magic (>=0.4.27,<0.5.0)",
@@ -38,7 +40,7 @@ dependencies = [
     "sentry_sdk (==2.0.1)",
     # servicelayer extras requirements
     "boto3 (>=1.11.9,<2.0.0)",
-    "openaleph-procrastinate (>=0.0.26,<0.0.27)",
+    "openaleph-procrastinate (>=0.0.27,<0.0.28)",
     "openaleph-servicelayer (>=1.23.3, <1.24.0)",
 ]
 
