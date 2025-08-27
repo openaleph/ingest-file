@@ -8,7 +8,7 @@ COPY . /ingestors
 RUN rm -rf /ingestors/tests
 WORKDIR /ingestors
 
-RUN pip3 install --no-cache-dir -r /ingestors/requirements.txt
+RUN pip3 install --no-cache-dir --no-deps -r /ingestors/requirements.txt
 RUN pip3 install --no-deps --no-cache-dir /ingestors
 
 ENV ARCHIVE_TYPE=file \
