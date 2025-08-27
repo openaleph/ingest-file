@@ -5399,7 +5399,10 @@ idna = ">=2.0"
 multidict = ">=4.0"
 propcache = ">=0.2.1"
 
+[extras]
+ocr = ["tesserocr"]
+
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "119c400b70a98b21e8ccee1ddac3752547a5f5d533263c2a94444b94972f2f20"
+content-hash = "e21e3bd89c13e000e7ac28b5950bc879be16328a83cae1c9d33912544314c8c6"
