@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from .support import TestCase
 from ingestors.exc import ENCRYPTED_MSG
+from tests.support import TestCase
 
 
 class TabularIngestorTest(TestCase):
@@ -16,7 +16,7 @@ class TabularIngestorTest(TestCase):
         table = [t for t in tables if "1" in t.first("title")][0]
         self.assertTrue(table.has("csvHash"))
         self.assertEqual(int(table.first("rowCount")), 3)
-        self.assertIn("Mihai Viteazul", table.get("indexText"))
+        self.assertIn("Mihai Viteazul", "".join(table.get("indexText")))
 
     def test_unicode_xls(self):
         fixture_path, entity = self.fixture("rom.xls")

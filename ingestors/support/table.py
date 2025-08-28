@@ -18,6 +18,7 @@ class TableSupport(EncodingSupport, TempFileSupport):
     def emit_row_dicts(self, table, rows, headers=None):
         csv_path = self.make_work_file(table.id)
         row_count = 0
+        fragment_rows = []
         with open(csv_path, "w", encoding=self.DEFAULT_ENCODING) as fp:
             csv_writer = csv.writer(fp, dialect="unix")
             for row in rows:
@@ -28,11 +29,15 @@ class TableSupport(EncodingSupport, TempFileSupport):
                 if length == 0:
                     continue
                 csv_writer.writerow(values)
-                self.manager.emit_text_fragment(table, values, row_count)
+                fragment_rows.append(",".join([v or "" for v in values]))
                 row_count += 1
                 if row_count > 0 and row_count % 1000 == 0:
                     log.info("Table emit [%s]: %s...", table, row_count)
+                    fragment_rows = []
+                    self.manager.emit_text_fragment(table, fragment_rows, row_count)
         if row_count > 0:
+            if len(fragment_rows):
+                self.manager.emit_text_fragment(table, fragment_rows, row_count)
             csv_hash = self.manager.store(csv_path, mime_type=CSV)
             table.set("csvHash", csv_hash)
         table.set("rowCount", row_count + 1)
