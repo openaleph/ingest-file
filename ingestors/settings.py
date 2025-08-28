@@ -27,4 +27,8 @@ class Settings(OpenAlephSettings):
 _settings = OpenAlephSettings()
 
 # Also store cached values in the SQL database
-sls.TAGS_DATABASE_URI = _settings.fragments_uri
+# Force psycopg3 for SQLAlchemy if fragments_uri is postgres
+fragments_uri = _settings.fragments_uri
+if fragments_uri and fragments_uri.startswith("postgresql://"):
+    fragments_uri = fragments_uri.replace("postgresql://", "postgresql+psycopg://", 1)
+sls.TAGS_DATABASE_URI = fragments_uri
