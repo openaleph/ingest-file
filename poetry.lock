@@ -654,14 +654,14 @@ files = [
 
 [[package]]
 name = "cachetools"
-version = "6.2.0"
+version = "5.5.2"
 description = "Extensible memoizing collections and decorators"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.7"
 groups = ["main"]
 files = [
-    {file = "cachetools-6.2.0-py3-none-any.whl", hash = "sha256:1c76a8960c0041fcc21097e357f882197c79da0dbff766e7317890a65d7d8ba6"},
-    {file = "cachetools-6.2.0.tar.gz", hash = "sha256:38b328c0889450f05f5e120f56ab68c8abaf424e1275522b138ffc93253f7e32"},
+    {file = "cachetools-5.5.2-py3-none-any.whl", hash = "sha256:d26a22bcc62eb95c3beabd9f1ee5e820d3d2704fe2967cbe350e20c8ffcd3f0a"},
+    {file = "cachetools-5.5.2.tar.gz", hash = "sha256:1a661caa9175d26759571b2e19580f9d6393969e5dfca11fdb1f947a23e640d4"},
 ]
 
 [[package]]
@@ -2755,22 +2755,22 @@ files = [
 
 [[package]]
 name = "openaleph-procrastinate"
-version = "0.0.27"
+version = "0.0.29"
 description = "Task queue logic for OpenAleph built upon procrastinate"
 optional = false
 python-versions = "<4,>=3.11"
 groups = ["main"]
 files = [
-    {file = "openaleph_procrastinate-0.0.27-py3-none-any.whl", hash = "sha256:42414029bc6c14d0046b550a791de4ba947fe5d5c07d66a68658fd628b415f27"},
-    {file = "openaleph_procrastinate-0.0.27.tar.gz", hash = "sha256:f0c24e016d664d799b4a2ce075d6c0d0eaaabc25d3cb6cf45894f420c988076a"},
+    {file = "openaleph_procrastinate-0.0.29-py3-none-any.whl", hash = "sha256:d700205d24952500ae6ca0976299e03c708925a1278c8097089c985198ea184e"},
+    {file = "openaleph_procrastinate-0.0.29.tar.gz", hash = "sha256:fcbfd89923a805cfc0e791d89715c319b630c2c6e25d3793391f9f5bee62e128"},
 ]
 
 [package.dependencies]
 anystore = ">=0.3.10,<0.4.0"
-cachetools = ">=6.1.0,<7.0.0"
+cachetools = "<6"
 followthemoney = ">=4.2.0,<5.0.0"
-ftmq = ">=4.1.4,<5.0.0"
-procrastinate = ">=3.5.1,<4.0.0"
+ftmq = ">=4.2.2,<5.0.0"
+procrastinate = ">=3.5.2,<4.0.0"
 psycopg = ">=3.2.9,<4.0.0"
 pydantic = ">=2.11.7,<3.0.0"
 pydantic-settings = ">=2.10.1,<3.0.0"
@@ -5353,4 +5353,4 @@ ocr = ["tesserocr"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "3b25cf32ac570a6b8166740913e286e16583dc1604de0b44883b9712748c3d68"
+content-hash = "852628d8b7a951089ddc316af321fb4ffed834f6fe799a90ef0396b68807ebec"
