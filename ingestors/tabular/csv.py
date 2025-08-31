@@ -10,6 +10,9 @@ from ingestors.support.table import TableSupport
 
 log = logging.getLogger(__name__)
 
+# Increase CSV field size limit to handle large fields
+csv.field_size_limit(10 * 1024 * 1024)  # 10MB limit
+
 
 class CSVIngestor(Ingestor, TableSupport):
     """Decode and ingest a CSV file.
