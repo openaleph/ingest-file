@@ -5,7 +5,7 @@
 # * Run "pre-commit install".
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
@@ -13,12 +13,13 @@ repos:
       - id: check-symlinks
       - id: check-toml
       - id: check-yaml
+        exclude: "mkdocs.yml"
       - id: debug-statements
       - id: end-of-file-fixer
       - id: mixed-line-ending
         args: ["--fix=lf"]
       - id: trailing-whitespace
-        exclude: ".bumpversion.cfg"  # wtf
+        exclude: ".bumpversion.cfg" # wtf
 
   # - repo: https://github.com/asottile/pyupgrade
   #   rev: v3.10.1
@@ -78,7 +79,7 @@ repos:
     rev: 1.9.0
     hooks:
       - id: poetry-export
-        args: ["--without-hashes", "-o", "requirements.txt"]
+        args: ["--without-hashes", "--with", "main", "-o", "requirements.txt"]
       - id: poetry-export
         args:
           ["--without-hashes", "--only", "dev", "-o", "requirements-dev.txt"]

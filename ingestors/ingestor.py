@@ -1,5 +1,6 @@
 import logging
-from pantomime import normalize_mimetype, normalize_extension
+
+from rigour.mime import normalize_extension, normalize_mimetype
 
 log = logging.getLogger(__name__)
 

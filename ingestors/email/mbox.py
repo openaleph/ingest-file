@@ -1,9 +1,10 @@
 import logging
 import mailbox
-from email.policy import default
 from email.generator import BytesGenerator
-from pantomime.types import RFC822
+from email.policy import default
+
 from followthemoney import model
+from rigour.mime.types import RFC822
 
 from ingestors.email.msg import RFC822Ingestor
 from ingestors.support.temp import TempFileSupport

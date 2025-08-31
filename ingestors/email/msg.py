@@ -1,15 +1,16 @@
 import email
 import logging
-from email.policy import default
 from email.errors import MessageError
+from email.policy import default
 from html import escape
-from pantomime import normalize_mimetype
-from followthemoney import model
 
+from followthemoney import model
+from rigour.mime import normalize_mimetype
+
+from ingestors.exc import ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.email import EmailSupport
 from ingestors.support.encoding import EncodingSupport
-from ingestors.exc import ProcessingException
 
 log = logging.getLogger(__name__)
 

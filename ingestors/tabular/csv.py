@@ -1,11 +1,12 @@
-import io
 import csv
+import io
 import logging
+
 from followthemoney import model
 
+from ingestors.exc import ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.table import TableSupport
-from ingestors.exc import ProcessingException
 
 log = logging.getLogger(__name__)
 
@@ -26,15 +27,13 @@ class CSVIngestor(Ingestor, TableSupport):
             encoding = self.detect_stream_encoding(fh)
             log.debug("Detected encoding [%r]: %s", entity, encoding)
 
-        fh = io.open(file_path, "r", encoding=encoding, errors="replace")
-        try:
-            sample = fh.read(4096 * 10)
-            fh.seek(0)
-            dialect = csv.Sniffer().sniff(sample)
-            reader = csv.reader(fh, dialect=dialect)
-            self.emit_row_tuples(entity, reader)
-        except (Exception, UnicodeDecodeError, csv.Error) as err:
-            log.warning("CSV error: %s", err)
-            raise ProcessingException("Invalid CSV: %s" % err) from err
-        finally:
-            fh.close()
+        with io.open(file_path, "r", encoding=encoding, errors="replace") as fh:
+            try:
+                sample = fh.read(4096 * 10)
+                fh.seek(0)
+                dialect = csv.Sniffer().sniff(sample)
+                reader = csv.reader(fh, dialect=dialect)
+                self.emit_row_tuples(entity, reader)
+            except (Exception, csv.Error) as err:
+                log.warning("CSV error: %s", err)
+                raise ProcessingException("Invalid CSV: %s" % err) from err

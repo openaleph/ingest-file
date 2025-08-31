@@ -1,5 +1,1 @@
-.git
-.github
-__pycache__
-convert
-docker-compose.yml
+.gitignore

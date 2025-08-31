@@ -1,15 +1,17 @@
 import logging
+
 from followthemoney import model
 from pymediainfo import MediaInfo
 
+from ingestors.exc import ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.timestamp import TimestampSupport
-from ingestors.exc import ProcessingException
+from ingestors.support.transcription import TranscriptionSupport
 
 log = logging.getLogger(__name__)
 
 
-class VideoIngestor(Ingestor, TimestampSupport):
+class VideoIngestor(Ingestor, TimestampSupport, TranscriptionSupport):
     MIME_TYPES = [
         "application/x-shockwave-flash",
         "video/quicktime",
@@ -44,6 +46,10 @@ class VideoIngestor(Ingestor, TimestampSupport):
                 entity.add("duration", track.duration)
         except Exception as ex:
             raise ProcessingException("Could not read video: %r", ex) from ex
+        try:
+            self.transcribe(self.manager.dataset, entity, self.manager.context)
+        except Exception as ex:
+            log.error(f"Could not queue audio for transcription: {ex}")
 
     @classmethod
     def match(cls, file_path, entity):

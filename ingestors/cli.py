@@ -1,132 +1,99 @@
-import logging
-import sys
-from pprint import pprint
+from pathlib import Path
+from typing import Optional
 
-import click
-from ftmq.store.fragments import get_dataset
-from servicelayer import settings as sl_settings
-from servicelayer.archive.util import ensure_path
-from servicelayer.cache import get_fakeredis, get_redis
-from servicelayer.jobs import Dataset, Job
-from servicelayer.logs import configure_logging
+import typer
+from anystore.cli import ErrorHandler
+from anystore.logging import configure_logging, get_logger
+from ftmq.io import smart_write_proxies
+from ftmq.store.fragments import get_fragments
+from rich import print
 from servicelayer.tags import Tags
+from typing_extensions import Annotated
 
-from ingestors import settings
-from ingestors.analysis import Analyzer
-from ingestors.directory import DirectoryIngestor
-from ingestors.manager import Manager
-from ingestors.worker import OP_ANALYZE, OP_INGEST, IngestWorker
+from ingestors import __version__
+from ingestors.settings import Settings
+from ingestors.tasks import ingest_path
 
-log = logging.getLogger(__name__)
-STAGES = [OP_ANALYZE, OP_INGEST]
-
-
-@click.group()
-def cli():
-    configure_logging(level=logging.DEBUG)
-
-
-@cli.command()
-@click.option("-s", "--sync", is_flag=True, default=False, help="Run without threads")
-def process(sync):
-    """Start the queue and process tasks as they come. Blocks while waiting"""
-    num_threads = None if sync else sl_settings.WORKER_THREADS
-    worker = IngestWorker(stages=STAGES, num_threads=num_threads)
-    code = worker.run()
-    sys.exit(code)
-
-
-@cli.command()
-@click.argument("dataset")
-def cancel(dataset):
-    """Delete scheduled tasks for given dataset"""
-    conn = get_redis()
-    Dataset(conn, dataset).cancel()
-
-
-@cli.command()
-def killthekitten():
-    """Completely kill redis contents."""
-    conn = get_redis()
-    conn.flushall()
-
-
-def _ingest_path(db, conn, dataset, path, languages=None):
-    languages = languages or []
-    context = {"languages": languages}
-    job = Job.create(conn, dataset)
-    stage = job.get_stage(OP_INGEST)
-    manager = Manager(db, stage, context)
-    path = ensure_path(path)
-    if path is not None:
-        if path.is_file():
-            entity = manager.make_entity("Document")
-            checksum = manager.store(path)
-            entity.set("contentHash", checksum)
-            entity.make_id(checksum)
-            entity.set("fileName", path.name)
-            log.info("Queue: %r", entity.to_dict())
-            manager.queue_entity(entity)
-        if path.is_dir():
-            DirectoryIngestor.crawl(manager, path)
-    manager.close()
-
-
-@cli.command()
-@click.option("--languages", multiple=True, help="3-letter language code (ISO 639)")
-@click.option("--dataset", required=True, help="Name of the dataset")
-@click.argument("path", type=click.Path(exists=True))
-def ingest(path, dataset, languages=None):
-    """Queue a set of files for ingest."""
-    conn = get_redis()
-    db = get_dataset(dataset, OP_INGEST)
-    _ingest_path(db, conn, dataset, path, languages=languages)
-
-
-@cli.command()
-@click.option("--dataset", required=True, help="Name of the dataset")
-def analyze(dataset):
-    db = get_dataset(dataset, OP_ANALYZE)
-    analyzer = None
-    for entity in db.partials():
-        if analyzer is None or analyzer.entity.id != entity.id:
-            if analyzer is not None:
-                analyzer.flush()
-            # log.debug("Analyze: %r", entity)
-            analyzer = Analyzer(db, entity, {})
-        analyzer.feed(entity)
-    if analyzer is not None:
-        analyzer.flush()
-
-
-@cli.command()
-@click.option("--languages", multiple=True, help="3-letter language code (ISO 639)")
-@click.argument("path", type=click.Path(exists=True))
-def debug(path, languages=None):
-    """Debug the ingest for the given path."""
-    conn = get_fakeredis()
-    settings.fts.DATABASE_URI = "sqlite:////tmp/debug.sqlite3"
-    db = get_dataset("debug", origin=OP_INGEST, database_uri=settings.fts.DATABASE_URI)
-    db.delete()
-    _ingest_path(db, conn, "debug", path, languages=languages)
-    worker = IngestWorker(conn=conn, stages=STAGES)
-    worker.sync()
-    for entity in db.iterate():
-        pprint(entity.to_dict())
-
-
-@cli.command()
-@click.argument(
-    "prefix",
-    default="",
+log = get_logger(__name__)
+settings = Settings()
+cli = typer.Typer(
+    no_args_is_help=True,
+    pretty_exceptions_enable=True,
+    pretty_exceptions_short=not settings.debug,
 )
-def cache_clear(prefix):
-    """Delete all ingest cache entries.
-
-    Only delete entries with the given prefix (e.g: 'ocr:', 'pdf:').
-    """
-    Tags("ingest_cache").delete(prefix=prefix)
 
 
-if __name__ == "__main__":
-    cli()
+@cli.callback(invoke_without_command=True)
+def cli_base(
+    version: Annotated[Optional[bool], typer.Option(..., help="Show version")] = False,
+    settings: Annotated[
+        Optional[bool], typer.Option(..., help="Show current settings")
+    ] = False,
+):
+    if version:
+        print(__version__)
+        raise typer.Exit()
+    if settings:
+        print(Settings())
+        raise typer.Exit()
+    configure_logging()
+
+
+@cli.command("ingest")
+def cli_ingest(
+    path: Annotated[
+        Path,
+        typer.Argument(
+            exists=True,
+            file_okay=True,
+            dir_okay=True,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+        ),
+    ],
+    dataset: Annotated[
+        str, typer.Option(..., "-d", "--dataset", help="Name of the dataset")
+    ],
+    foreign_id: Annotated[
+        Optional[str],
+        typer.Option(..., "-f", "--foreign-id", help="Foreign ID of the dataset"),
+    ] = None,
+    languages: Annotated[
+        Optional[list[str]], typer.Option(help="3-letter language code (ISO 639)")
+    ] = None,
+):
+    """Queue a local directory for ingest."""
+    with ErrorHandler(log):
+        if settings.debug:
+            from servicelayer import settings as sls
+
+            sls.TAGS_DATABASE_URI = "sqlite:///:memory:?mode=memory&cache=shared"
+
+        ingest_path(dataset, path, languages or [], foreign_id)
+
+        if settings.debug:
+            from openaleph_procrastinate.settings import DeferSettings
+
+            from ingestors.tasks import app
+
+            defer_settings = DeferSettings()
+            db = get_fragments(dataset)
+            db.delete()
+            app.run_worker(queues=[defer_settings.ingest.queue], wait=False)
+            smart_write_proxies("-", db.iterate())
+
+
+@cli.command()
+def cache_clear(
+    prefix: Annotated[
+        str,
+        typer.Option(
+            default="",
+            help="Only delete entries with the given prefix (e.g: 'ocr:', 'pdf:').",
+        ),
+    ] = "",
+):
+    """Delete ingest cache entries."""
+    with ErrorHandler(log):
+        Tags("ingest_cache").delete(prefix=prefix)

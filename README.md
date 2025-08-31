@@ -1,26 +1,17 @@
-# ingestors
+[![Docs](https://img.shields.io/badge/docs-live-brightgreen)](https://openaleph.org/docs/lib/ingest-file/)
+[![Python test and package](https://github.com/openaleph/ingest-file/actions/workflows/build.yml/badge.svg)](https://github.com/openaleph/ingest-file/actions/workflows/build.yml)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
+[![Coverage Status](https://coveralls.io/repos/github/openaleph/ingest-file/badge.svg?branch=main)](https://coveralls.io/github/openaleph/ingest-file?branch=main)
+[![AGPLv3+ License](https://img.shields.io/pypi/l/ftmq)](./LICENSE)
+[![Pydantic v2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydantic/pydantic/main/docs/badge/v2.json)](https://pydantic.dev)
 
-``ingestors`` extract useful information from documents of different types in
-a structured standard format. It retains folder structures across directories,
-compressed archives and emails. The extracted data is formatted as Follow the
-Money (FtM) entities, ready for import into Aleph, or processing as an object
-graph.
+# ingest-file
 
-Supported file types:
+``ingest-file`` extract useful information from documents of different types in a structured standard format. It retains folder structures across directories, compressed archives and emails. The extracted data is formatted as [Follow the Money (FtM)](https://followthemoney.tech) entities, ready for import into [OpenAleph](https://openaleph.org), or processing as an object graph.
 
-* Plain text
-* Images
-* Web pages, XML documents
-* PDF files
-* Emails (Outlook, plain text)
-* Archive files (ZIP, Rar, etc.)
+## Documentation
 
-Other features:
-
-* Extendable and composable using classes and mixins.
-* Generates FollowTheMoney objects to a database as result objects.
-* Lightweight worker-style support for logging, failures and callbacks.
-* Thoroughly tested.
+https://openaleph.org/docs/lib/ingest-file
 
 ## Development environment
 

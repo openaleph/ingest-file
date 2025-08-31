@@ -1,5 +1,10 @@
+contrib/*.bin
+data/archive
 data/model_type_prediction.ftz
+debug.sqlite3
 data/servicelayer-archive
+# documentation
+site
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

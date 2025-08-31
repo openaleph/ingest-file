@@ -12,23 +12,43 @@ services:
 
   ingest-file:
     build:
-      dockerfile: Dockerfile.test
+      dockerfile: Dockerfile
     hostname: ingest
     tmpfs:
       - /tmp:mode=777
       - /data:mode=777
     environment:
+      OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
       FTM_STORE_URI: postgresql://ingest:ingest@postgres/ingest
       LOG_FORMAT: TEXT # TEXT or JSON
-      # LD_PRELOAD: /usr/lib/x86_64-linux-gnu/libgomp.so.1
-      LD_PRELOAD: /usr/lib/aarch64-linux-gnu/libgomp.so.1
+    entrypoint: ["/bin/sh", "-c", "echo 'opal-procrastinate init-db' && exec \"$@\"", "--"]
     volumes:
       - "./ingestors:/ingestors/ingestors"
-      - "./tests:/ingestors/tests"
       - "./data:/ingestors/data"
       - "./requirements.txt:/ingestors/requirements.txt"
       - "./setup.py:/ingestors/setup.py"
-      - "~:/host"
+    depends_on:
+      - postgres
+      - redis
+
+  test-ingest-file:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    image: test-ingest-file
+    hostname: ingest
+    tmpfs:
+      - /tmp:mode=777
+      - /data:mode=777
+    environment:
+      OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
+      FTM_STORE_URI: postgresql://ingest:ingest@postgres/ingest
+      LOG_FORMAT: TEXT # TEXT or JSON
+      DEBUG: 1
+    entrypoint: ["/bin/sh", "-c", "echo 'opal-procrastinate init-db' && exec \"$@\"", "--"]
+    volumes:
+      - "./tests:/ingestors/tests"
+      - "./data:/ingestors/data"
     depends_on:
       - postgres
       - redis

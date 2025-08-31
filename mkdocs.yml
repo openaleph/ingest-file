@@ -1,0 +1,78 @@
+site_name: ingest-file
+site_url: https://openaleph.org/docs/lib/ingest-file
+repo_url: https://github.com/openaleph/ingest-file
+theme:
+  name: material
+  logo: https://openaleph.org/assets/Logo/RGB/Open-Aleph-Logo-RGB-Square-Neg.svg
+  favicon: https://openaleph.org/favicon.ico
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    # - navigation.footer
+    - toc.follow
+    - content.code.copy
+  custom_dir: docs/overrides
+extra_css:
+  - stylesheets/extra.css
+extra:
+  social:
+    - icon: material/mail
+      link: mailto:hi@dataresearchcenter.org
+    - icon: material/web
+      link: https://openaleph.org
+    - icon: material/github
+      link: https://github.com/openaleph/openaleph
+    - icon: material/linkedin
+      link: https://www.linkedin.com/company/dataresearchcenter/
+markdown_extensions:
+  - tables
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.details
+  - admonition
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - attr_list
+  - md_in_html
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+plugins:
+  - search
+  - autorefs
+  - mkdocs-typer2:
+      pretty: true
+  - macros:
+      module_name: mkdocs_env
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_root_heading: false
+            show_object_full_path: false
+
+nav:
+  - index.md
+  - setup.md
+  - usage.md
+  - pipeline.md
+  - versioning.md
+  - Reference:
+      - Mime types: ./reference/mime.md
+      - Command line: ./reference/cli.md
+      - Settings: ./reference/settings.md
+      - Ingestors: ./reference/ingestors.md
+  - OpenAleph:
+      - About: https://openaleph.org/
+      - User Guide: https://openaleph.org/docs
+      - Power User Blogpost Series: https://openaleph.org/blog/

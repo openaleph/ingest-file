@@ -17,7 +17,6 @@ class ImageIngestorTest(TestCase):
     def test_tesseract_ocr_regression(self):
         """This test is meant to catch a regression in the OCR behaviour
         described in this PR: https://github.com/alephdata/ingest-file/pull/585"""
-
         test_data = {
             "jpeg": {
                 "file": "regression_jpg.jpg",

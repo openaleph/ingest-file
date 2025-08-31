@@ -1,12 +1,13 @@
 import logging
 from io import BytesIO
-from PIL import Image, ExifTags
-from followthemoney import model
 
+from followthemoney import model
+from PIL import ExifTags, Image
+
+from ingestors.exc import ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.ocr import OCRSupport
 from ingestors.support.timestamp import TimestampSupport
-from ingestors.exc import ProcessingException
 
 log = logging.getLogger(__name__)
 
@@ -60,6 +61,7 @@ class ImageIngestor(Ingestor, OCRSupport, TimestampSupport):
         with open(file_path, "rb") as fh:
             data = fh.read()
 
+        image = None
         try:
             image = Image.open(BytesIO(data))
             image.load()
@@ -67,8 +69,11 @@ class ImageIngestor(Ingestor, OCRSupport, TimestampSupport):
             languages = self.manager.context.get("languages")
             text = self.extract_ocr_text(data, languages=languages)
             entity.add("bodyText", text)
-        except (OSError, IOError, Exception) as err:
-            raise ProcessingException("Failed to open image: %s" % err)
+        except Exception as err:
+            raise ProcessingException("Failed to process image: %s" % err)
+        finally:
+            if image is not None:
+                image.close()
 
     @classmethod
     def match(cls, file_path, entity):

@@ -1,18 +1,20 @@
-import shutil
 import logging
-import zipfile
 import pathlib
-from pprint import pprint  # noqa
-from normality import safe_filename, stringify
+import shutil
+import zipfile
+
 from followthemoney import model
+from normality import safe_filename, stringify
 from servicelayer.archive.util import ensure_path
 
+from ingestors.exc import ProcessingException
 from ingestors.ingestor import Ingestor
-from ingestors.support.xml import XMLSupport
+from ingestors.support.email import EmailIdentity, EmailSupport
 from ingestors.support.temp import TempFileSupport
 from ingestors.support.timestamp import TimestampSupport
-from ingestors.support.email import EmailSupport, EmailIdentity
-from ingestors.exc import ProcessingException
+from ingestors.support.xml import XMLSupport
+
+# from pprint import pprint
 
 log = logging.getLogger(__name__)
 MIME = "application/xml+opfmessage"
@@ -128,13 +130,13 @@ class OutlookOLMMessageIngestor(Ingestor, XMLSupport, EmailSupport, TimestampSup
         entity.schema = model.get("Email")
         try:
             doc = self.parse_xml_path(file_path)
-        except TypeError as te:
-            raise ProcessingException("Cannot parse OPF XML file.") from te
+        except TypeError as terr:
+            raise ProcessingException("Cannot parse OPF XML file.") from terr
 
-        if len(doc.findall("//email")) != 1:
+        if len(doc.findall(".//email")) != 1:
             raise ProcessingException("More than one email in file.")
 
-        email = doc.find("//email")
+        email = doc.find(".//email")
         props = email.getchildren()
         props = {c.tag: stringify(c.text) for c in props if c.text}
         # from pprint import pformat
@@ -151,8 +153,10 @@ class OutlookOLMMessageIngestor(Ingestor, XMLSupport, EmailSupport, TimestampSup
         senders = self.get_contacts(email, "OPFMessageCopySenderAddress")
         self.apply_identities(entity, senders, "emitters", "sender")
 
-        froms = self.get_contacts(email, "OPFMessageCopyFromAddresses")
-        self.apply_identities(entity, froms, "emitters", "from")
+        froms = self.get_contacts(  # codespell:ignore
+            email, "OPFMessageCopyFromAddresses"
+        )
+        self.apply_identities(entity, froms, "emitters", "from")  # codespell:ignore
 
         tos = self.get_contacts(email, "OPFMessageCopyToAddresses")
         self.apply_identities(entity, tos, "recipients", "to")

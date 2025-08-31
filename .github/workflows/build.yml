@@ -82,3 +82,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Run e2e test
+        working-directory: ./e2e
+        run: bash -c ./test_e2e.sh

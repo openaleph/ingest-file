@@ -1,29 +1,37 @@
 import logging
 from datetime import datetime
+from functools import cache
 from tempfile import mkdtemp
 from timeit import default_timer
+from typing import Any, Generator
 
 import magic
 from banal import ensure_list
 from followthemoney import model
 from followthemoney.helpers import entity_filename
 from followthemoney.namespace import Namespace
+from followthemoney.proxy import EntityProxy
+from ftmq.store.fragments import get_fragments
 from ftmq.store.fragments.utils import safe_fragment
 from normality import stringify
-from pantomime import normalize_mimetype
-from pkg_resources import get_distribution
+from openaleph_procrastinate import defer
+from procrastinate import App
 from prometheus_client import Counter, Histogram
-from sentry_sdk import capture_exception
+from rigour.mime import normalize_mimetype
 from servicelayer.archive import init_archive
+from servicelayer.archive.archive import Archive
 from servicelayer.archive.util import ensure_path
 from servicelayer.extensions import get_extensions
 
-from ingestors import settings
+from ingestors import __version__
 from ingestors.directory import DirectoryIngestor
 from ingestors.exc import ENCRYPTED_MSG, ProcessingException
+from ingestors.settings import Settings
 from ingestors.util import filter_text, remove_directory
 
 log = logging.getLogger(__name__)
+
+OP_INGEST = "ingest"
 
 INGESTIONS_SUCCEEDED = Counter(
     "ingestfile_ingestions_succeeded_total",
@@ -64,7 +72,19 @@ INGESTED_BYTES = Counter(
 )
 
 
-class Manager(object):
+@cache
+def get_archive() -> Archive:
+    from servicelayer import settings
+
+    return init_archive(
+        archive_type=settings.ARCHIVE_TYPE,
+        path=settings.ARCHIVE_PATH,
+        bucket=settings.ARCHIVE_BUCKET,
+        publication_bucket=settings.PUBLICATION_BUCKET,
+    )
+
+
+class Manager:
     """Handles the lifecycle of an ingestor. This can be subclassed to embed it
     into a larger processing framework."""
 
@@ -75,24 +95,23 @@ class Manager(object):
 
     MAGIC = magic.Magic(mime=True)
 
-    def __init__(self, dataset, stage, context):
+    def __init__(self, app: App, dataset: str, context: dict[str, Any]):
+        settings = Settings()
+        self.app = app
         self.dataset = dataset
-        self.writer = dataset.bulk()
-        self.stage = stage
+        self.db = get_fragments(dataset, OP_INGEST, database_uri=settings.fragments_uri)
+        self.writer = self.db.bulk()
         self.context = context
-        self.ns = Namespace(self.context.get("namespace"))
+        self.ns = Namespace(self.context["namespace"])
         self.work_path = ensure_path(mkdtemp(prefix="ingestor-"))
         self.emitted = set()
-
-    @property
-    def archive(self):
-        if not hasattr(settings, "_archive"):
-            settings._archive = init_archive()
-        return settings._archive
+        self.archive = get_archive()
 
     def make_entity(self, schema, parent=None):
         schema = model.get(schema)
-        entity = model.make_entity(schema, key_prefix=self.stage.job.dataset.name)
+        if schema is None:
+            raise ProcessingException("Invalid schema")
+        entity = model.make_entity(schema, key_prefix=self.dataset)
         self.make_child(parent, entity)
         return entity
 
@@ -149,8 +168,8 @@ class Manager(object):
         return best_cls
 
     def queue_entity(self, entity):
-        log.debug("Queue: %r", entity)
-        self.stage.queue(entity.to_dict(), self.context)
+        with self.app.open():
+            defer.ingest(self.app, self.dataset, [entity], **self.context)
 
     def store(self, file_path, mime_type=None):
         file_path = ensure_path(file_path)
@@ -193,7 +212,7 @@ class Manager(object):
         now_string = now.strftime("%Y-%m-%dT%H:%M:%S.%f")
 
         entity.set("processingStatus", self.STATUS_FAILURE)
-        entity.set("processingAgent", get_distribution("ingestors").version)
+        entity.set("processingAgent", __version__)
         entity.set("processedAt", now_string)
 
         ingestor_class = None
@@ -219,8 +238,6 @@ class Manager(object):
             log.exception(f"[{repr(entity)}] Failed to process: {pexc}")
             INGESTIONS_FAILED.labels(ingestor=ingestor_name).inc()
             entity.set("processingError", stringify(pexc))
-            if settings.SENTRY_CAPTURE_PROCESSING_EXCEPTIONS:
-                capture_exception(pexc)
         finally:
             self.finalize(entity)
 
@@ -235,3 +252,6 @@ class Manager(object):
     def close(self):
         self.writer.flush()
         remove_directory(self.work_path)
+
+    def iterate_emitted(self) -> Generator[EntityProxy, None, None]:
+        yield from self.db.iterate(self.emitted)

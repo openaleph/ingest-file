@@ -1,53 +1,34 @@
-from servicelayer import env
+from openaleph_procrastinate.settings import OpenAlephSettings
+from pydantic_settings import SettingsConfigDict
 from servicelayer import settings as sls
 
-TESTING = False
 
-CONVERT_TIMEOUT = env.to_int("INGESTORS_CONVERT_TIMEOUT", 300)  # seconds
+class Settings(OpenAlephSettings):
+    """
+    `ingest-file` settings management using
+    [pydantic-settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/)
 
-# Enable (expensive!) Google Cloud API
-OCR_VISION_API = env.to_bool("INGESTORS_OCR_VISION_API", False)
+    Note:
+        All settings can be set via environment variables, prepending
+        `INGESTORS_` (except for those with another alias) via runtime or in a
+        `.env` file.
+    """
 
-# Geonames data file
-GEONAMES_PATH = env.get("INGESTORS_GEONAMES_PATH", "/ingestors/data/geonames.txt")
+    model_config = SettingsConfigDict(
+        env_prefix="ingestors_",
+        env_file=".env",
+        extra="ignore",  # other envs in .env file
+    )
 
-# FastText lid model file
-LID_MODEL_PATH = env.get("INGESTORS_LID_MODEL_PATH", "/ingestors/data/lid.176.ftz")
+    convert_timeout: int = 300
+    """Headless libreoffice document convert timeout in seconds"""
 
-# Disable entity extraction
-ANALYZE_ENTITIES = env.to_bool("INGESTORS_ANALYZE_ENTITIES", True)
 
-# List available NER models
-NER_MODELS = {
-    "eng": "en_core_web_sm",
-    "deu": "de_core_news_sm",
-    "fra": "fr_core_news_sm",
-    "spa": "es_core_news_sm",
-    "rus": "ru_core_news_sm",
-    "por": "pt_core_news_sm",
-    "ron": "ro_core_news_sm",
-    "mkd": "mk_core_news_sm",
-    "ell": "el_core_news_sm",
-    "pol": "pl_core_news_sm",
-    "ita": "it_core_news_sm",
-    "lit": "lt_core_news_sm",
-    "nld": "nl_core_news_sm",
-    "nob": "nb_core_news_sm",
-    "nor": "nb_core_news_sm",
-    "dan": "da_core_news_sm",
-}
-
-# FastText type prediction model file
-NER_TYPE_MODEL_PATH = env.get(
-    "INGESTORS_TYPE_MODEL_PATH", "/models/model_type_prediction.ftz"
-)
+_settings = OpenAlephSettings()
 
 # Also store cached values in the SQL database
-sls.TAGS_DATABASE_URI = env.get("FTM_STORE_URI", env.get("ALEPH_DATABASE_URI"))
-
-# ProcessingException is thrown whenever something goes wrong with
-# parsing a file. Enable this with care, it can easily eat up the
-# Sentry quota of events.
-SENTRY_CAPTURE_PROCESSING_EXCEPTIONS = env.to_bool(
-    "SENTRY_CAPTURE_PROCESSING_EXCEPTIONS", False
-)
+# Force psycopg3 for SQLAlchemy if fragments_uri is postgres
+fragments_uri = _settings.fragments_uri
+if fragments_uri and fragments_uri.startswith("postgresql://"):
+    fragments_uri = fragments_uri.replace("postgresql://", "postgresql+psycopg://", 1)
+sls.TAGS_DATABASE_URI = fragments_uri
