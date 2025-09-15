@@ -1,6 +1,6 @@
-FROM ghcr.io/openaleph/ingest-file-base:latest
+FROM --platform=linux/arm64 ghcr.io/openaleph/ingest-file-base:latest
 
-ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libgomp.so.1
+ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1
 
 COPY . /ingestors
 RUN rm -rf /ingestors/tests
