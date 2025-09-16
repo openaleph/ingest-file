@@ -14,7 +14,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # - uses: actions/checkout@v4
+      # By default, this action uses the Git context, so you don't need to use the actions/checkout action to check out the repository as this will be done directly by BuildKit.
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -53,17 +54,23 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ./Dockerfile.arm
           load: true
           platforms: linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Set image reference
+        run: echo "IMAGE=$(echo '${{ steps.meta.outputs.tags }}' | head -n 1)" >> $GITHUB_ENV
 
       - name: Start services
         run: |
           make services
 
-      - name: Install development dependencies
-        run: make dev
+      # - name: Install development dependencies
+      #   run: make dev
 
       - name: Check formatting
         run: make format-check
@@ -72,12 +79,13 @@ jobs:
         run: make lint
 
       - name: Run tests
-        run: make test
+        run: make test-arm IMAGE=$IMAGE
 
       - name: Push docker images
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ./Dockerfile.arm
           platforms: linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
