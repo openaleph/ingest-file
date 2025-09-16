@@ -1,0 +1,90 @@
+name: Build ingest-file for ARM
+
+on:
+  push:
+    tags:
+      - 4.*
+      - 5.*
+      - 6.*
+
+permissions:
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/openaleph/ingest-file
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha
+            type=raw,value=cache
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags') }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up
+        run: |
+          docker --version
+          docker compose --version
+          echo "${GITHUB_REF}"
+
+      - name: Build container
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          platforms: linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start services
+        run: |
+          make services
+
+      - name: Install development dependencies
+        run: make dev
+
+      - name: Check formatting
+        run: make format-check
+
+      - name: Run linter (ruff)
+        run: make lint
+
+      - name: Run tests
+        run: make test
+
+      - name: Push docker images
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # - name: Run e2e test
+      #   working-directory: ./e2e
+      #   run: bash -c ./test_e2e.sh
