@@ -68,8 +68,8 @@ jobs:
         run: |
           make services
 
-      # - name: Install development dependencies
-      #   run: make dev
+      - name: Install development dependencies
+        run: make dev
 
       - name: Check formatting
         run: make format-check
