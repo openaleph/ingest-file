@@ -14,8 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # - uses: actions/checkout@v4
-      # By default, this action uses the Git context, so you don't need to use the actions/checkout action to check out the repository as this will be done directly by BuildKit.
+      - uses: actions/checkout@v4
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
