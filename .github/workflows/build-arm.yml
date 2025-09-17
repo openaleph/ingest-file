@@ -2,10 +2,10 @@ name: Build ingest-file for ARM
 
 on:
   push:
-    # tags:
-    #   - 4.*
-    #   - 5.*
-    #   - 6.*
+    tags:
+      - 4.*
+      - 5.*
+      - 6.*
 
 permissions:
   packages: write
