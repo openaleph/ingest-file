@@ -43,7 +43,7 @@ test: build-test services
 	PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 $(COMPOSE) run --rm test-ingest-file pytest
 
 test-arm: services
-	DEBUG=1 PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 ROCRASTINATE_APP=ingestors.tasks.app docker run --rm -v ./tests:/ingestors/tests $(IMAGE) sh -c "cd /ingestors && pip3 install --no-deps -r /ingestors/requirements-dev.txt && pip3 install --no-cache-dir procrastinate==3.2.2 && chown -R app:app /ingestors && pytest"
+	DEBUG=1 PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 PROCRASTINATE_APP=ingestors.tasks.app docker run --rm -v ./tests:/ingestors/tests $(IMAGE) sh -c "cd /ingestors && pip3 install --no-deps -r /ingestors/requirements-dev.txt && pip3 install --no-cache-dir procrastinate==3.2.2 && chown -R app:app /ingestors && pytest"
 
 test-e2e: build services
 	$(COMPOSE_E2E) run --rm ingest-file
