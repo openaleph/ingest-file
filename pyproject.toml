@@ -1,6 +1,6 @@
 [project]
 name = "ingestors"
-version = "5.0.1"
+version = "5.0.2"
 description = "Ingestors extract the contents of mixed unstructured documents into structured (followthemoney) data. "
 authors = [
     { name = "Friedrich Lindenberg", email = "friedrich@pudo.org" },
@@ -14,8 +14,8 @@ dependencies = [
     # base dependencies
     "banal (==1.0.6)",
     "normality (>=3.0.1,<4.0.0)",
-    "followthemoney (>=4.2.0,<5.0.1)",
-    "ftmq[postgres] (>=4.2.4,<5.0.1)",
+    "followthemoney (>=4.2.0,<5.0.2)",
+    "ftmq[postgres] (>=4.2.4,<5.0.2)",
     "pyicu (>=2.15.2,<3.0.0)",
     # ingest dependencies
     "dbf (>=0.99.10,<0.100.0)",
@@ -39,7 +39,7 @@ dependencies = [
     "sentry_sdk (==2.0.1)",
     # servicelayer extras requirements
     "boto3 (>=1.11.9,<2.0.0)",
-    "openaleph-procrastinate (>=5.0.1,<6.0.0)",
+    "openaleph-procrastinate (>=5.0.2,<6.0.0)",
     "openaleph-servicelayer (>=1.23.3, <1.24.0)",
     "tika (>=3.1.0,<4.0.0)",
 ]
@@ -98,7 +98,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.1"
-pytest-cov = "5.0.1"
+pytest-cov = "5.0.2"
 click = "8.2.1"
 pre-commit = "^4.2.0"
 bump2version = "^1.0.1"
