@@ -13,33 +13,33 @@ requires-python = ">=3.11,<3.14"
 dependencies = [
     # base dependencies
     "banal (==1.0.6)",
-    "normality (>=3.0.1,<4.0.0)",
-    "followthemoney (>=4.2.0,<5.0.2)",
-    "ftmq[postgres] (>=4.2.4,<5.0.2)",
-    "pyicu (>=2.15.2,<3.0.0)",
+    "normality (>=3.0.2,<4.0.0)",
+    "followthemoney (>=4.2.2,<5.0.0)",
+    "ftmq[postgres] (>=4.2.5,<5.0.0)",
+    "pyicu (>=2.15.3,<3.0.0)",
     # ingest dependencies
-    "dbf (>=0.99.10,<0.100.0)",
+    "dbf (>=0.99.11,<0.100.0)",
     "pymediainfo (>=7.0.1,<8.0.0)",
     "python-magic (>=0.4.27,<0.5.0)",
-    "py7zr (==1.0.0)",
+    "py7zr (>=1.0.0,<2.0.0)",
     "rarfile (>=4.2,<5.0)",
     "xlrd (>=2.0.2,<3.0.0)",
     "openpyxl (>=3.1.5,<4.0.0)",
     "odfpy (>=1.4.1,<2.0.0)",
     "faust-cchardet (>=2.1.19,<3.0.0)",
-    "lxml[html-clean] (>=5.4.0,<6.0.0)",
-    "pillow (>=11.2.1,<12.0.0)",
-    "pymupdf (>=1.26.1,<2.0.0)",
+    "lxml[html-clean] (>=6.0.2,<7.0.0)",
+    "pillow (>=11.3.0,<12.0.0)",
+    "pymupdf (>=1.26.5,<2.0.0)",
     "olefile (<0.47)",
     "vobject (>=0.9.9,<0.10.0)",
     "msglite (>=0.30.0,<0.31.0)",
     "icalendar (>=6.3.1,<7.0.0)",
-    "cryptography (>=45.0.4,<46.0.0)",
+    "cryptography (>=46.0.2,<47.0.0)",
     "prometheus-client (>=0.20.0,<0.21.0)",
     "sentry_sdk (==2.0.1)",
     # servicelayer extras requirements
     "boto3 (>=1.11.9,<2.0.0)",
-    "openaleph-procrastinate (>=5.0.2,<6.0.0)",
+    "openaleph-procrastinate (>=5.1.0,<6.0.0)",
     "openaleph-servicelayer (>=1.23.3, <1.24.0)",
     "tika (>=3.1.0,<4.0.0)",
 ]
@@ -98,7 +98,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.1"
-pytest-cov = "5.0.2"
+pytest-cov = "^7.0.0"
 click = "8.2.1"
 pre-commit = "^4.2.0"
 bump2version = "^1.0.1"
