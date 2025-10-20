@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .support import TestCase
+from tests.support import TestCase
 
 
 class DBFIngestorTest(TestCase):
@@ -13,5 +13,5 @@ class DBFIngestorTest(TestCase):
         self.assertEqual(entity.schema.name, "Table")
         self.assertTrue(entity.has("csvHash"))
         self.assertEqual(int(entity.first("rowCount")), 9)
-        self.assertIn("Azad Kashmir", table.get("indexText"))
-        self.assertIn("Pakistan", table.get("indexText"))
+        self.assertIn("Azad Kashmir", "".join(table.get("indexText")))
+        self.assertIn("Pakistan", "".join(table.get("indexText")))
