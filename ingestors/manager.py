@@ -193,14 +193,15 @@ class Manager:
             file_name = entity_filename(entity)
             file_path = self.load(content_hash, file_name=file_name)
             if file_path is None or not file_path.exists():
-                log.warning(
+                log.error(
                     f"Couldn't find file named {file_name} at path {file_path}."
                     "Skipping ingestion."
                 )
                 continue
             self.ingest(file_path, entity)
             return
-        self.finalize(entity)
+        # don't emit this entity if we didn't find a file to ingest
+        self.finalize(entity, emit=False)
 
     def ingest(self, file_path, entity, **kwargs):
         """Main execution step of an ingestor."""
@@ -246,8 +247,9 @@ class Manager:
         finally:
             self.finalize(entity)
 
-    def finalize(self, entity):
-        self.emit_entity(entity)
+    def finalize(self, entity, emit: bool | None = True):
+        if emit:
+            self.emit_entity(entity)
         self.writer.flush()
         remove_directory(self.work_path)
 
