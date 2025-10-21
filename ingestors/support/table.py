@@ -32,7 +32,12 @@ class TableSupport(EncodingSupport, TempFileSupport):
                 cell_values.update(values)
                 row_count += 1
                 if row_count > 0 and row_count % 10000 == 0:
-                    log.info("Table emit [%s]: %s...", table, row_count)
+                    log.info(
+                        "Table emit [%s]: %s cell values from %s rows ...",
+                        table,
+                        len(cell_values),
+                        row_count,
+                    )
                     self.manager.emit_text_fragment(table, list(cell_values), row_count)
                     cell_values = set()
         if row_count > 0:
