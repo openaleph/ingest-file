@@ -39,7 +39,7 @@ dependencies = [
     "sentry_sdk (==2.0.1)",
     # servicelayer extras requirements
     "boto3 (>=1.11.9,<2.0.0)",
-    "openaleph-procrastinate (>=5.1.0,<6.0.0)",
+    "openaleph-procrastinate @ git+https://github.com/openaleph/openaleph-procrastinate.git",
     "openaleph-servicelayer (>=1.23.3, <1.24.0)",
     "tika (>=3.1.0,<4.0.0)",
 ]
