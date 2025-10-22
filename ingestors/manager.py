@@ -3,19 +3,19 @@ from datetime import datetime
 from functools import cache
 from tempfile import mkdtemp
 from timeit import default_timer
-from typing import Any, Generator
+from typing import Any
 
 import magic
 from banal import ensure_list
 from followthemoney import model
 from followthemoney.helpers import entity_filename
 from followthemoney.namespace import Namespace
-from followthemoney.proxy import EntityProxy
 from ftmq.store.fragments import get_fragments
 from ftmq.store.fragments.utils import safe_fragment
 from normality import stringify
 from openaleph_procrastinate import defer
-from procrastinate import App
+from openaleph_procrastinate.app import App
+from openaleph_procrastinate.util import make_checksum_entity
 from prometheus_client import Counter, Histogram
 from rigour.mime import normalize_mimetype
 from servicelayer.archive import init_archive
@@ -106,7 +106,7 @@ class Manager:
         self.context = context
         self.ns = Namespace(self.context["namespace"])
         self.work_path = ensure_path(mkdtemp(prefix="ingestor-"))
-        self.emitted = set()
+        self.emitted = []
         self.archive = get_archive()
 
     def make_entity(self, schema, parent=None):
@@ -138,7 +138,7 @@ class Manager:
     def emit_entity(self, entity, fragment=None):
         entity = self.ns.apply(entity)
         self.writer.put(entity.to_dict(), fragment)
-        self.emitted.add(entity.id)
+        self.emitted.append(make_checksum_entity(entity, quiet=True))
 
     def emit_text_fragment(self, entity, texts, fragment):
         texts = [t for t in ensure_list(texts) if filter_text(t)]
@@ -259,6 +259,3 @@ class Manager:
     def close(self):
         self.writer.flush()
         remove_directory(self.work_path)
-
-    def iterate_emitted(self) -> Generator[EntityProxy, None, None]:
-        yield from self.db.iterate(self.emitted)
