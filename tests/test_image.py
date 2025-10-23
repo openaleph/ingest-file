@@ -1,3 +1,5 @@
+from ftmq.store.memory import MemoryStore
+
 from tests.support import TestCase
 
 
@@ -46,6 +48,8 @@ class ImageIngestorTest(TestCase):
         }
 
         for test_image_type in test_data:
+            # flush store for emitted test assertion to not fail (see self.get_emitted)
+            self.manager.emitted = MemoryStore()
             fixture_path, entity = self.fixture(test_data[test_image_type]["file"])
             self.manager.ingest(fixture_path, entity)
 
