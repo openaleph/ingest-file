@@ -7,7 +7,7 @@ from typing import Any
 
 import magic
 from banal import ensure_list
-from followthemoney import StatementEntity, model
+from followthemoney import DefaultDataset, StatementEntity, model
 from followthemoney.helpers import entity_filename
 from followthemoney.namespace import Namespace
 from ftmq.store.fragments import get_fragments
@@ -107,7 +107,7 @@ class Manager:
         self.context = context
         self.ns = Namespace(self.context["namespace"])
         self.work_path = ensure_path(mkdtemp(prefix="ingestor-"))
-        self.emitted = MemoryStore()
+        self.emitted = MemoryStore(dataset=DefaultDataset)
         self.archive = get_archive()
 
     def make_entity(self, schema, parent=None):
@@ -261,3 +261,6 @@ class Manager:
     def close(self):
         self.writer.flush()
         remove_directory(self.work_path)
+
+    def get_emitted(self) -> list[StatementEntity]:
+        return list(self.emitted.iterate(dataset=DefaultDataset))

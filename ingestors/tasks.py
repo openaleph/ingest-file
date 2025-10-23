@@ -39,7 +39,7 @@ def ingest(job: DatasetJob) -> None:
     finally:
         manager.close()
 
-    emitted = list(manager.emitted.iterate())
+    emitted = manager.get_emitted()
     for entity in emitted:
         if entity.schema.is_a("Analyzable"):
             to_analyze.append(entity)
@@ -77,6 +77,6 @@ def ingest_path(
             manager.queue_entity(entity)
         if path.is_dir():
             DirectoryIngestor.crawl(manager, path)
-    emitted = list(manager.emitted.iterate())
+    emitted = manager.get_emitted()
     log.info(f"Emitted {len(emitted)} entities.", emitted=[e.id for e in emitted])
     manager.close()

@@ -68,7 +68,7 @@ class TestCase(unittest.TestCase):
         return path, entity
 
     def get_emitted(self, schema=None):
-        entities = list(self.manager.db.iterate())
+        entities = self.manager.get_emitted()
         if schema is not None:
             entities = [e for e in entities if e.schema.is_a(schema)]
         return entities
