@@ -39,15 +39,16 @@ def ingest(job: DatasetJob) -> None:
     finally:
         manager.close()
 
-    for entity in manager.emitted:
+    emitted = list(manager.emitted.iterate())
+    for entity in emitted:
         if entity.schema.is_a("Analyzable"):
             to_analyze.append(entity)
 
         to_index.append(entity)
 
     job.log.info(
-        f"Emitted {len(manager.emitted)} entities.",
-        emitted=[e.id for e in manager.emitted],
+        f"Emitted {len(emitted)} entities.",
+        emitted=[e.id for e in emitted],
     )
     if to_analyze:
         defer.analyze(app, job.dataset, to_analyze, batch=job.batch, **job.context)

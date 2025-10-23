@@ -10,6 +10,7 @@ from banal import ensure_list
 from followthemoney import model
 from followthemoney.helpers import entity_filename
 from followthemoney.namespace import Namespace
+from ftmq.store import get_store
 from ftmq.store.fragments import get_fragments
 from ftmq.store.fragments.utils import safe_fragment
 from normality import stringify
@@ -106,7 +107,7 @@ class Manager:
         self.context = context
         self.ns = Namespace(self.context["namespace"])
         self.work_path = ensure_path(mkdtemp(prefix="ingestor-"))
-        self.emitted = []
+        self.emitted = get_store("memory://")
         self.archive = get_archive()
 
     def make_entity(self, schema, parent=None):
@@ -138,7 +139,8 @@ class Manager:
     def emit_entity(self, entity, fragment=None):
         entity = self.ns.apply(entity)
         self.writer.put(entity.to_dict(), fragment)
-        self.emitted.append(make_checksum_entity(entity, quiet=True))
+        with self.emitted.writer() as bulk:
+            bulk.add_entity(make_checksum_entity(entity, quiet=True))
 
     def emit_text_fragment(self, entity, texts, fragment):
         texts = [t for t in ensure_list(texts) if filter_text(t)]
