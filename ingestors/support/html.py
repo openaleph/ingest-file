@@ -1,11 +1,12 @@
-import re
 import logging
+import re
+
 from lxml import html
 from lxml.etree import ParseError, ParserError
 from normality import collapse_spaces
 
-from ingestors.support.timestamp import TimestampSupport
 from ingestors.exc import ProcessingException
+from ingestors.support.timestamp import TimestampSupport
 
 log = logging.getLogger(__name__)
 
@@ -33,9 +34,9 @@ class HTMLSupport(TimestampSupport):
         entity.add("summary", self.get_meta(doc, "description"))
         entity.add("author", self.get_meta(doc, "author"))
         entity.add("author", self.get_meta(doc, "og:site_name"))
-        published_at = self.get_meta(doc, "artcile:published_time")
+        published_at = self.get_meta(doc, "article:published_time")
         entity.add("publishedAt", self.parse_timestamp(published_at))
-        modified_at = self.get_meta(doc, "artcile:modified_time")
+        modified_at = self.get_meta(doc, "aricle:modified_time")
         entity.add("modifiedAt", self.parse_timestamp(modified_at))
 
         for field in ["keywords", "news_keywords"]:
@@ -47,7 +48,7 @@ class HTMLSupport(TimestampSupport):
     def extract_html_text(self, doc):
         """Get all text from a DOM, also used by the XML parser."""
         text = " ".join(self.extract_html_elements(doc))
-        text = collapse_spaces(text)
+        text = collapse_spaces(text) or ""
         if len(text):
             return text
 
