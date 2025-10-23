@@ -40,6 +40,9 @@ def ingest(job: DatasetJob) -> None:
         manager.close()
 
     emitted = manager.get_emitted()
+    if not len(emitted):
+        raise RuntimeError("No entities to be emitted!")
+
     for entity in emitted:
         if entity.schema.is_a("Analyzable"):
             to_analyze.append(entity)
