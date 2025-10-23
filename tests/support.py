@@ -68,7 +68,14 @@ class TestCase(unittest.TestCase):
         return path, entity
 
     def get_emitted(self, schema=None):
-        entities = self.manager.get_emitted()
+        entities = list(self.manager.db.iterate())
+        # test dehydrated emitted:
+        emitted = self.manager.get_emitted()
+        equal = {e.id for e in entities} == {e.id for e in emitted}
+        if not equal:
+            # special case of directory test: the child file is emitted in
+            # another manager instance, but the Folder entity is there:
+            assert len({e.id for e in entities} & {e.id for e in emitted}) == 1
         if schema is not None:
             entities = [e for e in entities if e.schema.is_a(schema)]
         return entities
