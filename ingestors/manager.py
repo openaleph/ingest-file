@@ -7,7 +7,7 @@ from typing import Any
 
 import magic
 from banal import ensure_list
-from followthemoney import model
+from followthemoney import StatementEntity, model
 from followthemoney.helpers import entity_filename
 from followthemoney.namespace import Namespace
 from ftmq.store.fragments import get_fragments
@@ -140,7 +140,7 @@ class Manager:
         entity = self.ns.apply(entity)
         self.writer.put(entity.to_dict(), fragment)
         with self.emitted.writer() as bulk:
-            bulk.add_entity(make_checksum_entity(entity, quiet=True))
+            bulk.add_entity(make_checksum_entity(entity, StatementEntity, quiet=True))
 
     def emit_text_fragment(self, entity, texts, fragment):
         texts = [t for t in ensure_list(texts) if filter_text(t)]
