@@ -77,5 +77,6 @@ def ingest_path(
             manager.queue_entity(entity)
         if path.is_dir():
             DirectoryIngestor.crawl(manager, path)
-    log.info(f"Emitted {len(manager.emitted)} entities.", emitted=manager.emitted)
+    emitted = list(manager.emitted.iterate())
+    log.info(f"Emitted {len(emitted)} entities.", emitted=[e.id for e in emitted])
     manager.close()
