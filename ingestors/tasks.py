@@ -1,5 +1,4 @@
 import gc
-import logging
 from pathlib import Path
 
 from anystore.logging import get_logger
@@ -21,8 +20,6 @@ SYSTEM.info({"ingestfile_version": __version__})
 app = make_app(__loader__.name)
 sync_app = make_app(__loader__.name, sync=True)
 
-log = logging.getLogger(__name__)
-
 
 @task(app=app)
 def ingest(job: DatasetJob) -> None:
@@ -41,7 +38,7 @@ def ingest(job: DatasetJob) -> None:
 
     emitted = manager.get_emitted()
     if not len(emitted):
-        raise RuntimeError("No entities to be emitted!")
+        job.log.error("No entities to be emitted!")
 
     for entity in emitted:
         if entity.schema.is_a("Analyzable"):

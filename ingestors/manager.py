@@ -202,8 +202,9 @@ class Manager:
                 continue
             self.ingest(file_path, entity)
             return
-        # don't emit this entity if we didn't find a file to ingest
-        self.finalize(entity, emit=False)
+        # don't emit this entity if we didn't find a file to ingest and its not
+        # a folder
+        self.finalize(entity, emit=entity.schema.is_a("Folder"))
 
     def ingest(self, file_path, entity, **kwargs):
         """Main execution step of an ingestor."""
