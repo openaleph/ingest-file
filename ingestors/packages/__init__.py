@@ -5,9 +5,9 @@ import tarfile
 from pathlib import PurePath
 
 import py7zr
-from py7zr.exceptions import ArchiveError
+from py7zr.exceptions import ArchiveError, PasswordRequired
 
-from ingestors.exc import ProcessingException
+from ingestors.exc import ENCRYPTED_MSG, ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.package import PackageSupport
 from ingestors.support.shell import ShellSupport
@@ -29,7 +29,10 @@ class SevenZipIngestor(PackageSupport, Ingestor, ShellSupport):
 
         try:
             with py7zr.SevenZipFile(str(pure_file_path), mode="r") as extractor:
-                extractor.extractall(path=temp_dir)
+                try:
+                    extractor.extractall(path=temp_dir)
+                except PasswordRequired:
+                    raise ProcessingException(ENCRYPTED_MSG)
         except ArchiveError as e:
             raise ProcessingException(f"Error: {e}")
 

@@ -1,11 +1,12 @@
-import shutil
 import logging
+import shutil
+
 from followthemoney import model
 
-from ingestors.support.temp import TempFileSupport
-from ingestors.support.encoding import EncodingSupport
 from ingestors.directory import DirectoryIngestor
 from ingestors.exc import ProcessingException
+from ingestors.support.encoding import EncodingSupport
+from ingestors.support.temp import TempFileSupport
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ class PackageSupport(TempFileSupport, EncodingSupport):
             self.manager.delegate(DirectoryIngestor, temp_dir, entity)
         except ProcessingException as e:
             raise ProcessingException(
-                "Could not unpack the contents of this file."
+                f"Could not unpack the contents of this file. {e}"
             ) from e
 
     def unpack(self, file_path, entity, temp_dir):
