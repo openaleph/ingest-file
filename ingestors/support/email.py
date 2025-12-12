@@ -17,12 +17,21 @@ log = logging.getLogger(__name__)
 
 class EmailIdentity(object):
     def __init__(self, manager, name, email):
+        """
+        Return a Person entity that encodes the name and e-mail of
+        an entity found in an e-mail header.
+
+        We want to create a Person entity even if we only have
+        a valid name, or a valid e-mail.
+        """
         self.email = ascii_text(stringify(email))
         self.name = stringify(name)
         if not self.name:
             self.name = None
         if not registry.email.validate(self.email):
             self.email = None
+        # If the value stored in name is a valid e-mail
+        # store it in self.email and set self.name to None
         if self.name and registry.email.validate(self.name):
             self.email = self.email or ascii_text(self.name)
             self.name = None
@@ -38,9 +47,11 @@ class EmailIdentity(object):
             self.label = self.name
 
         self.entity = None
-        key = registry.email.node_id_safe(self.email)
-        if self.name is not None and len(self.name) > 10:
-            key = key or registry.name.node_id_safe(self.name)
+
+        if not self.email:
+            return
+
+        key = self.email.strip().lower()
         if key is not None:
             fragment = safe_fragment(self.label)
             self.entity = manager.make_entity("Person")
@@ -81,14 +92,24 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
         self.manager.queue_entity(child)
 
     def get_header(self, msg, *headers):
-        values = []
+        """
+        As seen in real world, we can't rely on the correct parsing
+        of header values by the python built-in email module.
+        Therefore we additionally check for the raw header values
+        if the values contain "; " as a splitter.
+        """
+        raw_headers = dict(msg._headers)
+        values = set()
         for header in headers:
             try:
                 for value in ensure_list(msg.get_all(header)):
-                    values.append(value)
+                    values.add(value)
+                for value in ensure_list(raw_headers.get(header)):
+                    values.update(value.split(";"))
             except (TypeError, IndexError, AttributeError, ValueError) as exc:
                 log.warning("Failed to parse [%s]: %s", header, exc)
-        return values
+        values = [x.strip() for x in values]
+        return list(values)
 
     def get_dates(self, msg, *headers):
         dates = []
@@ -117,6 +138,12 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
                 entity.add(lprop, identity.label)
             entity.add("namesMentioned", identity.name)
             entity.add("emailMentioned", identity.email)
+
+    def apply_raw(self, msg, entity, lprop, *headers):
+        raw_header_values = self.get_header(msg, *headers)
+        for raw_value in raw_header_values:
+            raw_value = raw_value.replace('"', "")
+            entity.add(lprop, raw_value)
 
     def parse_message_ids(self, values):
         message_ids = []
@@ -196,15 +223,20 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
 
         sender = self.get_header_identities(msg, "Sender", "X-Sender")
         self.apply_identities(entity, sender, "emitters", "sender")
+        self.apply_raw(msg, entity, "sender", "Sender", "X-Sender")
 
         froms = self.get_header_identities(msg, "From", "X-From")  # codespell:ignore
         self.apply_identities(entity, froms, "emitters", "from")  # codespell:ignore
+        self.apply_raw(msg, entity, "from", "From", "X-From")
 
         tos = self.get_header_identities(msg, "To", "Resent-To")
         self.apply_identities(entity, tos, "recipients", "to")
+        self.apply_raw(msg, entity, "to", "To", "Resent-To")
 
         ccs = self.get_header_identities(msg, "CC", "Cc", "Resent-Cc")
         self.apply_identities(entity, ccs, "recipients", "cc")
+        self.apply_raw(msg, entity, "cc", "CC", "Cc", "Resent-Cc")
 
         bccs = self.get_header_identities(msg, "Bcc", "BCC", "Resent-Bcc")
         self.apply_identities(entity, bccs, "recipients", "bcc")
+        self.apply_raw(msg, entity, "bcc", "Bcc", "BCC", "Resent-Bcc")
