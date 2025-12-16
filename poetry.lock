@@ -5898,4 +5898,4 @@ ocr = ["tesserocr"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "452d53b2d1af7da352377752863ff2fcfca7b892083fd47936f5e0344efb214c"
+content-hash = "c99c78c0d4888fad3b92a6727be6c024d510ed0cc146d939c8c292e74a27b440"
