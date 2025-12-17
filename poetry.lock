@@ -297,14 +297,14 @@ trio = ["trio (>=0.31.0) ; python_version < \"3.10\"", "trio (>=0.32.0) ; python
 
 [[package]]
 name = "anystore"
-version = "0.4.0"
+version = "0.4.1"
 description = "Store and cache things anywhere"
 optional = false
 python-versions = "<4,>=3.11"
 groups = ["main"]
 files = [
-    {file = "anystore-0.4.0-py3-none-any.whl", hash = "sha256:e152d7b4f244cbe37d40b3cdc75c9d65bf8f8395256b5d04243ed28fe28798a8"},
-    {file = "anystore-0.4.0.tar.gz", hash = "sha256:08b6240b62e989f770b7becc7c929fd22350e35399104ece44f295af37ac3d8d"},
+    {file = "anystore-0.4.1-py3-none-any.whl", hash = "sha256:de660ccb59738fbae080d68ec3a92e9edc5264af350f54bdbda83c7c7a5b2cb0"},
+    {file = "anystore-0.4.1.tar.gz", hash = "sha256:c7b196042b7e74bd9a6ca6df1068e7d1b8752c84d91df73b0f6dfd831cfdcf62"},
 ]
 
 [package.dependencies]
@@ -3207,23 +3207,24 @@ files = [
 
 [[package]]
 name = "openaleph-procrastinate"
-version = "5.1.2"
+version = "5.1.3"
 description = "Task queue logic for OpenAleph built upon procrastinate"
 optional = false
 python-versions = "<4,>=3.11"
 groups = ["main"]
 files = [
-    {file = "openaleph_procrastinate-5.1.2-py3-none-any.whl", hash = "sha256:29555d270538b7d6ffc57cef8f9908aef101b451f58852bbd14a9480c05f9258"},
-    {file = "openaleph_procrastinate-5.1.2.tar.gz", hash = "sha256:b6739dedfcea88c109ae9eaca089ce34ee7779cdb22fb31e1584cd43a12af9cb"},
+    {file = "openaleph_procrastinate-5.1.3-py3-none-any.whl", hash = "sha256:c7d63a41f81571ac846d0a09f52157bc00760a8d59fcff5c26c46a503907a0f8"},
+    {file = "openaleph_procrastinate-5.1.3.tar.gz", hash = "sha256:9756cf46c0243a32212a7ccf8b6cbf8c91f77abb5b0cf05a397279834f6bf010"},
 ]
 
 [package.dependencies]
-anystore = ">=0.4.0,<0.5.0"
+anystore = ">=0.4.1,<0.5.0"
 cachetools = "<6"
-followthemoney = ">=4.3.2,<5.0.0"
-ftmq = ">=4.3.2,<5.0.0"
-procrastinate = ">=3.5.3,<4.0.0"
-psycopg = ">=3.2.11,<4.0.0"
+followthemoney = ">=4.3.4,<5.0.0"
+ftmq = ">=4.3.3,<5.0.0"
+procrastinate = ">=3.6.0,<4.0.0"
+psycopg = ">=3.3.2,<4.0.0"
+psycopg-pool = "<3.3"
 pydantic = ">=2.11.7,<3.0.0"
 pydantic-settings = ">=2.10.1,<3.0.0"
 
@@ -3541,14 +3542,14 @@ testing = ["coverage", "pytest", "pytest-benchmark"]
 
 [[package]]
 name = "pre-commit"
-version = "4.5.0"
+version = "4.5.1"
 description = "A framework for managing and maintaining multi-language pre-commit hooks."
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "pre_commit-4.5.0-py2.py3-none-any.whl", hash = "sha256:25e2ce09595174d9c97860a95609f9f852c0614ba602de3561e267547f2335e1"},
-    {file = "pre_commit-4.5.0.tar.gz", hash = "sha256:dc5a065e932b19fc1d4c653c6939068fe54325af8e741e74e88db4d28a4dd66b"},
+    {file = "pre_commit-4.5.1-py2.py3-none-any.whl", hash = "sha256:3b3afd891e97337708c1674210f8eba659b52a38ea5f822ff142d10786221f77"},
+    {file = "pre_commit-4.5.1.tar.gz", hash = "sha256:eb545fcff725875197837263e977ea257a402056661f09dae08e4b149b030a61"},
 ]
 
 [package.dependencies]
@@ -3807,21 +3808,18 @@ test = ["anyio (>=4.0)", "mypy (>=1.19.0) ; implementation_name != \"pypy\"", "p
 
 [[package]]
 name = "psycopg-pool"
-version = "3.3.0"
+version = "3.2.8"
 description = "Connection Pool for Psycopg"
 optional = false
-python-versions = ">=3.10"
+python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "psycopg_pool-3.3.0-py3-none-any.whl", hash = "sha256:2e44329155c410b5e8666372db44276a8b1ebd8c90f1c3026ebba40d4bc81063"},
-    {file = "psycopg_pool-3.3.0.tar.gz", hash = "sha256:fa115eb2860bd88fce1717d75611f41490dec6135efb619611142b24da3f6db5"},
+    {file = "psycopg_pool-3.2.8-py3-none-any.whl", hash = "sha256:5474137f3a58e697e0141d0311e70ec067fc4466031496d7f9ef3e2c28a1dc09"},
+    {file = "psycopg_pool-3.2.8.tar.gz", hash = "sha256:854e17c2a637c3b9f8d8b24faad57d4cf850baf3fc03ca56ef7e5b4998e391b9"},
 ]
 
 [package.dependencies]
 typing-extensions = ">=4.6"
-
-[package.extras]
-test = ["anyio (>=4.0)", "mypy (>=1.14)", "pproxy (>=2.7)", "pytest (>=6.2.5)", "pytest-cov (>=3.0)", "pytest-randomly (>=3.5)"]
 
 [[package]]
 name = "py7zr"
@@ -5898,4 +5896,4 @@ ocr = ["tesserocr"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "c99c78c0d4888fad3b92a6727be6c024d510ed0cc146d939c8c292e74a27b440"
+content-hash = "3128b382fdc590bb54868bc98232e5b421d9f464524ba0c2f6d3963f8a1c21f8"
