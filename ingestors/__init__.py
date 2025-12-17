@@ -5,7 +5,7 @@ import logging
 from anystore.logging import configure_logging, get_logger
 from procrastinate import cli as procrastinate_cli
 
-__version__ = "5.1.0-rc11"
+__version__ = "5.1.0-rc12"
 
 configure_logging()
 
