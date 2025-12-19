@@ -15,7 +15,7 @@ dependencies = [
     "banal (==1.0.6)",
     "normality (>=3.0.2,<4.0.0)",
     "followthemoney (>=4.3.4,<5.0.0)",
-    "ftmq[postgres] (>=4.3.3,<5.0.0)",
+    "ftmq[postgres] (>=4.3.4,<5.0.0)",
     "pyicu (>=2.15.3,<3.0.0)",
     # ingest dependencies
     "dbf (>=0.99.11,<0.100.0)",
