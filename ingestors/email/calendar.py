@@ -1,13 +1,14 @@
 import logging
+
 import icalendar
 from banal import ensure_list
 from followthemoney import model
 from followthemoney.util import sanitize_text
 
-from ingestors.ingestor import Ingestor
-from ingestors.support.encoding import EncodingSupport
-from ingestors.support.email import EmailIdentity
 from ingestors.exc import ProcessingException
+from ingestors.ingestor import Ingestor
+from ingestors.support.email import EmailIdentity
+from ingestors.support.encoding import EncodingSupport
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class CalendarIngestor(Ingestor, EncodingSupport):
             self.manager.apply_context(event, entity)
             uid = sanitize_text(comp.get("UID"))
             if uid is not None:
-                event.make_id(uid)
+                event.make_id(uid, "event")
             else:
                 event.make_id(entity.id, idx)
             event.add("proof", entity)
