@@ -67,6 +67,15 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
 
     MID_RE = re.compile(r"<([^>]*)>")
 
+    # Generic MIME types that email clients often use incorrectly for attachments.
+    # When these are encountered, let python-magic detect the actual content type.
+    GENERIC_MIME_TYPES = (
+        "application/octet-stream",
+        "application/binary",
+        "application/x-binary",
+        "text/plain",
+    )
+
     def ingest_attachment(self, entity, name, mime_type, body):
         has_body = body is not None and len(body)
         if stringify(name) is None and not has_body:
@@ -88,7 +97,10 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
         child.make_id(name, checksum)
         child.add("contentHash", checksum)
         child.add("fileName", name)
-        child.add("mimeType", mime_type)
+        # Only trust specific MIME types from email headers. For generic types,
+        # let python-magic detect the actual content type during ingestion.
+        if mime_type and mime_type not in self.GENERIC_MIME_TYPES:
+            child.add("mimeType", mime_type)
         self.manager.queue_entity(child)
 
     def get_header(self, msg, *headers):
