@@ -41,9 +41,9 @@ class CalendarIngestor(Ingestor, EncodingSupport):
             self.manager.apply_context(event, entity)
             uid = sanitize_text(comp.get("UID"))
             if uid is not None:
-                event.make_id(uid, "event")
+                event.make_id(entity.id, "event", uid)
             else:
-                event.make_id(entity.id, idx)
+                event.make_id(entity.id, "event", idx)
             event.add("proof", entity)
             event.add("name", comp.get("SUMMARY"))
             event.add("description", comp.get("DESCRIPTION"))
