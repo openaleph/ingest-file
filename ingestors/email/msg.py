@@ -7,6 +7,7 @@ from html import escape
 from followthemoney import model
 from rigour.mime import normalize_mimetype
 
+from ingestors.email.helpers import fix_rfc822
 from ingestors.exc import ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.email import EmailSupport
@@ -91,7 +92,15 @@ class RFC822Ingestor(Ingestor, EmailSupport, EncodingSupport):
         if is_attachment:
             if part.is_multipart():
                 # The attachment is an email
-                payload = str(part.get_payload(i=0))
+                if (
+                    part.get_all("Content-Transfer-Encoding")
+                    and part.get_all("Content-Transfer-Encoding")[0] == "base64"
+                ):
+                    import base64
+
+                    payload = base64.b64decode(part.get_payload(i=0).get_payload())
+                else:
+                    payload = str(part.get_payload(i=0))
             else:
                 payload = part.get_payload(decode=True)
             self.ingest_attachment(entity, file_name, mime_type, payload)
@@ -135,5 +144,12 @@ class RFC822Ingestor(Ingestor, EmailSupport, EncodingSupport):
                 msg = email.message_from_binary_file(fh, policy=default)
         except (MessageError, ValueError, IndexError) as err:
             raise ProcessingException("Cannot parse email: %s" % err) from err
+
+        if msg.defects:
+            fixed_email_string = fix_rfc822(file_path)
+            try:
+                msg = email.message_from_bytes(fixed_email_string, policy=default)
+            except (MessageError, ValueError, IndexError) as err:
+                raise ProcessingException("Cannot parse email: %s" % err) from err
 
         self.ingest_msg(entity, msg)
