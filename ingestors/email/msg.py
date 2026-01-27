@@ -1,6 +1,6 @@
 import email
 import logging
-from email.errors import MessageError
+from email.errors import MessageError, MissingHeaderBodySeparatorDefect
 from email.policy import default
 from html import escape
 
@@ -145,7 +145,9 @@ class RFC822Ingestor(Ingestor, EmailSupport, EncodingSupport):
         except (MessageError, ValueError, IndexError) as err:
             raise ProcessingException("Cannot parse email: %s" % err) from err
 
-        if msg.defects:
+        if msg.defects and any(
+            [isinstance(x, MissingHeaderBodySeparatorDefect) for x in msg.defects]
+        ):
             fixed_email_string = fix_rfc822(file_path)
             try:
                 msg = email.message_from_bytes(fixed_email_string, policy=default)
