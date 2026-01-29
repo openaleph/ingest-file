@@ -103,6 +103,7 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
         # let python-magic detect the actual content type during ingestion.
         if mime_type and mime_type not in self.GENERIC_MIME_TYPES:
             child.add("mimeType", mime_type)
+        self.attachments_checksums.add(checksum)
         self.manager.queue_entity(child)
 
     def get_header(self, msg, *headers) -> List:
