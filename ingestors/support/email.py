@@ -67,6 +67,7 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
     """Extract metadata from email messages."""
 
     MID_RE = re.compile(r"<([^>]*)>")
+    attachments_checksums = set()
 
     def ingest_attachment(self, entity, name, mime_type, body):
         has_body = body is not None and len(body)
@@ -90,6 +91,7 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
         child.add("contentHash", checksum)
         child.add("fileName", name)
         child.add("mimeType", mime_type)
+        self.attachments_checksums.add(checksum)
         self.manager.queue_entity(child)
 
     def get_header(self, msg, *headers) -> List:
