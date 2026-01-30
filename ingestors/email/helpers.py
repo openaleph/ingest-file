@@ -32,8 +32,12 @@ def fix_rfc822(file_path: Path) -> bytes:
                     if not match:
                         # if ":" is missing
                         # insert it after the header key
-                        idx_space = line.index(b" ")
-                        line = line[:idx_space] + b":" + line[idx_space:]
+                        if b" " in line:
+                            idx = line.index(b" ")
+                            line = line[:idx] + b":" + line[idx:]
+                        else:
+                            idx = line.index(b"\n")
+                            line = line[:idx] + b":" + b"\n"
                     fixed_lines.append(line)
         return b"".join(fixed_lines)
     except (ValueError, IndexError) as err:
