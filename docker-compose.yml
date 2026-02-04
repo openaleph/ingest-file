@@ -21,6 +21,8 @@ services:
       OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
       FTM_STORE_URI: postgresql://ingest:ingest@postgres/ingest
       LOG_FORMAT: TEXT # TEXT or JSON
+      PYTHONWARNINGS: "ignore"
+      TYPER_STANDARD_TRACEBACK: True
     entrypoint: ["/bin/sh", "-c", "echo 'opal-procrastinate init-db' && exec \"$@\"", "--"]
     volumes:
       - "./ingestors:/ingestors/ingestors"
@@ -45,6 +47,8 @@ services:
       FTM_STORE_URI: postgresql://ingest:ingest@postgres/ingest
       LOG_FORMAT: TEXT # TEXT or JSON
       DEBUG: 1
+      PYTHONWARNINGS: "ignore"
+      TYPER_STANDARD_TRACEBACK: True
     entrypoint: ["/bin/sh", "-c", "echo 'opal-procrastinate init-db' && exec \"$@\"", "--"]
     volumes:
       - "./tests:/ingestors/tests"
