@@ -2,6 +2,7 @@ import logging
 import re
 import types
 from email.utils import getaddresses, parsedate_to_datetime
+from typing import List
 
 from banal import ensure_list
 from followthemoney.types import registry
@@ -66,6 +67,7 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
     """Extract metadata from email messages."""
 
     MID_RE = re.compile(r"<([^>]*)>")
+    attachments_checksums = set()
 
     # Generic MIME types that email clients often use incorrectly for attachments.
     # When these are encountered, let python-magic detect the actual content type.
@@ -101,15 +103,17 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
         # let python-magic detect the actual content type during ingestion.
         if mime_type and mime_type not in self.GENERIC_MIME_TYPES:
             child.add("mimeType", mime_type)
+        self.attachments_checksums.add(checksum)
         self.manager.queue_entity(child)
 
-    def get_header(self, msg, *headers):
+    def get_header(self, msg, *headers) -> List:
         """
         As seen in real world, we can't rely on the correct parsing
         of header values by the python built-in email module.
         Therefore we additionally check for the raw header values
         if the values contain "; " as a splitter.
         """
+
         raw_headers = dict(msg._headers)
         values = set()
         for header in headers:
@@ -117,11 +121,15 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
                 for value in ensure_list(msg.get_all(header)):
                     values.add(value)
                 for value in ensure_list(raw_headers.get(header)):
-                    values.update(value.split(";"))
+                    if "Subject" not in headers:
+                        values.update(value.split(";"))
+                    else:
+                        # do not break the Subject string apart
+                        values.add(value)
             except (TypeError, IndexError, AttributeError, ValueError) as exc:
                 log.warning("Failed to parse [%s]: %s", header, exc)
         values = [x.strip() for x in values]
-        return list(values)
+        return values
 
     def get_dates(self, msg, *headers):
         dates = []

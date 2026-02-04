@@ -1,12 +1,17 @@
 import email
 import logging
-from email.errors import MessageError
+import subprocess
+from email.errors import MessageError, MissingHeaderBodySeparatorDefect
 from email.policy import default
 from html import escape
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from followthemoney import model
 from rigour.mime import normalize_mimetype
+from servicelayer.archive.util import checksum as servicelayer_checksum
 
+from ingestors.email.helpers import fix_rfc822
 from ingestors.exc import ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.email import EmailSupport
@@ -91,7 +96,15 @@ class RFC822Ingestor(Ingestor, EmailSupport, EncodingSupport):
         if is_attachment:
             if part.is_multipart():
                 # The attachment is an email
-                payload = str(part.get_payload(i=0))
+                if (
+                    part.get_all("Content-Transfer-Encoding")
+                    and part.get_all("Content-Transfer-Encoding")[0] == "base64"
+                ):
+                    import base64
+
+                    payload = base64.b64decode(part.get_payload(i=0).get_payload())
+                else:
+                    payload = str(part.get_payload(i=0))
             else:
                 payload = part.get_payload(decode=True)
             self.ingest_attachment(entity, file_name, mime_type, payload)
@@ -134,6 +147,56 @@ class RFC822Ingestor(Ingestor, EmailSupport, EncodingSupport):
             with open(file_path, "rb") as fh:
                 msg = email.message_from_binary_file(fh, policy=default)
         except (MessageError, ValueError, IndexError) as err:
-            raise ProcessingException("Cannot parse email: %s" % err) from err
+            raise ProcessingException(f"Cannot parse email: {err}") from err
+
+        if msg.defects and any(
+            [isinstance(x, MissingHeaderBodySeparatorDefect) for x in msg.defects]
+        ):
+            fixed_email_string = fix_rfc822(file_path)
+            try:
+                msg = email.message_from_bytes(fixed_email_string, policy=default)
+            except (MessageError, ValueError, IndexError) as err:
+                raise ProcessingException(f"Cannot parse email: {err}") from err
 
         self.ingest_msg(entity, msg)
+
+        ignore_prefix = "openaleph_ignore_nameless_attachment"
+        with TemporaryDirectory() as temp_dir:
+            # -p = prefix filename to be used on files without a filename
+            # --prefix = rename by putting unique code at the front of the filename
+            cmd = [
+                "ripmime",
+                "-q",
+                "-i",
+                file_path,
+                "-d",
+                temp_dir,
+                "-p",
+                ignore_prefix,
+                "--prefix",
+            ]
+            try:
+                subprocess.run(
+                    cmd,
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.STDOUT,
+                )
+
+                temp_dir_path = Path(temp_dir)
+                for attachment_path in temp_dir_path.iterdir():
+                    if not attachment_path.name.startswith(ignore_prefix):
+                        content_hash = servicelayer_checksum(attachment_path)
+                        if content_hash not in self.attachments_checksums:
+                            mime_type = self.manager.MAGIC.from_file(
+                                attachment_path.as_posix()
+                            )
+                            with open(attachment_path, "rb") as f:
+                                payload = f.read()
+                                self.ingest_attachment(
+                                    entity, attachment_path.name, mime_type, payload
+                                )
+            except subprocess.CalledProcessError as err:
+                raise ProcessingException(f"Cannot extract attachments: {err}") from err
+            except Exception as err:
+                raise ProcessingException(f"Cannot parse email: {err}") from err
