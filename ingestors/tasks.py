@@ -21,7 +21,7 @@ app = make_app(__loader__.name)
 sync_app = make_app(__loader__.name, sync=True)
 
 
-@task(app=app)
+@task(app=app, retry=defer.tasks.ingest.retries)
 def ingest(job: DatasetJob) -> None:
     to_analyze: list[EntityProxy] = []
     to_index: list[EntityProxy] = []
