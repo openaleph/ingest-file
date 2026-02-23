@@ -1,4 +1,4 @@
-FROM ghcr.io/openaleph/ingest-file-base:bug-emails
+FROM ghcr.io/openaleph/ingest-file-base:main
 
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libgomp.so.1
 
