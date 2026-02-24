@@ -6,7 +6,7 @@ export OPENALEPH_DB_URI=postgresql:///openaleph
 export FTM_FRAGMENTS_URI=postgresql:///openaleph
 
 then:
-opal-procrastinate init-db
+openaleph-procrastinate init-db
 memray run contrib/memory_test.py
 """
 

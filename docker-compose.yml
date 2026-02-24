@@ -23,7 +23,7 @@ services:
       LOG_FORMAT: TEXT # TEXT or JSON
       PYTHONWARNINGS: "ignore"
       TYPER_STANDARD_TRACEBACK: True
-    entrypoint: ["/bin/sh", "-c", "echo 'opal-procrastinate init-db' && exec \"$@\"", "--"]
+    entrypoint: ["/bin/sh", "-c", "echo 'openaleph-procrastinate init-db' && exec \"$@\"", "--"]
     volumes:
       - "./ingestors:/ingestors/ingestors"
       - "./data:/ingestors/data"
@@ -49,7 +49,7 @@ services:
       DEBUG: 1
       PYTHONWARNINGS: "ignore"
       TYPER_STANDARD_TRACEBACK: True
-    entrypoint: ["/bin/sh", "-c", "echo 'opal-procrastinate init-db' && exec \"$@\"", "--"]
+    entrypoint: ["/bin/sh", "-c", "echo 'openaleph-procrastinate init-db' && exec \"$@\"", "--"]
     volumes:
       - "./tests:/ingestors/tests"
       - "./data:/ingestors/data"
