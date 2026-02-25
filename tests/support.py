@@ -8,7 +8,7 @@ from tempfile import mkdtemp
 
 from followthemoney import StatementEntity
 from ftmq.store.fragments import get_fragments
-from openaleph_procrastinate.util import make_checksum_entity
+from openaleph_procrastinate.util import make_file_entity
 from procrastinate.testing import InMemoryConnector
 from servicelayer import settings as sls
 from servicelayer.archive.util import ensure_path
@@ -24,7 +24,7 @@ def emit_entity(self, entity, fragment=None):
     self.entities.append(entity)
     self.writer.put(entity.to_dict(), fragment=fragment)
     with self.emitted.writer() as bulk:
-        bulk.add_entity(make_checksum_entity(entity, StatementEntity, quiet=True))
+        bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
 
 
 class TestCase(unittest.TestCase):

@@ -16,7 +16,7 @@ from ftmq.store.memory import MemoryStore
 from normality import stringify
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.app import App
-from openaleph_procrastinate.util import make_checksum_entity
+from openaleph_procrastinate.util import make_file_entity
 from prometheus_client import Counter, Histogram
 from rigour.mime import normalize_mimetype
 from servicelayer.archive import init_archive
@@ -140,7 +140,7 @@ class Manager:
         entity = self.ns.apply(entity)
         self.writer.put(entity.to_dict(), fragment)
         with self.emitted.writer() as bulk:
-            bulk.add_entity(make_checksum_entity(entity, StatementEntity, quiet=True))
+            bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
 
     def emit_text_fragment(self, entity, texts, fragment):
         texts = [t for t in ensure_list(texts) if filter_text(t)]
