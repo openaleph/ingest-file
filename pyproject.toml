@@ -1,6 +1,6 @@
 [project]
 name = "ingestors"
-version = "5.2.0-rc2"
+version = "5.2.0-rc3"
 description = "Ingestors extract the contents of mixed unstructured documents into structured (followthemoney) data. "
 authors = [
     { name = "Friedrich Lindenberg", email = "friedrich@pudo.org" },
