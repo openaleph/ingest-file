@@ -6,6 +6,8 @@ from servicelayer.cache import get_redis, make_key
 from servicelayer.settings import REDIS_LONG
 from servicelayer.tags import Tags
 
+from ingestors.settings import Settings
+
 log = logging.getLogger(__name__)
 
 
@@ -16,7 +18,7 @@ class CacheSupport(object):
 
     @cached_property
     def tags(self):
-        return Tags("ingest_cache")
+        return Tags("ingest_cache", uri=Settings().tags_database_uri)
 
     def cache_key(self, *parts):
         return make_key(*parts)

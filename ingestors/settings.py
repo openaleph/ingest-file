@@ -1,6 +1,5 @@
 from openaleph_procrastinate.settings import OpenAlephSettings
 from pydantic_settings import SettingsConfigDict
-from servicelayer import settings as sls
 
 
 class Settings(OpenAlephSettings):
@@ -26,12 +25,11 @@ class Settings(OpenAlephSettings):
     tika_fallback: bool = False
     """Use Apache Tika as a text extraction fallback"""
 
-
-_settings = OpenAlephSettings()
-
-# Also store cached values in the SQL database
-# Force psycopg3 for SQLAlchemy if fragments_uri is postgres
-fragments_uri = _settings.fragments_uri
-if fragments_uri and fragments_uri.startswith("postgresql://"):
-    fragments_uri = fragments_uri.replace("postgresql://", "postgresql+psycopg://", 1)
-sls.TAGS_DATABASE_URI = fragments_uri
+    @property
+    def tags_database_uri(self) -> str:
+        """Resolve the tags database URI from fragments_uri, forcing psycopg3
+        driver for PostgreSQL."""
+        uri = self.fragments_uri
+        if uri and uri.startswith("postgresql://"):
+            uri = uri.replace("postgresql://", "postgresql+psycopg://", 1)
+        return uri

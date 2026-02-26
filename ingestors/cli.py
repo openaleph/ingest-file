@@ -65,11 +65,6 @@ def cli_ingest(
 ):
     """Queue a local directory for ingest."""
     with ErrorHandler(log):
-        if settings.debug:
-            from servicelayer import settings as sls
-
-            sls.TAGS_DATABASE_URI = "sqlite:///:memory:?mode=memory&cache=shared"
-
         ingest_path(dataset, path, languages or [], foreign_id)
 
         if settings.debug:
@@ -96,4 +91,4 @@ def cache_clear(
 ):
     """Delete ingest cache entries."""
     with ErrorHandler(log):
-        Tags("ingest_cache").delete(prefix=prefix)
+        Tags("ingest_cache", uri=settings.tags_database_uri).delete(prefix=prefix)
