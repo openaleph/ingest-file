@@ -288,14 +288,14 @@ files = [
 
 [[package]]
 name = "anystore"
-version = "1.1.0"
+version = "1.1.2"
 description = "Store and cache things anywhere"
 optional = false
 python-versions = "<4,>=3.11"
 groups = ["main"]
 files = [
-    {file = "anystore-1.1.0-py3-none-any.whl", hash = "sha256:8e635203dc059ab2ab7f6b4bca77d3acbea958d814e73ea22d303ba4ba6b3ba0"},
-    {file = "anystore-1.1.0.tar.gz", hash = "sha256:261e1e48a13f981fb372c2023effd11927ad5201325b400f86c2f1127e57d095"},
+    {file = "anystore-1.1.2-py3-none-any.whl", hash = "sha256:3fe59a74a74a45d3b3d81dc05d1a3abb6db6cec2a18a006d348afb9aa8d44c1d"},
+    {file = "anystore-1.1.2.tar.gz", hash = "sha256:3f2b7c93ce607012ef34da08ab255ca36c6518524f324556637fc1c59e472b2d"},
 ]
 
 [package.dependencies]
@@ -1803,18 +1803,18 @@ tqdm = ["tqdm"]
 
 [[package]]
 name = "ftmq"
-version = "4.5.4"
+version = "4.5.5"
 description = "followthemoney query dsl and io helpers"
 optional = false
 python-versions = "<3.14,>=3.11"
 groups = ["main"]
 files = [
-    {file = "ftmq-4.5.4-py3-none-any.whl", hash = "sha256:287f9e5376c017103652ad6ead0f8067b7b338a5babdc8a7ce480cbc23ed227c"},
-    {file = "ftmq-4.5.4.tar.gz", hash = "sha256:6f4efcbfe51d72dc914a6ffcbd5fd34ac7f50c5ca73a23ac9c04fa35e1c752de"},
+    {file = "ftmq-4.5.5-py3-none-any.whl", hash = "sha256:3f48d5821bfe47c23d5984bf16e5281301fd5c66988024543eb9ef2a72b80b45"},
+    {file = "ftmq-4.5.5.tar.gz", hash = "sha256:85b4e5ec9f80e899a3a0d8371d56d3c0f12c41a931c14b751ac21dd9cf9ef1d8"},
 ]
 
 [package.dependencies]
-anystore = ">=1.1.0,<2.0.0"
+anystore = ">=1.1.2,<2.0.0"
 click = ">=8.2.1,<9.0.0"
 click-default-group = ">=1.2.4,<2.0.0"
 followthemoney = ">=4.5.3,<5.0.0"
@@ -1828,7 +1828,7 @@ sqlalchemy = {version = ">=2.0.36,<3.0.0", optional = true, markers = "extra == 
 
 [package.extras]
 aleph = ["alephclient (>=2.6.0,<3.0.0)", "furl (>=2.1.4,<3.0.0)"]
-lake = ["deltalake (>=1.4.2,<2.0.0)", "duckdb (>=1.4.4,<2.0.0)", "pandas (>=3.0.0,<4.0.0)", "pyarrow (>=23.0.0,<24.0.0)"]
+lake = ["deltalake (>=1.4.2,<2.0.0)", "duckdb (>=1.4.4,<2.0.0)", "pandas (>=3.0.1,<4.0.0)", "pyarrow (>=23.0.1,<24.0.0)"]
 level = ["plyvel (>=1.5.1,<2.0.0)"]
 postgres = ["psycopg[pool] (>=3.2.9,<4.0.0)", "sqlalchemy (>=2.0.36,<3.0.0)"]
 redis = ["fakeredis (>=2.26.2,<3.0.0)", "redis (>=5.2.1,<6.0.0)"]
@@ -3163,13 +3163,13 @@ files = [
 
 [[package]]
 name = "nomenklatura"
-version = "4.6.9"
+version = "4.7.0"
 description = "Make record linkages in followthemoney data."
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "nomenklatura-4.6.9-py3-none-any.whl", hash = "sha256:8d0fca04c5f0e2aad6189014cebc4ce1c0f95ad781b83dab7b071476ae2f533a"},
+    {file = "nomenklatura-4.7.0-py3-none-any.whl", hash = "sha256:d50d4f05786c25d0519a8d0a0671763dd4d0f0bd647498841ea366038feefe66"},
 ]
 
 [package.dependencies]
@@ -6068,4 +6068,4 @@ ocr = ["tesserocr"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "bf5e73482f247ddc22eeb19e1fa455bf0833238d5cab318fc902c4119b45d34e"
+content-hash = "d597f22cc66bdec288d9370dfc06091d245f550ea3c63dd54a3fbebbac485047"
