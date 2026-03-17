@@ -1,0 +1,5 @@
+col1, col2
+ID:Date:Name:Email:Username, 1:2012:jan1:a@b.com:"another: comma"
+some:other:data, 1:2012:jan1:a@b.com:"another: comma"
+even:more:data, 2:2013:jan2:a@b.com:"another: comma"
+weirdly:more:data, 3:2014:jan3:a@b.com:"another: comma"
