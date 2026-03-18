@@ -35,7 +35,7 @@ class ExcelXMLIngestor(Ingestor, TableSupport, OOXMLSupport):
         entity.schema = model.get("Workbook")
         self.ooxml_extract_metadata(file_path, entity)
         try:
-            book = load_workbook(file_path, read_only=True)
+            book = load_workbook(file_path, read_only=True, data_only=True) # "controls whether cells with formulae have either the formula (default) or the value stored the last time Excel read the sheet"
         except Exception as err:
             raise ProcessingException("Invalid Excel file: %s" % err) from err
 
