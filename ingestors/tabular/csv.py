@@ -30,13 +30,21 @@ class CSVIngestor(Ingestor, TableSupport):
             encoding = self.detect_stream_encoding(fh)
             log.debug("Detected encoding [%r]: %s", entity, encoding)
 
-        with io.open(file_path, "r", encoding=encoding, errors="replace") as fh:
-            try:
+        try:
+            with io.open(file_path, "r", encoding=encoding, errors="replace") as fh:
                 sample = fh.read(4096 * 10)
                 fh.seek(0)
                 dialect = csv.Sniffer().sniff(sample)
+                log.debug("Detected CSV delimiter [%r]: %r", entity, dialect.delimiter)
                 reader = csv.reader(fh, dialect=dialect)
-                self.emit_row_tuples(entity, reader)
-            except (Exception, csv.Error) as err:
-                log.warning("CSV error: %s", err)
-                raise ProcessingException("Invalid CSV: %s" % err) from err
+                num_cols = len(next(reader, []))
+                single_column = any(len(row) > num_cols for row in reader)
+        except (Exception, csv.Error) as err:
+            log.warning("CSV error: %s", err)
+            raise ProcessingException("Invalid CSV: %s" % err) from err
+        with io.open(file_path, "r", encoding=encoding, errors="replace") as fh:
+            if single_column:
+                log.warning("Ambiguous CSV delimiter: [%r]", entity)
+                self.emit_row_tuples(entity, ([line.rstrip("\r\n")] for line in fh))
+            else:
+                self.emit_row_tuples(entity, csv.reader(fh, dialect=dialect))
