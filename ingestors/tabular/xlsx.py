@@ -1,21 +1,21 @@
 import logging
+from xml.etree.ElementTree import ParseError
 
 from followthemoney import model
 from openpyxl import load_workbook
-from xml.etree.ElementTree import ParseError
 
-from ingestors.ingestor import Ingestor
-from ingestors.support.table import TableSupport
-from ingestors.support.ooxml import OOXMLSupport
 from ingestors.exc import ProcessingException
+from ingestors.ingestor import Ingestor
+from ingestors.support.ooxml import OOXMLSupport
+from ingestors.support.table import TableSupport
 
 log = logging.getLogger(__name__)
 
 
 class ExcelXMLIngestor(Ingestor, TableSupport, OOXMLSupport):
     MIME_TYPES = [
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # noqa
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.template",  # noqa
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # noqa: B950
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.template",  # noqa: B950
         "application/vnd.ms-excel.sheet.macroenabled.12",
         "application/vnd.ms-excel.sheet.binary.macroenabled.12",
         "application/vnd.ms-excel.template.macroenabled.12",
@@ -35,7 +35,9 @@ class ExcelXMLIngestor(Ingestor, TableSupport, OOXMLSupport):
         entity.schema = model.get("Workbook")
         self.ooxml_extract_metadata(file_path, entity)
         try:
-            book = load_workbook(file_path, read_only=True, data_only=True) # "controls whether cells with formulae have either the formula (default) or the value stored the last time Excel read the sheet"
+            # "controls whether cells with formulae have either the formula
+            # (default) or the value stored the last time Excel read the sheet"
+            book = load_workbook(file_path, read_only=True, data_only=True)
         except Exception as err:
             raise ProcessingException("Invalid Excel file: %s" % err) from err
 
