@@ -3354,23 +3354,27 @@ name = "openaleph-procrastinate"
 version = "5.2.1"
 description = "Task queue logic for OpenAleph built upon procrastinate"
 optional = false
-python-versions = "<3.14,>=3.11"
+python-versions = ">=3.11,<3.14"
 groups = ["main"]
-files = [
-    {file = "openaleph_procrastinate-5.2.1-py3-none-any.whl", hash = "sha256:94b37a9ee48a6bab9d7e7ae9e80cb8d3dc22c59cd41fb6bf98ffb44dcbfb5352"},
-    {file = "openaleph_procrastinate-5.2.1.tar.gz", hash = "sha256:ce9590ff38ecf1709ba37c743253b554583f6bd0ef34769755cd561044c4c31f"},
-]
+files = []
+develop = false
 
 [package.dependencies]
-anystore = ">=1.1.3,<2.0.0"
+anystore = ">=1.1.6,<2.0.0"
 cachetools = "<6"
-followthemoney = ">=4.5.3,<5.0.0"
-ftmq = ">=4.5.7,<5.0.0"
-procrastinate = ">=3.7.2,<4.0.0"
-psycopg = ">=3.3.2,<4.0.0"
+followthemoney = ">=4.7.0,<5.0.0"
+ftmq = ">=4.7.1,<5.0.0"
+procrastinate = ">=3.8.0,<4.0.0"
+psycopg = ">=3.3.3,<4.0.0"
 psycopg-pool = ">=3.3.0,<4.0.0"
 pydantic = ">=2.11.7,<3.0.0"
 pydantic-settings = ">=2.10.1,<3.0.0"
+
+[package.source]
+type = "git"
+url = "https://github.com/openaleph/openaleph-procrastinate.git"
+reference = "HEAD"
+resolved_reference = "fd6f8c5aee2324decb6b4b2de5ed6f712c24e7d5"
 
 [[package]]
 name = "openaleph-servicelayer"
@@ -3727,14 +3731,14 @@ dev = ["build", "bump2version", "mypy", "pytest", "pytest-cov", "wheel"]
 
 [[package]]
 name = "procrastinate"
-version = "3.7.2"
+version = "3.8.0"
 description = "Postgres-based distributed task processing library"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "procrastinate-3.7.2-py3-none-any.whl", hash = "sha256:a2c71eb592067c57ec19d1a5074c81d4859489d2f8036ec3c2c046edf175736f"},
-    {file = "procrastinate-3.7.2.tar.gz", hash = "sha256:9845f6aa464b525fd0f38934f56bc4c04f4631bbdcb23fedc8c656c006e89d79"},
+    {file = "procrastinate-3.8.0-py3-none-any.whl", hash = "sha256:2ba171fd6a1dae20fcb903a300c40c2d6dc664cde10a62f2bd1806d128fcfe56"},
+    {file = "procrastinate-3.8.0.tar.gz", hash = "sha256:ce4ea0b806fd66579abee8140943d702f4c749304250842ebbb0d9925eaec164"},
 ]
 
 [package.dependencies]
@@ -6113,4 +6117,4 @@ ocr = ["tesserocr"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "c3751a47b1d8ad5a96b9d513d524cda148477aa79f2a90b6cbfebe746149e405"
+content-hash = "6546f3466a1e914dd4868943ae663201b867b1ff387b5735381fa1c2f2478d6a"
