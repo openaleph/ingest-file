@@ -1,7 +1,7 @@
 import logging
 import re
 import types
-from email.utils import getaddresses, parsedate_to_datetime
+from email.utils import parseaddr, parsedate_to_datetime
 from typing import List
 
 from banal import ensure_list
@@ -25,12 +25,14 @@ class EmailIdentity(object):
         We want to create a Person entity even if we only have
         a valid name, or a valid e-mail.
         """
-        self.email = ascii_text(stringify(email))
+        self.email = ascii_text(stringify(email)) if email else None
+        if not registry.email.validate(self.email):
+            self.email = None
+
         self.name = stringify(name)
         if not self.name:
             self.name = None
-        if not registry.email.validate(self.email):
-            self.email = None
+
         # If the value stored in name is a valid e-mail
         # store it in self.email and set self.name to None
         if self.name and registry.email.validate(self.name):
@@ -67,6 +69,7 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
     """Extract metadata from email messages."""
 
     MID_RE = re.compile(r"<([^>]*)>")
+    ENCODED_HEADER_PATTERN = re.compile(r"=\?{1}(.+)\?{1}([B|Q])\?{1}(.+)\?{1}=.*")
     attachments_checksums = set()
 
     # Generic MIME types that email clients often use incorrectly for attachments.
@@ -113,7 +116,6 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
         Therefore we additionally check for the raw header values
         if the values contain "; " as a splitter.
         """
-
         raw_headers = dict(msg._headers)
         values = set()
         for header in headers:
@@ -121,6 +123,9 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
                 for value in ensure_list(msg.get_all(header)):
                     values.add(value)
                 for value in ensure_list(raw_headers.get(header)):
+                    # do not store raw encoded values for the subject
+                    if self.ENCODED_HEADER_PATTERN.search(value):
+                        continue
                     if "Subject" not in headers:
                         values.update(value.split(";"))
                     else:
@@ -142,8 +147,14 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
 
     def get_identities(self, values):
         values = [v for v in ensure_list(values) if v is not None]
-        for name, email in getaddresses(values):
-            yield EmailIdentity(self.manager, name, email)
+        for value in values:
+            name, email = parseaddr(value)
+            if not name and not email:
+                continue
+            elif not email:
+                yield EmailIdentity(self.manager, value, "")
+            else:
+                yield EmailIdentity(self.manager, name, email)
 
     def get_header_identities(self, msg, *headers):
         yield from self.get_identities(self.get_header(msg, *headers))
@@ -249,14 +260,14 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
         self.apply_identities(entity, froms, "emitters", "from")  # codespell:ignore
         self.apply_raw(msg, entity, "from", "From", "X-From")
 
-        tos = self.get_header_identities(msg, "To", "Resent-To")
+        tos = self.get_header_identities(msg, "to", "To", "TO", "Resent-To")
         self.apply_identities(entity, tos, "recipients", "to")
-        self.apply_raw(msg, entity, "to", "To", "Resent-To")
+        self.apply_raw(msg, entity, "to", "To", "TO", "Resent-To")
 
-        ccs = self.get_header_identities(msg, "CC", "Cc", "Resent-Cc")
+        ccs = self.get_header_identities(msg, "cc", "Cc", "CC", "Resent-Cc")
         self.apply_identities(entity, ccs, "recipients", "cc")
-        self.apply_raw(msg, entity, "cc", "CC", "Cc", "Resent-Cc")
+        self.apply_raw(msg, entity, "cc", "Cc", "CC", "Resent-Cc")
 
-        bccs = self.get_header_identities(msg, "Bcc", "BCC", "Resent-Bcc")
+        bccs = self.get_header_identities(msg, "bcc", "Bcc", "BCC", "Resent-Bcc")
         self.apply_identities(entity, bccs, "recipients", "bcc")
         self.apply_raw(msg, entity, "bcc", "Bcc", "BCC", "Resent-Bcc")
