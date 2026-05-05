@@ -131,6 +131,9 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
                     values.add(value)
                 for value in ensure_list(raw_headers.get(header)):
                     # do not store raw encoded values for the subject
+                    if value:
+                        # the raw headers may contain \n or \r
+                        value = value.replace("\n", "")
                     if self.ENCODED_HEADER_PATTERN.search(value):
                         continue
                     if "Subject" not in headers:
