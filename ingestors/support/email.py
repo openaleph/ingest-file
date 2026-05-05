@@ -25,9 +25,13 @@ class EmailIdentity(object):
         We want to create a Person entity even if we only have
         a valid name, or a valid e-mail.
         """
-        self.email = ascii_text(stringify(email)) if email else None
-        if not registry.email.validate(self.email):
-            self.email = None
+        self.email = None
+        if email:
+            self.email = ascii_text(stringify(email))
+            # "     mailto:  uSEr@example.com  "
+            self.email = self.email.strip().lower().removeprefix("mailto:").strip()
+            if not registry.email.validate(self.email):
+                self.email = None
 
         self.name = stringify(name)
         if not self.name:
@@ -37,7 +41,11 @@ class EmailIdentity(object):
         # store it in self.email and set self.name to None
         if self.name and registry.email.validate(self.name):
             self.email = self.email or ascii_text(self.name)
+            self.email = self.email.strip().lower().removeprefix("mailto:").strip()
             self.name = None
+
+        if not self.email:
+            return
 
         # This should be using formataddr, but I cannot figure out how
         # to use that without encoding the name.
@@ -51,10 +59,9 @@ class EmailIdentity(object):
 
         self.entity = None
 
-        if not self.email:
-            return
-
-        key = self.email.strip().lower()
+        # e-mail dumps might be organized in folders named after the e-mail address
+        # which would otherwise result in merging a Folder entity with a Person entity
+        key = f"email:{self.email}"
         if key is not None:
             fragment = safe_fragment(self.label)
             self.entity = manager.make_entity("Person")
