@@ -27,10 +27,7 @@ class CalendarIngestor(Ingestor, EncodingSupport):
     SCORE = 10
 
     def address_entity(self, address):
-        email = str(address).strip()
-        if email.lower().startswith("mailto:"):
-            email = address[len("mailto:") :]
-        identity = EmailIdentity(self.manager, None, email)
+        identity = EmailIdentity(self.manager, None, address)
         return identity.entity
 
     def ingest_component(self, entity, idx, comp):
