@@ -40,7 +40,7 @@ dependencies = [
     # servicelayer extras requirements
     "boto3 (>=1.11.9,<2.0.0)",
     "openaleph-procrastinate (>=5.2.2,<6.0.0)",
-    "openaleph-servicelayer (>=1.23.4,<2.0.0)",
+    "openaleph-servicelayer[anystore] @ git+https://github.com/openaleph/openaleph-servicelayer.git@feat/http-api",
     "tika (>=3.1.0,<4.0.0)",
 ]
 
