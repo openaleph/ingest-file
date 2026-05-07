@@ -7,7 +7,7 @@ from typing import List
 from banal import ensure_list
 from followthemoney.types import registry
 from ftmq.store.fragments.utils import safe_fragment
-from normality import ascii_text, safe_filename, stringify
+from normality import ascii_text, safe_filename, squash_spaces, stringify
 
 from ingestors.support.cache import CacheSupport
 from ingestors.support.html import HTMLSupport
@@ -133,7 +133,7 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
                     # do not store raw encoded values for the subject
                     if value:
                         # the raw headers may contain \n or \r
-                        value = value.replace("\n", "")
+                        value = squash_spaces(value)
                     if self.ENCODED_HEADER_PATTERN.search(value):
                         continue
                     if "Subject" not in headers:
