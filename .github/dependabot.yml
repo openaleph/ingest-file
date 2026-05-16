@@ -3,17 +3,8 @@ updates:
   - package-ecosystem: docker
     directory: "/"
     schedule:
-      interval: monthly
-    open-pull-requests-limit: 99
+      interval: weekly
   - package-ecosystem: pip
     directory: "/"
     schedule:
-      interval: monthly
-    open-pull-requests-limit: 99
-    groups:
-      dev-dependencies:
-        patterns:
-          - "black"
-          - "ruff"
-          - "pytest*"
-          - "wheel"
+      interval: daily
