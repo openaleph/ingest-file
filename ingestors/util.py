@@ -1,8 +1,9 @@
-import shutil
 import locale
-from pathlib import Path
-from normality import stringify
+import shutil
 from contextlib import contextmanager
+from pathlib import Path
+
+from normality import stringify
 
 
 class SingletonDecorator:
@@ -25,20 +26,12 @@ def remove_directory(file_path):
 
 
 def filter_text(text):
-    """Remove text strings not worth indexing for full-text search."""
+    """Remove empty text strings not worth indexing for full-text search. As of
+    v5.3.1 this doesn't reject numeric types anymore as this is actually worth
+    to search for."""
     text = stringify(text)
-    if text is None:
+    if text is None or not text.strip():
         return False
-    if not len(text.strip()):
-        return False
-    try:
-        # try to exclude numeric data from spreadsheets
-        float(text)
-        return False
-    except Exception:
-        pass
-    # TODO: should we check there's any alphabetic characters in the
-    # text to avoid snippets entirely comprised of non-text chars?
     return True
 
 
