@@ -143,6 +143,7 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
                         values.add(value)
             except (TypeError, IndexError, AttributeError, ValueError) as exc:
                 log.warning("Failed to parse [%s]: %s", header, exc)
+
         values = [x.strip() for x in values]
         return values
 
@@ -173,6 +174,9 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
         if isinstance(identities, types.GeneratorType):
             identities = list(identities)
         for identity in ensure_list(identities):
+            # if the EmailIdentity obj has an invalid email attr, skip
+            if not hasattr(identity, "entity"):
+                continue
             if eprop is not None:
                 entity.add(eprop, identity.entity)
             if lprop is not None:
