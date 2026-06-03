@@ -1,4 +1,4 @@
-from .support import TestCase
+from tests.support import TestCase
 
 
 class JsonFileIngestorTest(TestCase):
@@ -7,4 +7,5 @@ class JsonFileIngestorTest(TestCase):
         self.manager.ingest(fixture_path, entity)
         entity = list(self.get_emitted())[0]
         assert "Golden State Warriros" in entity.get("indexText")
-        assert "10" not in entity.get("indexText")
+        # 5.3.1 we don't filter out "numeric only" fragments anymore
+        assert "10" in entity.get("indexText")
