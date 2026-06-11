@@ -13,6 +13,7 @@ from followthemoney.namespace import Namespace
 from ftmq.store.fragments import get_fragments
 from ftmq.store.fragments.utils import safe_fragment
 from ftmq.store.memory import MemoryStore
+from ftmq.util import make_entity as make_statement_entity
 from normality import stringify
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.app import App
@@ -145,7 +146,10 @@ class Manager:
             if self.settings.procrastinate_dehydrate_entities:
                 bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
             else:
-                bulk.add_entity(entity)
+                # the memory store needs a StatementEntity, not an EntityProxy
+                bulk.add_entity(
+                    make_statement_entity(entity.to_dict(), StatementEntity)
+                )
 
     def emit_text_fragment(self, entity, texts, fragment):
         texts = [t for t in ensure_list(texts) if filter_text(t)]

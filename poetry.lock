@@ -3281,7 +3281,7 @@ pydantic-settings = ">=2.10.1,<3.0.0"
 type = "git"
 url = "https://github.com/openaleph/openaleph-procrastinate.git"
 reference = "HEAD"
-resolved_reference = "0e8412b642830a861ef74b4483f9938445a3b609"
+resolved_reference = "a8cd416c20792707f6371e0fcb418e125f8ec23a"
 
 [[package]]
 name = "openaleph-servicelayer"
