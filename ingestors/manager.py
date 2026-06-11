@@ -99,10 +99,12 @@ class Manager:
     MAGIC = magic.Magic(mime=True)
 
     def __init__(self, app: App, dataset: str, context: dict[str, Any]):
-        settings = Settings()
+        self.settings = Settings()
         self.app = app
         self.dataset = dataset
-        self.db = get_fragments(dataset, OP_INGEST, database_uri=settings.fragments_uri)
+        self.db = get_fragments(
+            dataset, OP_INGEST, database_uri=self.settings.fragments_uri
+        )
         self.writer = self.db.bulk()
         self.context = context
         self.ns = Namespace(self.context["namespace"])
@@ -140,7 +142,10 @@ class Manager:
         entity = self.ns.apply(entity)
         self.writer.put(entity.to_dict(), fragment)
         with self.emitted.writer() as bulk:
-            bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
+            if self.settings.procrastinate_dehydrate_entities:
+                bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
+            else:
+                bulk.add_entity(entity)
 
     def emit_text_fragment(self, entity, texts, fragment):
         texts = [t for t in ensure_list(texts) if filter_text(t)]
@@ -167,8 +172,7 @@ class Manager:
                 best_score = score
                 best_cls = cls
         if best_cls is None:
-            settings = Settings()
-            if settings.tika_fallback:
+            if self.settings.tika_fallback:
                 best_cls = TikaIngestor
             else:
                 raise ProcessingException("Format not supported")
