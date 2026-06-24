@@ -1,6 +1,6 @@
 import csv
 import logging
-from collections import OrderedDict
+from itertools import chain
 
 from followthemoney import EntityProxy
 from followthemoney.types import registry
@@ -15,29 +15,36 @@ from ingestors.support.temp import TempFileSupport
 
 log = logging.getLogger(__name__)
 
+_MISSING = object()
+
 
 class TableSupport(EncodingSupport, TempFileSupport):
     """Handle creating rows from an ingestor."""
 
     manager: Manager
 
-    def emit_row_dicts(self, table, rows, headers=None):
+    def _emit_value_rows(self, table, value_rows, headers):
+        """Write rows of raw cell values (each aligned to ``headers``) to a CSV
+        and emit table metadata.
+
+        Shared core for the dict- and tuple-based entry points: it sanitises
+        cells, skips fully-empty rows, streams chunked text fragments and sets
+        the table properties, so both paths behave identically.
+        """
+        sanitize = sanitize_text
         csv_path = self.make_work_file(table.id)
         row_count = 0
         cell_values: set[str] = set()
         with open(csv_path, "w", encoding=self.DEFAULT_ENCODING) as fp:
             csv_writer = csv.writer(fp, dialect="unix")
-            for row in rows:
-                if headers is None:
-                    headers = list(row.keys())
-                values = [sanitize_text(row.get(h)) or "" for h in headers]
-                length = sum((len(v) for v in values if v))
-                if length == 0:
+            for raw in value_rows:
+                values = [sanitize(v) or "" for v in raw]
+                if not any(values):
                     continue
                 csv_writer.writerow(values)
                 cell_values.update(values)
                 row_count += 1
-                if row_count > 0 and row_count % 10000 == 0:
+                if row_count % 10000 == 0:
                     log.info(
                         "Table emit [%s]: %s cell values from %s rows ...",
                         table,
@@ -54,13 +61,33 @@ class TableSupport(EncodingSupport, TempFileSupport):
         table.set("rowCount", row_count + 1)
         table.set("columns", registry.json.pack(headers))
 
-    def wrap_row_tuples(self, rows):
-        for row in rows:
-            headers = ["Column %s" % i for i in range(1, len(row) + 1)]
-            yield OrderedDict(zip(headers, row))
+    def emit_row_dicts(self, table, rows, headers=None):
+        rows = iter(rows)
+        if headers is None:
+            # Derive headers from the first row's keys (as the previous in-loop
+            # logic did), then replay that row through the shared core.
+            first = next(rows, _MISSING)
+            if first is _MISSING:
+                return self._emit_value_rows(table, iter(()), None)
+            headers = list(first.keys())
+            rows = chain((first,), rows)
+        value_rows = ([row.get(h) for h in headers] for row in rows)
+        return self._emit_value_rows(table, value_rows, headers)
 
     def emit_row_tuples(self, table, rows):
-        return self.emit_row_dicts(table, self.wrap_row_tuples(rows))
+        rows = iter(rows)
+        first = next(rows, _MISSING)
+        if first is _MISSING:
+            return self._emit_value_rows(table, iter(()), None)
+        width = len(first)
+        headers = ["Column %s" % i for i in range(1, width + 1)]
+        rows = chain((first,), rows)
+        # Align each row to the first row's width: drop extra columns, pad short
+        # rows with None — matching the previous OrderedDict/`.get` lookup.
+        value_rows = (
+            [row[i] if i < len(row) else None for i in range(width)] for row in rows
+        )
+        return self._emit_value_rows(table, value_rows, headers)
 
 
 class KreuzbergSpreadsheetSupport(TableSupport):
