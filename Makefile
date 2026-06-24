@@ -39,8 +39,13 @@ format:
 format-check:
 	black --check .
 
-test: build-test services
+test: build-test services test-kreuzberg
 	PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 $(COMPOSE) run --rm test-ingest-file pytest
+
+# Re-run the tabular suite with the kreuzberg extraction backend enabled
+# (INGESTORS_KREUZBERG defaults to off) so both code paths get covered.
+test-kreuzberg: build-test services
+	PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 $(COMPOSE) run --rm -e INGESTORS_KREUZBERG=1 test-ingest-file pytest tests/test_tabular.py
 
 test-arm: services
 	DEBUG=1 PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 PROCRASTINATE_APP=ingestors.tasks.app docker run --rm -v ./tests:/ingestors/tests $(IMAGE) sh -c "cd /ingestors && pip3 install --no-deps -r /ingestors/requirements-dev.txt && pip3 install --no-cache-dir procrastinate==3.2.2 && chown -R app:app /ingestors && pytest"
