@@ -56,6 +56,12 @@ class TableSupport(EncodingSupport, TempFileSupport):
         if row_count > 0:
             if len(cell_values):
                 self.manager.emit_text_fragment(table, list(cell_values), row_count)
+                log.info(
+                    "Table emit [%s]: %s cell values from %s rows ...",
+                    table,
+                    len(cell_values),
+                    row_count,
+                )
             csv_hash = self.manager.store(csv_path, mime_type=CSV)
             table.set("csvHash", csv_hash)
         table.set("rowCount", row_count + 1)
