@@ -18,6 +18,27 @@ class TabularIngestorTest(TestCase):
         self.assertEqual(int(table.first("rowCount")), 3)
         self.assertIn("Mihai Viteazul", "".join(table.get("indexText")))
 
+    def test_xlsx_with_wrong_extension(self):
+        # Regression test: openpyxl refuses to open a workbook when handed a
+        # path whose extension is not one of .xlsx/.xlsm/.xltx/.xltm. Files can
+        # reach the ingestor without a correct extension (e.g. extracted from an
+        # archive or named by content hash), so the ingestor passes openpyxl a
+        # file handle, which bypasses that check. The fixture is a valid .xlsx
+        # workbook deliberately named ".bin".
+        fixture_path, entity = self.fixture("disguised_xlsx.bin")
+        # Pin the detected type so ingestor selection does not depend on the
+        # local libmagic database; the behaviour under test is purely the
+        # ".bin" path extension handed to openpyxl.
+        entity.set(
+            "mimeType",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        self.manager.ingest(fixture_path, entity)
+        self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)
+        self.assertEqual(entity.schema.name, "Workbook")
+        tables = self.get_emitted("Table")
+        self.assertEqual(len(tables), 2)
+
     def test_unicode_xls(self):
         fixture_path, entity = self.fixture("rom.xls")
         self.manager.ingest(fixture_path, entity)

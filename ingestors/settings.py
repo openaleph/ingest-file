@@ -25,6 +25,9 @@ class Settings(OpenAlephSettings):
     tika_fallback: bool = False
     """Use Apache Tika as a text extraction fallback"""
 
+    kreuzberg: bool = False
+    """Use kreuzberg.dev implementation for supported file types"""
+
     @property
     def tags_database_uri(self) -> str:
         """Resolve the tags database URI from fragments_uri, forcing psycopg3
