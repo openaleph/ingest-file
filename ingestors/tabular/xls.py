@@ -7,14 +7,14 @@ from followthemoney import EntityProxy, model
 from xlrd.biffh import XLRDError
 
 from ingestors.exc import ENCRYPTED_MSG, ProcessingException
-from ingestors.ingestor import KreuzbergIngestor
+from ingestors.ingestor import Ingestor
 from ingestors.support.ole import OLESupport
-from ingestors.support.table import KreuzbergSpreadsheetSupport
+from ingestors.support.table import CalamineSpreadsheetSupport
 
 log = logging.getLogger(__name__)
 
 
-class ExcelIngestor(KreuzbergIngestor, KreuzbergSpreadsheetSupport, OLESupport):
+class ExcelIngestor(Ingestor, CalamineSpreadsheetSupport, OLESupport):
     MIME_TYPES = [
         "application/excel",
         "application/x-excel",
@@ -48,12 +48,11 @@ class ExcelIngestor(KreuzbergIngestor, KreuzbergSpreadsheetSupport, OLESupport):
 
     def ingest(self, file_path: Uri, entity: EntityProxy):
         entity.schema = model["Workbook"]
-
-        if self.settings.kreuzberg:
-            result = self.kreuzberg_extract(file_path, entity)
-            return self.kreuzberg_extract_sheets(result, entity)
-
         self.extract_ole_metadata(file_path, entity)
+
+        if self.settings.calamine:
+            return self.calamine_extract_sheets(file_path, entity)
+
         try:
             book = xlrd.open_workbook(str(file_path), formatting_info=False)
         except XLRDError:

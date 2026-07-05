@@ -1,18 +1,21 @@
 import logging
-from odf.teletype import extractText
-from odf.table import TableRow, TableCell, Table
-from odf.text import P
-from odf.namespaces import OFFICENS
+
 from followthemoney import model
+from odf.namespaces import OFFICENS
+from odf.table import Table, TableCell, TableRow
+from odf.teletype import extractText
+from odf.text import P
 
 from ingestors.ingestor import Ingestor
-from ingestors.support.table import TableSupport
 from ingestors.support.opendoc import OpenDocumentSupport
+from ingestors.support.table import CalamineSpreadsheetSupport
 
 log = logging.getLogger(__name__)
 
 
-class OpenOfficeSpreadsheetIngestor(Ingestor, TableSupport, OpenDocumentSupport):
+class OpenOfficeSpreadsheetIngestor(
+    Ingestor, CalamineSpreadsheetSupport, OpenDocumentSupport
+):
     MIME_TYPES = [
         "application/vnd.oasis.opendocument.spreadsheet",
         "application/vnd.oasis.opendocument.spreadsheet-template",
@@ -51,12 +54,20 @@ class OpenOfficeSpreadsheetIngestor(Ingestor, TableSupport, OpenDocumentSupport)
             for cell in row.getElementsByType(TableCell):
                 repeat = cell.getAttribute("numbercolumnsrepeated") or 1
                 value = self.convert_cell(cell)
-                for i in range(int(repeat)):
+                for _ in range(int(repeat)):
                     values.append(value)
             yield values
 
     def ingest(self, file_path, entity):
         entity.schema = model.get("Workbook")
+
+        if self.settings.calamine:
+            # Reading meta.xml alone keeps the metadata extraction O(1); a
+            # full parse_opendocument would parse all cell content in Python
+            # and forfeit the calamine speedup.
+            self.parse_opendocument_metadata(file_path, entity)
+            return self.calamine_extract_sheets(file_path, entity)
+
         doc = self.parse_opendocument(file_path, entity)
         for sheet in doc.spreadsheet.getElementsByType(Table):
             name = sheet.getAttribute("name")

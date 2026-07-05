@@ -1,9 +1,10 @@
 import logging
-from pprint import pprint  # noqa
-from olefile import isOleFile, OleFileIO
+from datetime import datetime
 
-from ingestors.support.timestamp import TimestampSupport
+from olefile import OleFileIO, isOleFile
+
 from ingestors.support.encoding import EncodingSupport
+from ingestors.support.timestamp import TimestampSupport
 
 log = logging.getLogger(__name__)
 
@@ -14,6 +15,12 @@ class OLESupport(TimestampSupport, EncodingSupport):
     def decode_meta(self, meta, prop):
         try:
             value = getattr(meta, prop, None)
+            if isinstance(value, datetime):
+                # olefile decodes unset FILETIME properties to the epoch
+                # 1601-01-01, which means "not set".
+                if value.year <= 1601:
+                    return
+                return value
             if not isinstance(value, bytes):
                 return
             encoding = "cp%s" % meta.codepage
