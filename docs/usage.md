@@ -69,7 +69,6 @@ ingest the file and output the resulting dataset to the file `./followthemoney.s
 an sqlite database.
 This also produces the directory `./archive`, which will contain the file
 you just ingested.
-If you omit
 
 Note, that this still requires setting up the database beforehand using 
 ```bash
