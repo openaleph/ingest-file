@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.14-slim
 ENV DEBIAN_FRONTEND="noninteractive"
 
 LABEL org.opencontainers.image.title="Base image for FollowTheMoney File Ingestors"

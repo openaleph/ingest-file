@@ -9,15 +9,13 @@ authors = [
 ]
 readme = "README.md"
 license = "AGPL-3.0"
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.11,<3.15"
 dependencies = [
     # base dependencies
     "banal (>=1.1.2,<2.0.0)",
     "normality (>=3.1.0,<4.0.0)",
-    "followthemoney (>=4.9.2,<5.0.0)",
-    "ftmq[postgres] (>=4.9.2,<5.0.0)",
-    # nomenklatura 4.11 removed Resolver.make_default, which ftmq still calls
-    "nomenklatura (>=4.10,<4.11)",
+    "followthemoney (>=4.10.0,<5.0.0)",
+    "ftmq[postgres] (>=4.10.0,<5.0.0)",
     "pyicu (>=2.15.3,<3.0.0)",
     # ingest dependencies
     "dbf (>=0.99.11,<0.100.0)",
@@ -39,12 +37,12 @@ dependencies = [
     "cryptography (>=46.0.2,<47.0.0)",
     "prometheus-client (>=0.20.0,<0.21.0)",
     "sentry_sdk (==2.0.1)",
-    # servicelayer extras requirements
-    "boto3 (>=1.11.9,<2.0.0)",
-    "openaleph-procrastinate @ git+https://github.com/openaleph/openaleph-procrastinate.git",
-    "openaleph-servicelayer (>=1.24.0,<2.0.0)",
     "tika (>=3.1.0,<4.0.0)",
     "python-calamine (>=0.7.0,<0.8.0)",
+    # servicelayer extras requirements
+    "boto3 (>=1.11.9,<2.0.0)",
+    "openaleph-procrastinate (>=5.3.1,<6.0.0)",
+    "openaleph-servicelayer (>=1.24.0,<2.0.0)",
 ]
 
 [project.scripts]
