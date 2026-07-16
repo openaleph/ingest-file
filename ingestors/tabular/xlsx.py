@@ -6,14 +6,14 @@ from followthemoney import EntityProxy, model
 from openpyxl import load_workbook
 
 from ingestors.exc import ProcessingException
-from ingestors.ingestor import KreuzbergIngestor
+from ingestors.ingestor import Ingestor
 from ingestors.support.ooxml import OOXMLSupport
-from ingestors.support.table import KreuzbergSpreadsheetSupport
+from ingestors.support.table import CalamineSpreadsheetSupport
 
 log = logging.getLogger(__name__)
 
 
-class ExcelXMLIngestor(KreuzbergIngestor, KreuzbergSpreadsheetSupport, OOXMLSupport):
+class ExcelXMLIngestor(Ingestor, CalamineSpreadsheetSupport, OOXMLSupport):
     MIME_TYPES = [
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # noqa: B950
         "application/vnd.openxmlformats-officedocument.spreadsheetml.template",  # noqa: B950
@@ -34,12 +34,11 @@ class ExcelXMLIngestor(KreuzbergIngestor, KreuzbergSpreadsheetSupport, OOXMLSupp
 
     def ingest(self, file_path: Uri, entity: EntityProxy):
         entity.schema = model["Workbook"]
-
-        if self.settings.kreuzberg:
-            result = self.kreuzberg_extract(file_path, entity)
-            return self.kreuzberg_extract_sheets(result, entity)
-
         self.ooxml_extract_metadata(file_path, entity)
+
+        if self.settings.calamine:
+            return self.calamine_extract_sheets(file_path, entity)
+
         # Pass a file handle rather than the path: openpyxl only accepts files
         # whose extension is one of .xlsx/.xlsm/.xltx/.xltm when given a path,
         # but skips that check for file-like objects. Files can reach us without

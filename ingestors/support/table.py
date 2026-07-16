@@ -2,13 +2,14 @@ import csv
 import logging
 from itertools import chain
 
+from anystore.types import Uri
 from followthemoney import EntityProxy
 from followthemoney.types import registry
 from followthemoney.util import sanitize_text
-from kreuzberg import ExtractionResult
+from python_calamine import CalamineError, CalamineWorkbook, PasswordError
 from rigour.mime.types import CSV
 
-from ingestors.exc import ProcessingException
+from ingestors.exc import ENCRYPTED_MSG, ProcessingException
 from ingestors.manager import Manager
 from ingestors.support.encoding import EncodingSupport
 from ingestors.support.temp import TempFileSupport
@@ -96,35 +97,36 @@ class TableSupport(EncodingSupport, TempFileSupport):
         return self._emit_value_rows(table, value_rows, headers)
 
 
-class KreuzbergSpreadsheetSupport(TableSupport):
-    """Kreuzberg implementation for xls[x] spreadsheets"""
+class CalamineSpreadsheetSupport(TableSupport):
+    """Spreadsheet extraction via python-calamine, a binding to the Rust
+    `calamine` crate. Reads xls, xlsx and ods with content-based format
+    detection, orders of magnitude faster than the pure-Python parsers.
+    It reads cell data only; document metadata (author, dates, generator)
+    must be extracted natively by the calling ingestor."""
 
-    def kreuzberg_extract_sheets(
-        self, result: ExtractionResult, entity: EntityProxy
-    ) -> None:
-        sheet_names = result.metadata.get("sheet_names")
-        if not sheet_names:
-            log.warning(
-                f"No sheets in Workbook `{entity.id}` ({entity.first('contentHash')})"
-            )
+    def calamine_generate_rows(self, sheet):
+        # start is None for empty sheets, where iter_rows() panics
+        # (python-calamine 0.7.0)
+        if sheet.start is None:
             return
-        # kreuzberg emits one table per non-empty sheet (empty sheets are
-        # skipped), so the number of tables can be smaller than sheet_count.
-        # Each table's `page_number` is the 1-based index of its source sheet,
-        # which recovers the correct name regardless of any empty sheets.
-        if not result.tables:
-            log.warning(
-                f"No tables extracted from Workbook `{entity.id}` "
-                f"({entity.first('contentHash')})"
-            )
+        # iter_rows() is lazy but trims leading empty columns; left-pad to
+        # keep absolute column positions, matching the native
+        # openpyxl/xlrd/odfpy behaviour.
+        padding = [None] * sheet.start[1]
+        for row in sheet.iter_rows():
+            yield padding + list(row) if padding else row
+
+    def calamine_extract_sheets(self, file_path: Uri, entity: EntityProxy) -> None:
+        log.info(f"Calamine extract: [{repr(entity)}]: {self.__class__.__name__}")
         try:
-            for position, sheet_table in enumerate(result.tables):
-                index = sheet_table.page_number or position + 1
-                name = (
-                    sheet_names[index - 1]
-                    if index <= len(sheet_names)
-                    else f"Sheet {index}"
-                )
+            workbook = CalamineWorkbook.from_path(str(file_path))
+        except PasswordError as err:
+            raise ProcessingException(ENCRYPTED_MSG) from err
+        except CalamineError as err:
+            raise ProcessingException("Invalid workbook: %s" % err) from err
+        try:
+            for name in workbook.sheet_names:
+                sheet = workbook.get_sheet_by_name(name)
                 table = self.manager.make_entity("Table", parent=entity)
                 table.make_id(entity.id, name)
                 table.set("title", name)
@@ -134,8 +136,8 @@ class KreuzbergSpreadsheetSupport(TableSupport):
                 # See https://github.com/alephdata/ingest-file/issues/171
                 self.manager.emit_entity(table, fragment="initial")
                 log.debug("Sheet: %s", name)
-                self.emit_row_tuples(table, sheet_table.cells)
+                self.emit_row_tuples(table, self.calamine_generate_rows(sheet))
                 if table.has("csvHash"):
                     self.manager.emit_entity(table)
-        except Exception as err:
-            raise ProcessingException("Cannot read Excel file: %s" % err) from err
+        except CalamineError as err:
+            raise ProcessingException("Cannot read workbook: %s" % err) from err

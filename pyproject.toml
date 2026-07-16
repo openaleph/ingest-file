@@ -16,6 +16,8 @@ dependencies = [
     "normality (>=3.1.0,<4.0.0)",
     "followthemoney (>=4.9.2,<5.0.0)",
     "ftmq[postgres] (>=4.9.2,<5.0.0)",
+    # nomenklatura 4.11 removed Resolver.make_default, which ftmq still calls
+    "nomenklatura (>=4.10,<4.11)",
     "pyicu (>=2.15.3,<3.0.0)",
     # ingest dependencies
     "dbf (>=0.99.11,<0.100.0)",
@@ -42,7 +44,7 @@ dependencies = [
     "openaleph-procrastinate @ git+https://github.com/openaleph/openaleph-procrastinate.git",
     "openaleph-servicelayer (>=1.24.0,<2.0.0)",
     "tika (>=3.1.0,<4.0.0)",
-    "kreuzberg (>=4.9.9,<5.0.0)",
+    "python-calamine (>=0.7.0,<0.8.0)",
 ]
 
 [project.scripts]
