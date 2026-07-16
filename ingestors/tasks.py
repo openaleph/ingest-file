@@ -2,6 +2,7 @@ import gc
 from pathlib import Path
 
 from anystore.logging import get_logger
+from followthemoney import registry
 from followthemoney.proxy import EntityProxy
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.app import make_app
@@ -20,6 +21,20 @@ SYSTEM.info({"ingestfile_version": __version__})
 
 app = make_app(__loader__.name)
 sync_app = make_app(__loader__.name, sync=True)
+
+
+SKIP_ANALYSIS = ("Workbook", "Package", "Folder")
+
+
+def should_analyze(e: EntityProxy) -> bool:
+    if e.schema.is_a("Analyzable"):
+        for schema in SKIP_ANALYSIS:
+            if e.schema.is_a(schema):
+                return False
+        for txt in e.get_type_values(registry.text):
+            if txt:
+                return True
+    return False
 
 
 @task(app=app, retry=defer.tasks.ingest.retries)
@@ -42,7 +57,7 @@ def ingest(job: DatasetJob) -> None:
         job.log.error("No entities to be emitted!")
 
     for entity in emitted:
-        if entity.schema.is_a("Analyzable"):
+        if should_analyze(entity):
             to_analyze.append(entity)
 
         to_index.append(entity)
