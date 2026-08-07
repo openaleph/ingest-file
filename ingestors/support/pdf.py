@@ -129,7 +129,9 @@ class PDFSupport(DocumentConvertSupport, OCRSupport, XMLSupport):
     def pdf_alternative_extract(self, entity, pdf_path: str, manager):
         checksum = self.manager.store(pdf_path)
         entity.set("pdfHash", checksum)
-        self.parse_and_ingest(pdf_path, entity, manager)
+        # skip metadata extraction for generated pfds
+        pdf_model = self.parse(pdf_path)
+        self.extract_pages(pdf_model, entity, manager)
 
     def pdf_extract_page(
         self, pdf_doc: fitz.Document, page: fitz.Page, page_number: int
