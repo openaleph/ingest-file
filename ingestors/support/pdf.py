@@ -36,7 +36,7 @@ class PdfModel:
     pages: List[PdfPageModel]
 
 
-# context here https://github.com/adobe/XMP-Toolkit-SDK/blob/main/docs/XMPSpecificationPart2.pdf 
+# context here https://github.com/adobe/XMP-Toolkit-SDK/blob/main/docs/XMPSpecificationPart2.pdf
 # and here https://github.com/adobe/XMP-Toolkit-SDK/blob/main/docs/XMPSpecificationPart3.pdf
 XMP_NS = {
     "dc": "http://purl.org/dc/elements/1.1/",
