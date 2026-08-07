@@ -78,7 +78,7 @@ class PDFSupport(DocumentConvertSupport, OCRSupport):
         with fitz.open(file_path) as pdf_doc:
             if pdf_doc.needs_pass:
                 raise UnauthorizedError
-            # print(f"\n[IF] number of pages: {pdf_doc.page_count}")
+            pdf_model.metadata = pdf_doc.metadata
             for page in pdf_doc:
                 pdf_model.pages.append(
                     self.pdf_extract_page(pdf_doc, page, page.number + 1)
