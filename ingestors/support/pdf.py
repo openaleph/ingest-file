@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 import logging
 import os
-from typing import Dict, List
+from typing import Dict, List, Optional
 import uuid
 import unicodedata
 
 import fitz
+from lxml import etree
 
 from normality import collapse_spaces  # noqa
 
@@ -13,6 +14,7 @@ from followthemoney import model
 from ingestors.exc import UnauthorizedError
 from ingestors.support.ocr import OCRSupport
 from ingestors.support.convert import DocumentConvertSupport
+from ingestors.support.xml import XMLSupport
 
 log = logging.getLogger(__name__)
 
@@ -29,25 +31,57 @@ class PdfPageModel:
 class PdfModel:
     """Represents data extracted from a PDF"""
 
-    metadata: Dict[str, str]
-    xmp_metadata: Dict[str, str]
+    metadata: Optional[Dict[str, str]]
+    xmp_metadata: Optional[etree._Element]
     pages: List[PdfPageModel]
 
 
-class PDFSupport(DocumentConvertSupport, OCRSupport):
+# context here https://github.com/adobe/XMP-Toolkit-SDK/blob/main/docs/XMPSpecificationPart2.pdf 
+# and here https://github.com/adobe/XMP-Toolkit-SDK/blob/main/docs/XMPSpecificationPart3.pdf
+XMP_NS = {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "xmp": "http://ns.adobe.com/xap/1.0/",
+    "pdf": "http://ns.adobe.com/pdf/1.3/",
+    "xmpMM": "http://ns.adobe.com/xap/1.0/mm/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+}
+
+
+class PDFSupport(DocumentConvertSupport, OCRSupport, XMLSupport):
     """Provides helpers for PDF file context extraction."""
 
+    def parse_xmp_metadata(self, xmp_string: str) -> Optional[etree._Element]:
+        if not xmp_string:
+            return None
+        return self.parse_xml_string(xmp_string)
+
+    def _xmp_find(self, tree: etree._Element, xpath: str):
+        el = tree.find(xpath, namespaces=XMP_NS)
+        if el is None:
+            return None
+        # plain text
+        if el.text and el.text.strip():
+            return el.text.strip()
+        # rdf:Alt or rdf:Seq — return all li values
+        items = el.findall("./rdf:Alt/rdf:li", namespaces=XMP_NS)
+        if not items:
+            items = el.findall("./rdf:Seq/rdf:li", namespaces=XMP_NS)
+        if items:
+            return [li.text.strip() for li in items if li.text]
+        return None
+
     def extract_xmp_metadata(self, pdf: PdfModel, entity):
+        if pdf.xmp_metadata is None:
+            return
         try:
-            xmp = pdf.xmp_metadata
-            if xmp is None:
-                return
-            entity.add("messageId", xmp["xmpmm"].get("documentid"))
-            entity.add("title", xmp["dc"].get("title"))
-            entity.add("generator", xmp["pdf"].get("producer"))
-            entity.add("language", xmp["dc"].get("language"))
-            entity.add("authoredAt", xmp["xmp"].get("createdate"))
-            entity.add("modifiedAt", xmp["xmp"].get("modifydate"))
+            tree = pdf.xmp_metadata
+            entity.add("messageId", self._xmp_find(tree, ".//xmpMM:DocumentID"))
+            entity.add("title", self._xmp_find(tree, ".//dc:title"))
+            entity.add("author", self._xmp_find(tree, ".//dc:creator"))
+            entity.add("generator", self._xmp_find(tree, ".//pdf:Producer"))
+            entity.add("language", self._xmp_find(tree, ".//dc:language"))
+            entity.add("authoredAt", self._xmp_find(tree, ".//xmp:CreateDate"))
+            entity.add("modifiedAt", self._xmp_find(tree, ".//xmp:ModifyDate"))
         except Exception as ex:
             log.warning("Error reading XMP: %r", ex)
 
@@ -79,6 +113,7 @@ class PDFSupport(DocumentConvertSupport, OCRSupport):
             if pdf_doc.needs_pass:
                 raise UnauthorizedError
             pdf_model.metadata = pdf_doc.metadata
+            pdf_model.xmp_metadata = self.parse_xmp_metadata(pdf_doc.get_xml_metadata())
             for page in pdf_doc:
                 pdf_model.pages.append(
                     self.pdf_extract_page(pdf_doc, page, page.number + 1)
