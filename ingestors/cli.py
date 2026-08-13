@@ -5,12 +5,12 @@ import typer
 from anystore.cli import ErrorHandler
 from anystore.logging import configure_logging, get_logger
 from ftmq.io import smart_write_proxies
-from ftmq.store.fragments import get_fragments
 from rich import print
 from servicelayer.tags import Tags
 from typing_extensions import Annotated
 
 from ingestors import __version__
+from ingestors.repository import get_entity_store
 from ingestors.settings import Settings
 from ingestors.tasks import ingest_path
 
@@ -73,7 +73,7 @@ def cli_ingest(
             from ingestors.tasks import app
 
             defer_settings = DeferSettings()
-            db = get_fragments(dataset)
+            db = get_entity_store(dataset)
             db.delete()
             app.run_worker(queues=[defer_settings.ingest.queue], wait=False)
             smart_write_proxies("-", db.iterate())
