@@ -11,7 +11,7 @@ apt-get install build-essential locales ca-certificates \
     imagemagick-6-common imagemagick mdbtools djvulibre-bin \
     libtiff5-dev libjpeg-dev libfreetype-dev libwebp-dev \
     libtiff-tools ghostscript librsvg2-bin jbig2dec \
-    pst-utils \
+    pst-utils ripmime \
     tesseract-ocr-eng \
     tesseract-ocr-swa \
     tesseract-ocr-swe \
