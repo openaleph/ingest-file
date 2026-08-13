@@ -1,3 +1,10 @@
+x-ingest-env: &ingest-env
+  OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
+  FTM_FRAGMENTS_URI: postgresql://ingest:ingest@postgres/ingest
+  LOG_FORMAT: TEXT # TEXT or JSON
+  PYTHONWARNINGS: "ignore"
+  TYPER_STANDARD_TRACEBACK: True
+
 services:
   postgres:
     image: postgres:17
@@ -42,15 +49,14 @@ services:
     image: ghcr.io/dataresearchcenter/ftm-analyze:main
     command: procrastinate worker -q analyze --concurrency 8 --one-shot
     environment:
-      OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
-      FTM_FRAGMENTS_URI: postgresql://ingest:ingest@postgres/ingest
+      <<: *ingest-env
     tmpfs:
       - /tmp:mode=777
     depends_on:
       - postgres
 
   ingest-file:
-    image: ghcr.io/openaleph/ingest-file:feat-procrastinate
+    image: ${INGEST_IMAGE:-ghcr.io/openaleph/ingest-file:main}
     command: procrastinate worker -q ingest --concurrency 8 --one-shot
     hostname: ingest
     tmpfs:
@@ -58,13 +64,16 @@ services:
     volumes:
       - ../tests/fixtures:/fixtures
     environment:
-      OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
-      FTM_FRAGMENTS_URI: postgresql://ingest:ingest@postgres/ingest
+      <<: *ingest-env
       ARCHIVE_TYPE: s3
       ARCHIVE_BUCKET: openaleph
       ARCHIVE_ENDPOINT_URL: http://minio:9000
+      FSSPEC_S3_ENDPOINT_URL: http://minio:9000
       AWS_ACCESS_KEY_ID: openaleph
       AWS_SECRET_ACCESS_KEY: openaleph
+      LAKEHOUSE_URI: s3://openaleph
+      LAKEHOUSE_JOURNAL_URI: postgresql://ingest:ingest@postgres/ingest
+      INGESTORS_LAKEHOUSE: 0
     depends_on:
       - minio
       - postgres
