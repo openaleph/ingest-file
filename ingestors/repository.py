@@ -3,11 +3,12 @@ repository during transition"""
 
 from functools import cache
 from pathlib import Path
+from typing import Protocol
 
 from anystore.exceptions import DoesNotExist
 from anystore.logic.io import stream
 from anystore.store import get_store
-from anystore.util import uri_to_path
+from anystore.util import join_uri, uri_to_path
 from followthemoney import EntityProxy
 from ftm_lakehouse import get_archive as get_lakehouse_archive
 from ftm_lakehouse import get_entities
@@ -25,7 +26,21 @@ from ingestors.settings import OP_INGEST, Settings
 settings = Settings()
 
 
-class Archive:
+def lakehouse_uri(dataset: str) -> str | None:
+    """Dataset location for the lakehouse backend.
+
+    `None` keeps the default `{LAKEHOUSE_URI}/{dataset}`. An override (the tests
+    use one to get an isolated location per case) is joined with the dataset
+    name, because the lakehouse factories take an explicit uri as-is.
+    """
+    if settings._lakehouse_uri:
+        return join_uri(settings._lakehouse_uri, dataset)
+    return None
+
+
+class Archive(Protocol):
+    """Blob storage for the files being ingested."""
+
     def archive_file(self, file_path: Path, mime_type: str | None = None) -> str: ...
 
     def load_file(
@@ -33,8 +48,23 @@ class Archive:
     ) -> Path | None: ...
 
 
-class ServicelayerArchive(Archive):
-    def __init__(self, dataset: str) -> None:
+class EntityStore(Protocol):
+    """Read and write access to the entities of one dataset."""
+
+    def put(self, entity: EntityProxy, fragment: str | None = None) -> None: ...
+
+    def flush(self) -> None: ...
+
+    def iterate(self, entity_id: str | None = None) -> EntityProxies: ...
+
+    def get(self, entity_id: str) -> EntityProxy | None: ...
+
+    def delete(self) -> None: ...
+
+
+class ServicelayerArchive:
+    def __init__(self) -> None:
+        # the servicelayer archive is global, it has no notion of a dataset
         self._archive = init_archive(
             archive_type=sls.ARCHIVE_TYPE,
             path=sls.ARCHIVE_PATH,
@@ -51,9 +81,9 @@ class ServicelayerArchive(Archive):
         return self._archive.load_file(content_hash, file_name, temp_path)
 
 
-class LakehouseArchive(Archive):
+class LakehouseArchive:
     def __init__(self, dataset: str) -> None:
-        self._archive = get_lakehouse_archive(dataset)
+        self._archive = get_lakehouse_archive(dataset, lakehouse_uri(dataset))
 
     def archive_file(self, file_path: Path, mime_type: str | None = None) -> str:
         with file_path.open("rb") as fh:
@@ -63,7 +93,7 @@ class LakehouseArchive(Archive):
             checksum=checksum,
             mimeType=mime_type,
             id=checksum,
-            origin="ingest",
+            origin=OP_INGEST,
         )
         return file.checksum
 
@@ -81,62 +111,18 @@ class LakehouseArchive(Archive):
             return
 
 
-@cache
-def get_archive(dataset: str) -> Archive:
-    if settings.lakehouse:
-        return LakehouseArchive(dataset)
-    return ServicelayerArchive(dataset)
-
-
-class EntityWriter:
-    def put(self, entity: EntityProxy, fragment: str | None = None) -> None: ...
-
-    def flush(self) -> None: ...
-
-
-class LakehouseWriter(EntityWriter):
+class FragmentStore:
     def __init__(self, dataset: str) -> None:
-        self._entities = get_entities(dataset)
+        self._db = get_fragments(
+            dataset, OP_INGEST, database_uri=settings.fragments_uri
+        )
+        self._writer = self._db.bulk()
 
     def put(self, entity: EntityProxy, fragment: str | None = None) -> None:
-        fragment = safe_fragment(fragment)
-        self._entities.add(entity, origin=OP_INGEST, fragment=fragment)
-
-    def flush(self) -> None:
-        self._entities.flush()
-
-
-class FragmentWriter(EntityWriter):
-    def __init__(self, dataset: str) -> None:
-        db = get_fragments(dataset, OP_INGEST, database_uri=settings.fragments_uri)
-        self._writer = db.bulk()
-
-    def put(self, entity: EntityProxy, fragment: str | None = None) -> None:
-        fragment = safe_fragment(fragment)
-        self._writer.put(entity.to_dict(), fragment=fragment)
+        self._writer.put(entity.to_dict(), fragment=safe_fragment(fragment))
 
     def flush(self) -> None:
         self._writer.flush()
-
-
-@cache
-def get_writer(dataset: str) -> EntityWriter:
-    if settings.lakehouse:
-        return LakehouseWriter(dataset)
-    return FragmentWriter(dataset)
-
-
-class Dataset:
-    def iterate(self, entity_id: str | None = None) -> EntityProxies: ...
-
-    def get(self, entity_id: str) -> EntityProxy | None: ...
-
-    def delete(self) -> None: ...
-
-
-class FragmentDataset(Dataset):
-    def __init__(self, dataset: str) -> None:
-        self._db = get_fragments(dataset, origin=OP_INGEST)
 
     def iterate(self, entity_id: str | None = None) -> EntityProxies:
         return self._db.iterate(entity_id)
@@ -148,9 +134,15 @@ class FragmentDataset(Dataset):
         self._db.delete()
 
 
-class LakehouseDataset(Dataset):
+class LakehouseStore:
     def __init__(self, dataset: str) -> None:
-        self._entities = get_entities(dataset)
+        self._entities = get_entities(dataset, lakehouse_uri(dataset))
+
+    def put(self, entity: EntityProxy, fragment: str | None = None) -> None:
+        self._entities.add(entity, origin=OP_INGEST, fragment=safe_fragment(fragment))
+
+    def flush(self) -> None:
+        self._entities.flush()
 
     def iterate(self, entity_id: str | None = None) -> EntityProxies:
         q = Query()
@@ -162,11 +154,19 @@ class LakehouseDataset(Dataset):
         return self._entities.get(entity_id, flush_first=True)
 
     def delete(self) -> None:
+        # FIXME: there is no public api to drop a whole dataset yet
         self._entities._statements.destroy()
 
 
 @cache
-def get_dataset(dataset: str) -> Dataset:
+def get_archive(dataset: str) -> Archive:
     if settings.lakehouse:
-        return LakehouseDataset(dataset)
-    return FragmentDataset(dataset)
+        return LakehouseArchive(dataset)
+    return ServicelayerArchive()
+
+
+@cache
+def get_entity_store(dataset: str) -> EntityStore:
+    if settings.lakehouse:
+        return LakehouseStore(dataset)
+    return FragmentStore(dataset)

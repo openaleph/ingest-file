@@ -26,7 +26,7 @@ from ingestors.directory import DirectoryIngestor
 from ingestors.exc import ENCRYPTED_MSG, ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.misc.tika import TikaIngestor
-from ingestors.repository import get_archive, get_writer
+from ingestors.repository import get_archive, get_entity_store
 from ingestors.settings import Settings
 from ingestors.util import filter_text, remove_directory
 
@@ -87,7 +87,7 @@ class Manager:
         self.settings = Settings()
         self.app = app
         self.dataset = dataset
-        self.writer = get_writer(self.dataset)
+        self.writer = get_entity_store(self.dataset)
         self.context = context
         self.ns = Namespace(self.context["namespace"])
         self.work_path = ensure_path(mkdtemp(prefix="ingestor-"))

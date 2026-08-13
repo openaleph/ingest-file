@@ -14,7 +14,8 @@ from servicelayer.archive.util import ensure_path
 from servicelayer.tags import Tags
 
 from ingestors.manager import Manager, get_archive
-from ingestors.repository import get_dataset
+from ingestors.repository import get_entity_store
+from ingestors.repository import settings as repository_settings
 from ingestors.settings import OP_INGEST
 from ingestors.tasks import app
 
@@ -31,9 +32,10 @@ def emit_entity(self, entity, fragment=None):
 class TestCase(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = mkdtemp()
-        # clear cached func calls
+        # clear cached func calls, they are keyed on the dataset only and would
+        # otherwise hand back stores pointing at a previous test's tmp dir
         get_archive.cache_clear()
-        get_dataset.cache_clear()
+        get_entity_store.cache_clear()
         # Force tests to use fake configuration
         self.assertIsInstance(app.connector, InMemoryConnector)
         # `App.run_worker` registers a notification listener bound to the loop
@@ -44,13 +46,15 @@ class TestCase(unittest.TestCase):
         sls.REDIS_URL = None
         sls.ARCHIVE_TYPE = "file"
         sls.ARCHIVE_PATH = self.tmp_dir
+        # same for the lakehouse backend: an isolated location per test
+        repository_settings._lakehouse_uri = self.tmp_dir
         os.environ["FTM_STORE_URI"] = f"sqlite:///{self.tmp_dir}/ftm.store"
         sls.TAGS_DATABASE_URI = os.environ["FTM_STORE_URI"]
         Tags("ingest_cache").delete()
         self.manager = Manager(app, TEST_DATASET, {"namespace": "test"})
         self.manager.emit_entity = types.MethodType(emit_entity, self.manager)
         self.manager.entities = []
-        self.dataset = get_dataset(self.manager.dataset)
+        self.dataset = get_entity_store(self.manager.dataset)
 
     def fixture(self, fixture_path):
         """Returns a fixture path and a dummy entity"""

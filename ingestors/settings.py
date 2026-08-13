@@ -33,6 +33,10 @@ class Settings(OpenAlephSettings):
     lakehouse: bool = False
     """Run against ftm-lakehouse storage backend"""
 
+    _lakehouse_uri: str | None = None
+    """Runtime override for the ftm-lakehouse location, used by the tests to
+    isolate each case."""
+
     @property
     def tags_database_uri(self) -> str:
         """Resolve the tags database URI from fragments_uri, forcing psycopg3
