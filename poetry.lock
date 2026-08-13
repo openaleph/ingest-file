@@ -1394,6 +1394,90 @@ test = ["certifi (>=2024)", "cryptography-vectors (==46.0.7)", "pretend (>=0.7)"
 test-randomorder = ["pytest-randomly"]
 
 [[package]]
+name = "cysignals"
+version = "1.12.5"
+description = "Interrupt and signal handling for Cython"
+optional = false
+python-versions = "<3.14,>=3.9"
+groups = ["main"]
+markers = "python_version < \"3.13\""
+files = [
+    {file = "cysignals-1.12.5-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:78ec72c069b0c0fbf81c52afadf4220e49ff04405976cd3ac1d1fb3561bdc8b3"},
+    {file = "cysignals-1.12.5-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:dcea06cc0902ed5453345bc7a8e6a2237b222ce772ab3cc137b135ebcb7e410c"},
+    {file = "cysignals-1.12.5-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:131e70b8c1eead0781c34d1cd5b5d3fe1c9228a985ce548f277a68d10df691ff"},
+    {file = "cysignals-1.12.5-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:215fdf50197256e456075c0a80de67006584a67d7f489ff1436c1b2f00592e2d"},
+    {file = "cysignals-1.12.5-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:a8631d5ed0c15951c5ab653298efd76e0a8d48912693dd8287cb52d4b631783a"},
+    {file = "cysignals-1.12.5-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:13d61803e20d471f3bafa2acbb290168609b8854aaefb6feaab2208ef4906b9a"},
+    {file = "cysignals-1.12.5-cp310-cp310-win_amd64.whl", hash = "sha256:8636cb41552467e5037220b5368ef10a3d9890b1991e87640769a8f00ebad0c6"},
+    {file = "cysignals-1.12.5-cp310-cp310-win_arm64.whl", hash = "sha256:2fc8b1e90a1589c899d815635b073d0a9614309cc981db8c53c55104a11412f4"},
+    {file = "cysignals-1.12.5-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:b8b757e49c9181d874c08271bcbc3ded677f43263e2370b36e41556d897fb053"},
+    {file = "cysignals-1.12.5-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:82022c3f20f44e52e1c1767716ebf936f15ed9dc2539ae0f840108a59c8313b2"},
+    {file = "cysignals-1.12.5-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9c2daad79f36bf288be9501fcfac4eaacd80113376128e67151a45a57a6470d5"},
+    {file = "cysignals-1.12.5-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c37abf7fe2c68c7b63bb5df1f0bf54abab69f7386e767c625d6924dc38746f45"},
+    {file = "cysignals-1.12.5-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:90404a01595e0fcc2f55760ab25ba4ea995c3143739da976364a64fa16306a47"},
+    {file = "cysignals-1.12.5-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:f14d212027280f37fc1324a66737f78755be010101e0ee8ddd3c98c0dcef4276"},
+    {file = "cysignals-1.12.5-cp311-cp311-win_amd64.whl", hash = "sha256:e372512ad4137ffeb5ea9626854fc0f7feb0fafca07b2ea5f8c5a968138c23f3"},
+    {file = "cysignals-1.12.5-cp311-cp311-win_arm64.whl", hash = "sha256:e5f9f1d1f47e9b680c69c63a7faf1a0863736f6f00311b273c076810ef40509c"},
+    {file = "cysignals-1.12.5-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:f7c4074c9a9ae1294abf6a7de224174c2797e3b8f0c86881a04557224ad766bd"},
+    {file = "cysignals-1.12.5-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:08dc79fd7470f828d7ae2f70b534a2710d39c1f194ffeb9649fbdff6e6f0bfff"},
+    {file = "cysignals-1.12.5-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9c8011f72efc59fda3cf72096e7cdfc00f415629252c161c29eb721427a666a8"},
+    {file = "cysignals-1.12.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:eccbcfd762de37daf4a01a0a77ef653561a153c48c2db9104916d36ebbd3cf24"},
+    {file = "cysignals-1.12.5-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:741c9bed4ef802c5892f62c6c8ad96390610bcfb617a0250a86c595eecdd13a9"},
+    {file = "cysignals-1.12.5-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:10e57664e3a2c3e7cdd270b7fa041859b552c2813c195b1247e3c116bf40226b"},
+    {file = "cysignals-1.12.5-cp312-cp312-win_amd64.whl", hash = "sha256:8824990cdf09891ccdd8f5d0f839762948c90535b56d476fcf8c0dddd27ca53b"},
+    {file = "cysignals-1.12.5-cp312-cp312-win_arm64.whl", hash = "sha256:f8e27a442aea569e824b12cd4b8c8599d94e44272e3dfaa56d4ac98215aef7c1"},
+    {file = "cysignals-1.12.5-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:c2131f0a724d3f5c0d6ae11c100641a491b223b075d03aa83c69b1d44736a099"},
+    {file = "cysignals-1.12.5-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:03cb462edcc1ee7b63f2108bbeb89ce04ddca3baeb4d490f26c997ec23f392f1"},
+    {file = "cysignals-1.12.5-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:64895f286cb6e0f070db6ea8c808039fda21b2c3c9876e3486e6f36aa956b557"},
+    {file = "cysignals-1.12.5-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:0008a7e53f4889f75c5132c06b42723e80ec40f1035be1cbe4d909896e8f55dc"},
+    {file = "cysignals-1.12.5-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:800b6b7ad6c45590a2a30d05889378beee9948d8828bc8aafd79694825b595b6"},
+    {file = "cysignals-1.12.5-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:c09035afcd3017250e796247f3eaf5e79a9a7090b1e104a962b8eb4c87bf9ebe"},
+    {file = "cysignals-1.12.5-cp313-cp313-win_amd64.whl", hash = "sha256:7392bbc6a46ee9b1eb973ec994f95f7421257a474c071c56def37c7ce0ea8d87"},
+    {file = "cysignals-1.12.5-cp313-cp313-win_arm64.whl", hash = "sha256:1a2ebb66883be5e493741c5db787d509b2c1f860d32829a184dbc912b33a9f4e"},
+    {file = "cysignals-1.12.5-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:421b7e880255d97a78b33c2a7b5fc2fb8096ebe5ca4b8b6e7a9cff02536c433d"},
+    {file = "cysignals-1.12.5-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:ea8988f1b6b9eaff7a30e47593e9856b1888fe881b1e10c9c3158ba3ea3c23d3"},
+    {file = "cysignals-1.12.5-cp39-cp39-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:4641b141545dc719ef694608ad717507e39b1c1521297a15a25d36a441f937fb"},
+    {file = "cysignals-1.12.5-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:52b8b72f9dd07d8a1d87633a53afab825eb6027f3a1b92777df590fb0ac9c3c1"},
+    {file = "cysignals-1.12.5-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:32bfec54acb3aaf0f5a89411221974aad2507eae17009029df44795f4c0e9317"},
+    {file = "cysignals-1.12.5-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:95ace34327ded6e3634185d03d2defc83e74d644d8ecc8cd2738558e60ee6a2f"},
+    {file = "cysignals-1.12.5-cp39-cp39-win_amd64.whl", hash = "sha256:c512da79dddb83315912704d66d160d2942e792d055b44b090b37bf8210277f1"},
+    {file = "cysignals-1.12.5-cp39-cp39-win_arm64.whl", hash = "sha256:78e5be4b7d6173afae961ab896e38b7439f6e0873031bf059677fdc5765ecfa6"},
+    {file = "cysignals-1.12.5.tar.gz", hash = "sha256:8f8ed409043d028b59d063dc4c069cbf12a750534757ce06f38eeac5ff368700"},
+]
+
+[[package]]
+name = "cysignals"
+version = "1.12.6"
+description = "Interrupt and signal handling for Cython"
+optional = false
+python-versions = ">=3.12"
+groups = ["main"]
+markers = "python_version >= \"3.13\""
+files = [
+    {file = "cysignals-1.12.6-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:3ee654e14c0747d39711d169a664766e0140327a1d3ea1e0fccda1e31ef74e53"},
+    {file = "cysignals-1.12.6-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:26a79edceeee7d74609b0cc73b4c3d93301e488dca28b166b3667049a2ee559c"},
+    {file = "cysignals-1.12.6-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:cdcf379028c9a4afcc957d046ce492c3418ac931ddf2089d21d34f337b64ecfb"},
+    {file = "cysignals-1.12.6-cp312-cp312-win_amd64.whl", hash = "sha256:ae2119e7194f48f31eebdaf238fe09a69ce6c89b73f8733a6a9b7b9386bbf414"},
+    {file = "cysignals-1.12.6-cp312-cp312-win_arm64.whl", hash = "sha256:3a664ba18028400abf1221c412ca914795c4cfe9564b9bde1e065e1ab472e668"},
+    {file = "cysignals-1.12.6-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:7cfce1fb8b5b30027518d29c472ea78377b049c74aa72b2750d203ba6e791327"},
+    {file = "cysignals-1.12.6-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d2a54eb2787e7e93855e06e420740b51b61c06dd466b8ad48a01cf5bc3bc2375"},
+    {file = "cysignals-1.12.6-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:63bd2aeab7e515a530176a007478129a043415de7fa08519d9721689b47f91b3"},
+    {file = "cysignals-1.12.6-cp313-cp313-win_amd64.whl", hash = "sha256:8c3987e9607e7db896e99aa23066366544151aba0f2155fc3da7e19d20d66439"},
+    {file = "cysignals-1.12.6-cp313-cp313-win_arm64.whl", hash = "sha256:f85bc3d7bf6d8a79d53685bf466e25b95b799787397622265515a72bb7addf6c"},
+    {file = "cysignals-1.12.6-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:f0e1b9c1f0a1a6ddc3b550893aa032cb2e865a60b8480d3ec61bf4f24f232cf1"},
+    {file = "cysignals-1.12.6-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:948d9b0fcdb54d6ef0624991fb22b9c57a63467da56d46bc1f8edb618c900584"},
+    {file = "cysignals-1.12.6-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:8eceead50d00487179017eb81b00a7bbf2acfcef6869ba950a13e0e3ee5fef07"},
+    {file = "cysignals-1.12.6-cp314-cp314-win_amd64.whl", hash = "sha256:77fc10e45f7ee704adf6d217812a6fa58b983fff22ceb1c8530dd27bc067d6d0"},
+    {file = "cysignals-1.12.6-cp314-cp314-win_arm64.whl", hash = "sha256:34e19f1abcf40d08634b07bd4ac21852f9e4091e9245012b031fa923a1d7d7fe"},
+    {file = "cysignals-1.12.6-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:83c4f6bb0cd1fc58fc55a3f0dbca0e1229113e3faf06e9a1a7f9cb19a4263f6f"},
+    {file = "cysignals-1.12.6-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:8fd29e7452de0d8c7a929b29e8ba7f8bfa84fca746e80263799db026b56b8a1e"},
+    {file = "cysignals-1.12.6-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:576c16e08b4a917c23ca6d586131a53bedc921b9af8e311dbfc145d39dacd9cd"},
+    {file = "cysignals-1.12.6-cp314-cp314t-win_amd64.whl", hash = "sha256:8876ac137f055c20cba80b73bce8908afe24bb62fa1c6f9889c30354e53ea4e6"},
+    {file = "cysignals-1.12.6-cp314-cp314t-win_arm64.whl", hash = "sha256:ba487c5b75c2b4ab480bc5bc59d6c0a540443db133ce1565e925179e7f5f3c10"},
+    {file = "cysignals-1.12.6.tar.gz", hash = "sha256:3ef3a37bdb244821b85475a08e2762ca1019570b369e321504995fa9a54675ce"},
+]
+
+[[package]]
 name = "dateparser"
 version = "1.4.1"
 description = "Date parsing library designed to parse dates from HTML pages"
@@ -5981,40 +6065,52 @@ typing = ["mypy (>=1.4)", "rich", "twisted"]
 
 [[package]]
 name = "tesserocr"
-version = "2.6.2"
+version = "2.11.0"
 description = "A simple, Pillow-friendly, Python wrapper around tesseract-ocr API using Cython"
-optional = true
-python-versions = "*"
+optional = false
+python-versions = ">=3.9"
 groups = ["main"]
-markers = "extra == \"ocr\""
 files = [
-    {file = "tesserocr-2.6.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e66ba562a0168ca3c1317daf6658548d979750ef4ee47de00724b8e0e0251fac"},
-    {file = "tesserocr-2.6.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:d2033ce4e76bf8b1a818deb87184301f997ee8e0f0830527821c75ff9d73087e"},
-    {file = "tesserocr-2.6.2-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:0584eeafce957606ee969e31eef3e24de1ed8f3d905a8f4de9173d7ce189093b"},
-    {file = "tesserocr-2.6.2-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:bfb45e80232656080fc41e451786841f181af57dd84c9356d7498a4368472a98"},
-    {file = "tesserocr-2.6.2-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:902150c089fd2cdda97f0039b4530eb43f1a0f1255dc3b9a9207bf94830e7292"},
-    {file = "tesserocr-2.6.2-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:c00485b8442f857c9845d0566236d1c3ff83c9862ea42504a66437a27bf16789"},
-    {file = "tesserocr-2.6.2-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:4092a38f8219abd9f33c7b8866b957acefe6f9becdbc0944b0a75e7ca2ee818e"},
-    {file = "tesserocr-2.6.2-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:ab3de303d6e09f8989ad07475460a5badad1db3ad8db5dc2b44d395eca772280"},
-    {file = "tesserocr-2.6.2-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:6f4edd93abf60d685bbef56359c7b3ad89538c4f3e5c0d3940d22129a1697b26"},
-    {file = "tesserocr-2.6.2-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:76113c9b0c5e19292b15353471eda24b88c60eb8855e6252913a1e920e46ce16"},
-    {file = "tesserocr-2.6.2-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:c047c239f1dc741e18d96ebb961fd697b33d23e3e01323fb97a5a75c12cd0768"},
-    {file = "tesserocr-2.6.2-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:3fc9cd002ee17b5a9976deb5898f693a093a868b7cf70b489a1465025a7f71da"},
-    {file = "tesserocr-2.6.2-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:97c591d62e47739d03cb484a2acfa291e8111a0cb5d5deb54a36311a3a124cea"},
-    {file = "tesserocr-2.6.2-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:7278e94d835337c208d79804c418914879c7089f047c4e3fe869c942de951911"},
-    {file = "tesserocr-2.6.2-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:9c7afd39c438f0e41887adf34d5e96f3f368e1c1f7bbb1bf3462c8a6f7e53f14"},
-    {file = "tesserocr-2.6.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:d3acf3a0139c86b523b1a8ea40262e24ce4989d221bcf8554d6539a16e658e08"},
-    {file = "tesserocr-2.6.2-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:d409b97d0fd5e67debc6ee6b47547ebad87fd61996e5ef3fc143465fa6412c48"},
-    {file = "tesserocr-2.6.2-cp38-cp38-manylinux_2_28_aarch64.whl", hash = "sha256:05add129e6594b8755ce2f0698ab5c86403545dd599071c00b8a1dbf1ffc9e36"},
-    {file = "tesserocr-2.6.2-cp38-cp38-manylinux_2_28_x86_64.whl", hash = "sha256:c31bc7be7711194d6b447110dc7d42d90e0c637d1a4243c95f0537116ab623d0"},
-    {file = "tesserocr-2.6.2-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:3acf8bbee449bfd6f4c724c83c9535d28ff4ea9a83d2f8c81413c29ed6e8eb0d"},
-    {file = "tesserocr-2.6.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:fe08813c0ef5b2708533b861114618bf4cb3642be65613da2b1b9faec4eb3c0a"},
-    {file = "tesserocr-2.6.2-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:be7595dcdd54c12730c13c64683161994534c6c8764a64e4985874b2498446cb"},
-    {file = "tesserocr-2.6.2-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:05222b8bd4b18c2cdfd4c0753c3ac021370c99122f6ed9bc32b15b6deff0ec63"},
-    {file = "tesserocr-2.6.2-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:fae7e1daf58d1fb29498e671f1f4a0cdf0f709da9d59e613b4d78f9fa65f02ec"},
-    {file = "tesserocr-2.6.2-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:91dbfeb72bd35e8ed667b554f9021b8a4efc765b5965f81e7d3592bcac5609a2"},
-    {file = "tesserocr-2.6.2.tar.gz", hash = "sha256:45525fa1c1a356f9d155a9de91b3759ca444084afd853544f5a29aa858b30390"},
+    {file = "tesserocr-2.11.0-cp310-cp310-macosx_15_0_arm64.whl", hash = "sha256:c5fbda176fb2b576e8086122b52b3faaad6176a8fe73b6aad9a64ecebc700186"},
+    {file = "tesserocr-2.11.0-cp310-cp310-macosx_15_0_x86_64.whl", hash = "sha256:729b36ac4d75cf9da0ef90cfb0b793f67b56831ae02cf301318d7aeee3ea3e83"},
+    {file = "tesserocr-2.11.0-cp310-cp310-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:828260fced1b69df2535dd0589c227a1d89e1d1a91c5230b260369c20ed7c0f1"},
+    {file = "tesserocr-2.11.0-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b292e496540fca8e1bc8585d63651d77265bc0bd71ecb0e7951d7bc77f18376c"},
+    {file = "tesserocr-2.11.0-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:d4774a0bbdd2713d958419f92bb47d3d9c91d07aa623da7d9829d15eea5ee960"},
+    {file = "tesserocr-2.11.0-cp311-cp311-macosx_15_0_arm64.whl", hash = "sha256:d0ed565ebad312d3996b0a4de2dc5500d3937d9cebf5a09e59f78b341eed2b3c"},
+    {file = "tesserocr-2.11.0-cp311-cp311-macosx_15_0_x86_64.whl", hash = "sha256:3fba875b5db629b84a505e99dbdceb81826f709371d20fe8943a48fd8aa5ad93"},
+    {file = "tesserocr-2.11.0-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:509a1e6292ea136b242d50d536eabb77034415fad60be15c11cea979da2c6a89"},
+    {file = "tesserocr-2.11.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:e80d48eeb231a2033afddb52b0dc5ffce769c807308d1915a241a2fd402bf717"},
+    {file = "tesserocr-2.11.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:84c422f830dc6312fce5756e5f8d8182662c5e8542e6529955d79f9b92da4dea"},
+    {file = "tesserocr-2.11.0-cp312-cp312-macosx_15_0_arm64.whl", hash = "sha256:e35d1bad8e20f2e933548fd4a0e18dad66c47058a10465bb5da059125add5d76"},
+    {file = "tesserocr-2.11.0-cp312-cp312-macosx_15_0_x86_64.whl", hash = "sha256:59ae6fdc30313755301f024584707188ecfe9819dee755cd003d322167c141e3"},
+    {file = "tesserocr-2.11.0-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9a32bdb35233c3548a2c44e517a7875e06020e3d8e6ea458749808d268c13628"},
+    {file = "tesserocr-2.11.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:184e682bdf33bc8c22d8e9d787160da5fb773b3020062d74bdd5fb86dc03f7fb"},
+    {file = "tesserocr-2.11.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:8e829151f583cdbab312abdd50d75f66bffaee14bb5ca1f3b53f46f807007703"},
+    {file = "tesserocr-2.11.0-cp313-cp313-macosx_15_0_arm64.whl", hash = "sha256:27b5fecc185d8ecc0e1d97abc726b96df62d8f82984917027b5450d665e3d9ce"},
+    {file = "tesserocr-2.11.0-cp313-cp313-macosx_15_0_x86_64.whl", hash = "sha256:642bd233f4fd560ff354c55fcab05d982ed29df9d624c4c861f11cbd401603fa"},
+    {file = "tesserocr-2.11.0-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:2276b8eaf4011ba4be3b1890bd9a0e6a9dc707b31adcdb76586079f75b3bd553"},
+    {file = "tesserocr-2.11.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:f6d316b371b1bf9fbd6e3bd43de14974650761e8d0f43b0aeb5f0bceb2e729af"},
+    {file = "tesserocr-2.11.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:ed89fde24fc18252efba988a17ec459018174c1deef2efa3f7759a08b7d1b77b"},
+    {file = "tesserocr-2.11.0-cp314-cp314-macosx_15_0_arm64.whl", hash = "sha256:0daa527320ce84e89a43ef3c01af1bb9fb958f2f81db2c01e098898e31bbb74f"},
+    {file = "tesserocr-2.11.0-cp314-cp314-macosx_15_0_x86_64.whl", hash = "sha256:2588a3819103cdb1a6acc7039274e94874ecd51930c1ad3ffdb3dc55b572aa59"},
+    {file = "tesserocr-2.11.0-cp314-cp314-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:66d31c1f092a28dce946cd0d8feb9f313350ff13d837ca4667bf8b9f34454bee"},
+    {file = "tesserocr-2.11.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:f83e4c7ad6beec5f8580237e256cc2232a1d0d1c3125382d332eef80a7d46366"},
+    {file = "tesserocr-2.11.0-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:a88c0f32ea2d932f4d28820c61baa40fcab2fd691c83bce8a94ea9ef8e056d2f"},
+    {file = "tesserocr-2.11.0-cp314-cp314t-macosx_15_0_arm64.whl", hash = "sha256:cb62569ab0a822728a123fe73fc6b262595a30315d887e2447cff50a96ac3aed"},
+    {file = "tesserocr-2.11.0-cp314-cp314t-macosx_15_0_x86_64.whl", hash = "sha256:b910d67457e3d419801035ea0e0af0fd869e087a47da54950d108edcf6a22561"},
+    {file = "tesserocr-2.11.0-cp314-cp314t-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:15876614a89e035827422b2871dc1f706e5b14a309f8db690fee188c68302f4b"},
+    {file = "tesserocr-2.11.0-cp314-cp314t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:045b1663e9b021efaa90919ad8692cbde6103e8f40a7c7b071aaefcd5685cab9"},
+    {file = "tesserocr-2.11.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:c194d31b14d70278f05938762d155f956373347d4cd9b5612d2a425914f20da9"},
+    {file = "tesserocr-2.11.0-cp39-cp39-macosx_15_0_arm64.whl", hash = "sha256:4f7204dced012aca385ff7e27f5fd5dc2b60bab291351a49c8ed7580cb0d4a18"},
+    {file = "tesserocr-2.11.0-cp39-cp39-macosx_15_0_x86_64.whl", hash = "sha256:47d486ba23911c2232055ab4fa7fbf0647f73e3f7aead3bf6f0ee146d554e583"},
+    {file = "tesserocr-2.11.0-cp39-cp39-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:8d557f8100cae39fdaea4cc9108284844d08ca147228d4f75df3c804ccaff0fb"},
+    {file = "tesserocr-2.11.0-cp39-cp39-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d8e3253895b33330aba05198d26f8b17241b0f0d7f73785c28abbd145f8cf4a0"},
+    {file = "tesserocr-2.11.0-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:fad6898fc3acfffb97d38b14fe4a4313ad81684786e9ddd1e59a81fab3627b41"},
+    {file = "tesserocr-2.11.0.tar.gz", hash = "sha256:1c1ae89c589fddf3a25dbcc21031aea18bd82259e42ef491c43a44f2bef811b3"},
 ]
+
+[package.dependencies]
+cysignals = "*"
 
 [[package]]
 name = "texttable"
@@ -6522,10 +6618,7 @@ files = [
     {file = "zfs_agent-0.0.1.tar.gz", hash = "sha256:b68e3ece30d8bc41d894706b2d564accfb5b94be21c016accc9d1fc1bd977d71"},
 ]
 
-[extras]
-ocr = ["tesserocr"]
-
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.15"
-content-hash = "b489f168573d7504b2a1b7041b9de861ab9f0c68f2166316beea97ebefbd2759"
+content-hash = "96537b15d2c3acacbb17e027adcf818264831d979f063a5d24a421f8cfce9ccc"

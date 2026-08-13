@@ -44,6 +44,7 @@ dependencies = [
     "openaleph-procrastinate (>=5.3.1,<6.0.0)",
     "openaleph-servicelayer (>=1.24.0,<2.0.0)",
     "ftm-lakehouse @ git+https://github.com/openaleph/ftm-lakehouse.git",
+    "tesserocr (>=2.11.0,<3.0.0)",
 ]
 
 [project.scripts]
@@ -90,9 +91,6 @@ svg = "ingestors.media.svg:SVGIngestor"
 audio = "ingestors.media.audio:AudioIngestor"
 video = "ingestors.media.video:VideoIngestor"
 json = "ingestors.misc.jsonfile:JSONIngestor"
-
-[project.optional-dependencies]
-ocr = ["tesserocr (==2.6.2)"]
 
 [build-system]
 requires = ["poetry-core"]
