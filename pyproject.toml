@@ -37,7 +37,7 @@ dependencies = [
     "cryptography (>=46.0.2,<47.0.0)",
     "prometheus-client (>=0.20.0,<0.21.0)",
     "sentry_sdk (==2.0.1)",
-    "tika (>=3.1.0,<4.0.0)",
+    "tika (>=3.3.2,<4.0.0)",
     "python-calamine (>=0.7.0,<0.8.0)",
     # servicelayer extras requirements
     "boto3 (>=1.11.9,<2.0.0)",
