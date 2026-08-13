@@ -1,9 +1,10 @@
 """Provide servicelayer archive and lakehouse archive as a transparent
 repository during transition"""
 
+from collections import defaultdict
 from functools import cache
 from pathlib import Path
-from typing import Protocol
+from typing import DefaultDict, Protocol
 
 from anystore.exceptions import DoesNotExist
 from anystore.logic.io import stream
@@ -107,7 +108,9 @@ class LakehouseArchive:
                 with tmp_store.open(local_key, "wb") as o:
                     stream(i, o)
             return uri_to_path(tmp_store.to_uri(local_key))
-        except DoesNotExist:
+        except (DoesNotExist, FileNotFoundError):
+            # callers treat `None` as a miss, a blob that isn't there is not an
+            # error. fsspec raises FileNotFoundError instead of DoesNotExist.
             return
 
 
@@ -137,12 +140,20 @@ class FragmentStore:
 class LakehouseStore:
     def __init__(self, dataset: str) -> None:
         self._entities = get_entities(dataset, lakehouse_uri(dataset))
+        self._buffer: DefaultDict[str | None, list[EntityProxy]] = defaultdict(list)
 
     def put(self, entity: EntityProxy, fragment: str | None = None) -> None:
-        self._entities.add(entity, origin=OP_INGEST, fragment=safe_fragment(fragment))
+        self._buffer[fragment].append(entity)
 
     def flush(self) -> None:
-        self._entities.flush()
+        """Flush from buffer to journal. Flushes journal to parquet if it's
+        full, but final flush to parquet needs to be invoked manually by
+        callers"""
+        with self._entities.writer(OP_INGEST) as bulk:
+            for fragment, entities in self._buffer.items():
+                for entity in entities:
+                    bulk.add_entity(entity, fragment=fragment)
+        self._buffer.clear()
 
     def iterate(self, entity_id: str | None = None) -> EntityProxies:
         q = Query()
