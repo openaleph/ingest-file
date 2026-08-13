@@ -203,7 +203,8 @@ class PDFIngestorTest(TestCase):
         emitted = self.get_emitted()
         assert len(emitted) == 3
 
-        page = emitted[1]
+        # pick the first page
+        page = [e for e in emitted if e.first("index", quiet=True) == "1"][0]
         assert page.schema.name == "Page"
         assert "IRIDECEA HOLDINGS LIMITED" in "\n".join(page.get("bodyText"))
 
@@ -242,7 +243,8 @@ class PDFIngestorTest(TestCase):
         emitted = self.get_emitted()
         assert len(emitted) == 10
 
-        page = emitted[0]
+        # get 8th page
+        page = [e for e in emitted if e.first("index", quiet=True) == "8"][0]
         assert page.schema.name == "Page"
         assert page.properties["index"][0] == "8"
         text = "\n".join(page.get("bodyText"))

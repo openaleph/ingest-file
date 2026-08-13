@@ -1,27 +1,23 @@
 import logging
 from datetime import datetime
-from functools import cache
 from tempfile import mkdtemp
 from timeit import default_timer
 from typing import Any
 
 import magic
 from banal import ensure_list
-from followthemoney import StatementEntity, model
+from followthemoney import EntityProxy, StatementEntity, model
 from followthemoney.helpers import entity_filename
 from followthemoney.namespace import Namespace
-from ftmq.store.fragments import get_fragments
 from ftmq.store.fragments.utils import safe_fragment
 from ftmq.store.memory import MemoryStore
-from ftmq.util import make_entity as make_statement_entity
+from ftmq.util import ensure_entity
 from normality import stringify
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.app import App
 from openaleph_procrastinate.util import make_file_entity
 from prometheus_client import Counter, Histogram
 from rigour.mime import normalize_mimetype
-from servicelayer.archive import init_archive
-from servicelayer.archive.archive import Archive
 from servicelayer.archive.util import ensure_path
 from servicelayer.extensions import get_extensions
 
@@ -30,12 +26,12 @@ from ingestors.directory import DirectoryIngestor
 from ingestors.exc import ENCRYPTED_MSG, ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.misc.tika import TikaIngestor
+from ingestors.repository import get_archive, get_writer
 from ingestors.settings import Settings
 from ingestors.util import filter_text, remove_directory
 
 log = logging.getLogger(__name__)
 
-OP_INGEST = "ingest"
 
 INGESTIONS_SUCCEEDED = Counter(
     "ingestfile_ingestions_succeeded_total",
@@ -76,18 +72,6 @@ INGESTED_BYTES = Counter(
 )
 
 
-@cache
-def get_archive() -> Archive:
-    from servicelayer import settings
-
-    return init_archive(
-        archive_type=settings.ARCHIVE_TYPE,
-        path=settings.ARCHIVE_PATH,
-        bucket=settings.ARCHIVE_BUCKET,
-        publication_bucket=settings.PUBLICATION_BUCKET,
-    )
-
-
 class Manager:
     """Handles the lifecycle of an ingestor. This can be subclassed to embed it
     into a larger processing framework."""
@@ -103,15 +87,12 @@ class Manager:
         self.settings = Settings()
         self.app = app
         self.dataset = dataset
-        self.db = get_fragments(
-            dataset, OP_INGEST, database_uri=self.settings.fragments_uri
-        )
-        self.writer = self.db.bulk()
+        self.writer = get_writer(self.dataset)
         self.context = context
         self.ns = Namespace(self.context["namespace"])
         self.work_path = ensure_path(mkdtemp(prefix="ingestor-"))
         self.emitted = MemoryStore()
-        self.archive = get_archive()
+        self.archive = get_archive(self.dataset)
         self.error = None
 
     def make_entity(self, schema, parent=None):
@@ -140,17 +121,15 @@ class Manager:
             "mutable": False,
         }
 
-    def emit_entity(self, entity, fragment=None):
+    def emit_entity(self, entity: EntityProxy, fragment: str | None = None):
         entity = self.ns.apply(entity)
-        self.writer.put(entity.to_dict(), fragment)
+        self.writer.put(entity, fragment)
         with self.emitted.writer() as bulk:
             if self.settings.procrastinate_dehydrate_entities:
                 bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
             else:
                 # the memory store needs a StatementEntity, not an EntityProxy
-                bulk.add_entity(
-                    make_statement_entity(entity.to_dict(), StatementEntity)
-                )
+                bulk.add_entity(ensure_entity(entity, StatementEntity))
 
     def emit_text_fragment(self, entity, texts, fragment):
         texts = [t for t in ensure_list(texts) if filter_text(t)]
@@ -275,4 +254,4 @@ class Manager:
         remove_directory(self.work_path)
 
     def get_emitted(self) -> list[StatementEntity]:
-        return list(self.emitted.iterate(dataset="default"))
+        return list(self.emitted.iterate())

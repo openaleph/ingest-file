@@ -7,14 +7,15 @@ import unittest
 from tempfile import mkdtemp
 
 from followthemoney import StatementEntity
-from ftmq.store.fragments import get_fragments
 from openaleph_procrastinate.util import make_file_entity
 from procrastinate.testing import InMemoryConnector
 from servicelayer import settings as sls
 from servicelayer.archive.util import ensure_path
 from servicelayer.tags import Tags
 
-from ingestors.manager import OP_INGEST, Manager, get_archive
+from ingestors.manager import Manager, get_archive
+from ingestors.repository import get_dataset
+from ingestors.settings import OP_INGEST
 from ingestors.tasks import app
 
 TEST_DATASET = "test"
@@ -22,7 +23,7 @@ TEST_DATASET = "test"
 
 def emit_entity(self, entity, fragment=None):
     self.entities.append(entity)
-    self.writer.put(entity.to_dict(), fragment=fragment)
+    self.writer.put(entity, fragment=fragment)
     with self.emitted.writer() as bulk:
         bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
 
@@ -37,7 +38,7 @@ class TestCase(unittest.TestCase):
         self.tmp_dir = mkdtemp()
         # clear cached func calls
         get_archive.cache_clear()
-        get_fragments.cache_clear()
+        get_dataset.cache_clear()
         # Force tests to use fake configuration
         self.assertIsInstance(app.connector, InMemoryConnector)
         sls.REDIS_URL = None
@@ -49,12 +50,12 @@ class TestCase(unittest.TestCase):
         self.manager = Manager(app, TEST_DATASET, {"namespace": "test"})
         self.manager.emit_entity = types.MethodType(emit_entity, self.manager)
         self.manager.entities = []
-        self.dataset = self.manager.db
+        self.dataset = get_dataset(self.manager.dataset)
 
     def fixture(self, fixture_path):
         """Returns a fixture path and a dummy entity"""
         # clear out entities
-        self.manager.db.delete()
+        self.dataset.delete()
         self.manager.entities = []
         cur_path = ensure_path(__file__).parent
         cur_path = cur_path.joinpath("fixtures")
@@ -73,11 +74,12 @@ class TestCase(unittest.TestCase):
         return path, entity
 
     def get_emitted(self, schema=None):
-        entities = list(self.manager.db.iterate())
+        entities = list(sorted(self.dataset.iterate(), key=lambda e: e.id))
         # test dehydrated emitted:
         emitted = self.manager.get_emitted()
-        equal = {e.id for e in entities} == {e.id for e in emitted}
-        if not equal:
+        try:
+            assert {e.id for e in entities} == {e.id for e in emitted}
+        except AssertionError:
             # special case of directory test: the child file is emitted in
             # another manager instance, but the Folder entity is there:
             assert len({e.id for e in entities} & {e.id for e in emitted}) == 1
@@ -86,7 +88,7 @@ class TestCase(unittest.TestCase):
         return entities
 
     def get_emitted_by_id(self, id):
-        return self.manager.db.get(id)
+        return self.dataset.get(id)
 
     def assertSuccess(self, entity):
         self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)

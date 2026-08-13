@@ -1,6 +1,8 @@
 from openaleph_procrastinate.settings import OpenAlephSettings
 from pydantic_settings import SettingsConfigDict
 
+OP_INGEST = "ingest"
+
 
 class Settings(OpenAlephSettings):
     """
@@ -27,6 +29,9 @@ class Settings(OpenAlephSettings):
 
     calamine: bool = False
     """Use the Rust calamine implementation (python-calamine) for spreadsheets"""
+
+    lakehouse: bool = False
+    """Run against ftm-lakehouse storage backend"""
 
     @property
     def tags_database_uri(self) -> str:
