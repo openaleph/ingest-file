@@ -17,6 +17,22 @@ log = logging.getLogger(__name__)
 TESSERACT_LOCALE = "C"
 
 
+def init_ocr() -> None:
+    """Import tesserocr while still on the main thread.
+
+    tesserocr initialises cysignals on import, which installs signal handlers,
+    and `signal.signal` raises "signal only works in main thread of the main
+    interpreter" anywhere else. Procrastinate runs sync tasks in a worker
+    thread (`sync_to_async(..., thread_sensitive=False)`) and the ingestor
+    modules are only imported when the auction first runs, so without this the
+    import lands in that thread and every OCR attempt fails.
+    """
+    try:
+        import tesserocr  # noqa: F401
+    except Exception as exc:
+        log.warning("Cannot initialise OCR engine: %s", exc)
+
+
 @cache
 def get_ocr_service() -> "LocalOCRService":
     return LocalOCRService()

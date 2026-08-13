@@ -16,9 +16,13 @@ from ingestors import __version__
 from ingestors.directory import DirectoryIngestor
 from ingestors.exc import ProcessingException
 from ingestors.manager import Manager
+from ingestors.support.ocr import init_ocr
 
 SYSTEM = Info("ingestfile_system", "ingest-file system information")
 SYSTEM.info({"ingestfile_version": __version__})
+
+# tasks run in a worker thread, this has to happen here on the main thread
+init_ocr()
 
 app = make_app(__loader__.name)
 sync_app = make_app(__loader__.name, sync=True)
