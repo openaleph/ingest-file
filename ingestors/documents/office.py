@@ -3,8 +3,8 @@ import tempfile
 from followthemoney import model
 
 from ingestors.ingestor import Ingestor
-from ingestors.support.pdf import PDFSupport
 from ingestors.support.ole import OLESupport
+from ingestors.support.pdf import PDFSupport
 
 
 class DocumentIngestor(Ingestor, OLESupport, PDFSupport):
@@ -16,7 +16,7 @@ class DocumentIngestor(Ingestor, OLESupport, PDFSupport):
     Requires system tools:
 
     - Open/Libre Office with dependencies
-    - image ingestor dependencies to cover any embeded images OCR
+    - image ingestor dependencies to cover any embedded images OCR
     """
 
     MIME_TYPES = [
@@ -44,17 +44,17 @@ class DocumentIngestor(Ingestor, OLESupport, PDFSupport):
         "application/vnd.corel-draw",  # Corel Draw Document
         "application/vnd.lotus-wordpro",  # LotusWordPro
         "application/vnd.ms-powerpoint",  # MS PowerPoint 97 Vorlage
-        "application/vnd.ms-powerpoint.presentation.macroEnabled.main+xml",  # Impress MS PowerPoint 2007 XML VBA  # noqa
+        "application/vnd.ms-powerpoint.presentation.macroEnabled.main+xml",  # Impress MS PowerPoint 2007 XML VBA  # noqa: B950
         "application/vnd.ms-works",  # Mac_Works
         "application/vnd.palm",  # Palm_Text_Document
         "application/vnd.sun.xml.draw",  # StarOffice XML (Draw)
-        "application/vnd.sun.xml.draw.template",  # draw_StarOffice_XML_Draw_Template  # noqa
+        "application/vnd.sun.xml.draw.template",  # draw_StarOffice_XML_Draw_Template
         "application/vnd.sun.xml.impress",  # StarOffice XML (Impress)
-        "application/vnd.sun.xml.impress.template",  # impress_StarOffice_XML_Impress_Template  # noqa
+        "application/vnd.sun.xml.impress.template",  # impress_StarOffice_XML_Impress_Template
         "application/vnd.sun.xml.writer",  # StarOffice XML (Writer)
-        "application/vnd.sun.xml.writer.global",  # writer_globaldocument_StarOffice_XML_Writer_GlobalDocument  # noqa
-        "application/vnd.sun.xml.writer.template",  # writer_StarOffice_XML_Writer_Template  # noqa
-        "application/vnd.sun.xml.writer.web",  # writer_web_StarOffice_XML_Writer_Web_Template  # noqa
+        "application/vnd.sun.xml.writer.global",  # writer_globaldocument_StarOffice_XML_Writer_GlobalDocument  # noqa: B950
+        "application/vnd.sun.xml.writer.template",  # writer_StarOffice_XML_Writer_Template
+        "application/vnd.sun.xml.writer.web",  # writer_web_StarOffice_XML_Writer_Web_Template
         "application/vnd.visio",  # Visio Document
         "application/vnd.wordperfect",  # WordPerfect
         "application/x-abiword",  # AbiWord
@@ -169,4 +169,7 @@ class DocumentIngestor(Ingestor, OLESupport, PDFSupport):
         with tempfile.TemporaryDirectory() as unique_tmpdir:
             # TODO - write to logs the case in which the context manager can't delete these dirs
             pdf_path = self.document_to_pdf(unique_tmpdir, file_path, entity)
-            self.pdf_alternative_extract(entity, pdf_path, self.manager)
+            # `document_to_pdf` already archived it and set `pdfHash`
+            self.pdf_alternative_extract(
+                entity, pdf_path, self.manager, checksum=entity.first("pdfHash")
+            )

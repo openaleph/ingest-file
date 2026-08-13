@@ -1,7 +1,8 @@
 import logging
-from lxml import etree
-from lxml.etree import XMLSyntaxError, ParseError, ParserError
 from pathlib import Path
+
+from lxml import etree
+from lxml.etree import ParseError, ParserError, XMLSyntaxError
 
 from ingestors.exc import ProcessingException
 

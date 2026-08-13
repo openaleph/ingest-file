@@ -1,8 +1,8 @@
 from followthemoney import model
 
+from ingestors.exc import ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.encoding import EncodingSupport
-from ingestors.exc import ProcessingException
 
 
 class PlainTextIngestor(Ingestor, EncodingSupport):

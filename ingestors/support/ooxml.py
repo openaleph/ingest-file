@@ -1,10 +1,10 @@
 import logging
 import zipfile
-from zipfile import ZipFile, BadZipfile
+from zipfile import BadZipfile, ZipFile
 
-from ingestors.support.xml import XMLSupport
+from ingestors.exc import ENCRYPTED_MSG, ProcessingException
 from ingestors.support.timestamp import TimestampSupport
-from ingestors.exc import ProcessingException, ENCRYPTED_MSG
+from ingestors.support.xml import XMLSupport
 
 # from ingestors.exc import ProcessingException
 
@@ -15,7 +15,7 @@ class OOXMLSupport(TimestampSupport, XMLSupport):
     """Provides helpers for Office Open XML format metadata."""
 
     PROP_FILE = "docProps/core.xml"
-    CP_NS = "{http://schemas.openxmlformats.org/package/2006/metadata/core-properties}"  # noqa
+    CP_NS = "{http://schemas.openxmlformats.org/package/2006/metadata/core-properties}"
     DC_NS = "{http://purl.org/dc/elements/1.1/}"
     DCT_NS = "{http://purl.org/dc/terms/}"
 

@@ -1,18 +1,16 @@
-from dataclasses import dataclass
 import logging
 import os
-from typing import Dict, List
-import uuid
 import unicodedata
+import uuid
+from dataclasses import dataclass
+from typing import Dict, List
 
 import fitz
-
-from normality import collapse_spaces  # noqa
-
 from followthemoney import model
+
 from ingestors.exc import UnauthorizedError
-from ingestors.support.ocr import OCRSupport
 from ingestors.support.convert import DocumentConvertSupport
+from ingestors.support.ocr import OCRSupport
 
 log = logging.getLogger(__name__)
 
@@ -91,8 +89,17 @@ class PDFSupport(DocumentConvertSupport, OCRSupport):
         self.extract_xmp_metadata(pdf_model, entity)
         self.extract_pages(pdf_model, entity, manager)
 
-    def pdf_alternative_extract(self, entity, pdf_path: str, manager):
-        checksum = self.manager.store(pdf_path)
+    def pdf_alternative_extract(
+        self, entity, pdf_path: str, manager, checksum: str | None = None
+    ):
+        """Extract a pdf rendition of a document.
+
+        `checksum` is for callers that archived the pdf themselves, so it isn't
+        stored (and checksummed) a second time. Converted documents come that
+        way via `document_to_pdf`, a pdf produced here (djvu) does not.
+        """
+        if checksum is None:
+            checksum = self.manager.store(pdf_path)
         entity.set("pdfHash", checksum)
         self.parse_and_ingest(pdf_path, entity, manager)
 
