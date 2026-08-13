@@ -41,7 +41,7 @@ dependencies = [
     "python-calamine (>=0.7.0,<0.8.0)",
     # servicelayer extras requirements
     "boto3 (>=1.11.9,<2.0.0)",
-    "openaleph-procrastinate (>=5.3.1,<6.0.0)",
+    "openaleph-procrastinate @ git+https://github.com/openaleph/openaleph-procrastinate.git",
     "openaleph-servicelayer (>=1.24.0,<2.0.0)",
     "ftm-lakehouse @ git+https://github.com/openaleph/ftm-lakehouse.git",
     "tesserocr (>=2.11.0,<3.0.0)",
@@ -115,7 +115,6 @@ poetry-plugin-export = ">=1.8"
 DEBUG = 1
 OPENALEPH_ANALYZE_DEFER = 0
 OPENALEPH_INDEX_DEFER = 0
-PROCRASTINATE_DB_URI = "memory://"
-FTM_FRAGMENTS_URI = "sqlite:///ingest_test.db"
+PROCRASTINATE_DB_URI = "sqlite:///:memory:"
 TIKA_PATH = "./contrib"
 INGESTORS_TIKA_FALLBACK = 1

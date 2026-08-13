@@ -16,7 +16,7 @@ from servicelayer.tags import Tags
 from ingestors.manager import Manager, get_archive
 from ingestors.repository import get_entity_store
 from ingestors.repository import settings as repository_settings
-from ingestors.settings import OP_INGEST
+from ingestors.settings import OP_INGEST, Settings
 from ingestors.tasks import app
 
 TEST_DATASET = "test"
@@ -50,7 +50,10 @@ class TestCase(unittest.TestCase):
         repository_settings._lakehouse_uri = self.tmp_dir
         os.environ["FTM_STORE_URI"] = f"sqlite:///{self.tmp_dir}/ftm.store"
         sls.TAGS_DATABASE_URI = os.environ["FTM_STORE_URI"]
-        Tags("ingest_cache").delete()
+        # `CacheSupport` resolves the tags db from the ingestors settings, not
+        # from `sls`, so clearing the default would leave the real cache (and
+        # e.g. the pdf conversion hashes in it) in place between tests
+        Tags("ingest_cache", uri=Settings().tags_database_uri).delete()
         self.manager = Manager(app, TEST_DATASET, {"namespace": "test"})
         self.manager.emit_entity = types.MethodType(emit_entity, self.manager)
         self.manager.entities = []
