@@ -43,6 +43,7 @@ dependencies = [
     "boto3 (>=1.11.9,<2.0.0)",
     "openaleph-procrastinate (>=5.3.1,<6.0.0)",
     "openaleph-servicelayer (>=1.24.0,<2.0.0)",
+    "ftm-lakehouse @ git+https://github.com/openaleph/ftm-lakehouse.git",
 ]
 
 [project.scripts]
