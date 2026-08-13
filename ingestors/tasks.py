@@ -3,6 +3,7 @@ from pathlib import Path
 
 from anystore.logging import get_logger
 from followthemoney import registry
+from followthemoney.dataset.util import dataset_name_check
 from followthemoney.proxy import EntityProxy
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.app import make_app
@@ -86,6 +87,8 @@ def ingest_path(
     languages: list[str] | None = None,
     foreign_id: str | None = None,
 ):
+    if foreign_id:
+        foreign_id = dataset_name_check(foreign_id)
     context = {"languages": languages or [], "namespace": foreign_id or dataset}
     manager = Manager(sync_app, dataset, context)
     path = ensure_path(path)

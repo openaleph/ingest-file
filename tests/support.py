@@ -30,17 +30,17 @@ def emit_entity(self, entity, fragment=None):
 
 class TestCase(unittest.TestCase):
     def setUp(self):
-        # `App.run_worker` registers a notification listener bound to the loop
-        # that `asyncio.run` closes on its way out. The connector is module
-        # level, so without a reset the next test would dispatch onto that dead
-        # loop and fail with "Event loop is closed". Also isolates the job table.
-        app.connector.reset()
         self.tmp_dir = mkdtemp()
         # clear cached func calls
         get_archive.cache_clear()
         get_dataset.cache_clear()
         # Force tests to use fake configuration
         self.assertIsInstance(app.connector, InMemoryConnector)
+        # `App.run_worker` registers a notification listener bound to the loop
+        # that `asyncio.run` closes on its way out. The connector is module
+        # level, so without a reset the next test would dispatch onto that dead
+        # loop and fail with "Event loop is closed". Also isolates the job table.
+        app.connector.reset()
         sls.REDIS_URL = None
         sls.ARCHIVE_TYPE = "file"
         sls.ARCHIVE_PATH = self.tmp_dir
