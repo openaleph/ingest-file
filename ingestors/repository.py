@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import DefaultDict, Protocol
 
 from anystore.exceptions import DoesNotExist
+from anystore.logging import get_logger
 from anystore.logic.io import stream
 from anystore.store import get_store
 from anystore.util import join_uri, uri_to_path
@@ -25,6 +26,7 @@ from servicelayer.archive import init_archive
 from ingestors.settings import OP_INGEST, Settings
 
 settings = Settings()
+log = get_logger(__name__)
 
 
 def lakehouse_uri(dataset: str) -> str | None:
@@ -166,6 +168,13 @@ class LakehouseStore:
 
     def delete(self) -> None:
         # FIXME: there is no public api to drop a whole dataset yet
+        if self._entities._is_api:
+            log.error(
+                "Can't delete dataset in api mode",
+                dataset=self._entities.dataset,
+                uri=self._entities.uri,
+            )
+            return
         self._entities._statements.destroy()
 
 
