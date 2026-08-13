@@ -1,1 +1,15 @@
-.gitignore
+# Allowlist: everything is excluded unless listed below. The working tree holds
+# large artifacts (.git, data/, *.db, tika jars) that must not enter the build
+# context.
+*
+
+!ingestors/
+!tests/
+!pyproject.toml
+!requirements.txt
+!requirements-dev.txt
+!README.md
+!LICENSE
+
+**/__pycache__/
+**/*.py[cod]

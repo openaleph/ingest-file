@@ -1,21 +1,54 @@
-FROM python:3.14-slim
+# syntax=docker/dockerfile:1
+
+# ---------------------------------------------------------------------------
+# system: OS packages, split into layers ordered from least to most volatile so
+# that touching the tesseract language list doesn't rebuild libreoffice.
+# ---------------------------------------------------------------------------
+FROM python:3.14-slim AS system
+
 ENV DEBIAN_FRONTEND="noninteractive"
 
 LABEL org.opencontainers.image.title="Base image for FollowTheMoney File Ingestors"
 LABEL org.opencontainers.image.licenses="AGPL3"
 LABEL org.opencontainers.image.source="https://github.com/openaleph/ingest-file-base"
 
-# Enable non-free archive for `unrar`.
-RUN echo "deb http://http.us.debian.org/debian bookworm non-free" >/etc/apt/sources.list.d/nonfree.list
-RUN apt-get -qq -y update \
-    && apt-get -qq -y install build-essential locales ca-certificates git \
-    # python deps (mostly to install their dependencies)
-    python3-pip python3-dev python3-pil \
-    # tesseract
-    tesseract-ocr libtesseract-dev libleptonica-dev pkg-config \
-    # libraries
+# Keep downloaded archives so the cache mount below survives between builds; the
+# default docker-clean hook deletes them after every install. Package indexes
+# are deliberately *not* cached: a stale list against a moved mirror gives
+# "Hash Sum mismatch". Non-free is needed for `unrar`.
+RUN rm -f /etc/apt/apt.conf.d/docker-clean \
+    && echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' >/etc/apt/apt.conf.d/keep-cache \
+    && echo 'Acquire::Retries "3";' >/etc/apt/apt.conf.d/retries \
+    && echo "deb http://http.us.debian.org/debian bookworm non-free" >/etc/apt/sources.list.d/nonfree.list
+
+# Toolchain and core libraries. Needed to compile PyICU (and any dependency
+# without a wheel), so it stays in the published image. No python3-* packages:
+# this image already ships its own interpreter, debian's would be a second one.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get -qq -y update \
+    && apt-get -qq -y install build-essential pkg-config locales ca-certificates git \
     libxslt1-dev libpq-dev libldap2-dev libsasl2-dev \
     zlib1g-dev libicu-dev libxml2-dev \
+    # necessary for python-magic
+    libmagic1 \
+    && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8 \
+    && rm -rf /var/lib/apt/lists/*
+
+# pdf convert: libreoffice + a bunch of fonts. By far the largest layer and
+# almost never edited, so it sits ahead of everything that changes.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get -qq -y update \
+    && apt-get -qq -y install libreoffice fonts-opensymbol hyphen-fr hyphen-de \
+    hyphen-en-us hyphen-it hyphen-ru fonts-dejavu fonts-dejavu-core fonts-dejavu-extra \
+    fonts-droid-fallback fonts-dustin fonts-f500 fonts-fanwood fonts-freefont-ttf \
+    fonts-liberation fonts-lmodern fonts-lyx fonts-sil-gentium fonts-texgyre \
+    fonts-tlwg-purisa \
+    && rm -rf /var/lib/apt/lists/*
+
+# Document, image, archive and media tooling.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get -qq -y update \
+    && apt-get -qq -y install \
     # package tools
     unrar \
     # audio & video metadata
@@ -24,10 +57,14 @@ RUN apt-get -qq -y update \
     imagemagick-common imagemagick mdbtools djvulibre-bin \
     libtiff5-dev libjpeg-dev libfreetype6-dev libwebp-dev libgif-dev \
     libtiff-tools ghostscript librsvg2-bin jbig2dec \
-    pst-utils libgif-dev ripmime \
-    # necessary for python-magic
-    libmagic1 \
-    ### tesseract
+    pst-utils ripmime \
+    && rm -rf /var/lib/apt/lists/*
+
+# Tesseract. The engine itself ships inside the tesserocr wheel, only the
+# traineddata comes from debian. This list changes most often, so it goes last.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get -qq -y update \
+    && apt-get -qq -y install tesseract-ocr \
     tesseract-ocr-eng \
     tesseract-ocr-swa \
     tesseract-ocr-swe \
@@ -98,40 +135,35 @@ RUN apt-get -qq -y update \
     tesseract-ocr-aze \
     tesseract-ocr-bel \
     tesseract-ocr-uzb \
-    ### pdf convert: libreoffice + a bunch of fonts
-    libreoffice fonts-opensymbol hyphen-fr hyphen-de \
-    hyphen-en-us hyphen-it hyphen-ru fonts-dejavu fonts-dejavu-core fonts-dejavu-extra \
-    fonts-droid-fallback fonts-dustin fonts-f500 fonts-fanwood fonts-freefont-ttf \
-    fonts-liberation fonts-lmodern fonts-lyx fonts-sil-gentium fonts-texgyre \
-    fonts-tlwg-purisa \
-    ###
-    && apt-get -qq -y autoremove \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
-    && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
+    && rm -rf /var/lib/apt/lists/*
 
 # Set up the locale and make sure the system uses unicode for the file system.
 ENV LANG='en_US.UTF-8' \
     TZ='UTC' \
     OMP_THREAD_LIMIT='1' \
-    OPENBLAS_NUM_THREADS='1'
-
-# force compile tesserocr 2.6.2 with C++ 14
-# to make it compatible with Tesseract 5
-RUN pip download --no-binary=:all: "tesserocr==2.6.2" \
-    && tar -xzf tesserocr-2.6.2.tar.gz \
-    && sed -i "s/-std=c++11/-std=c++14/" tesserocr-2.6.2/setup.py \
-    && cd tesserocr-2.6.2 \
-    && CXXFLAGS="-std=c++14" pip install --no-cache-dir .
-
-# tesseract 5
-ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
+    OPENBLAS_NUM_THREADS='1' \
+    TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
 
 RUN groupadd -g 1000 -r app \
     && useradd -m -u 1000 -s /bin/false -g app app
 
-RUN pip3 install --no-cache-dir --prefer-binary --upgrade pip
-RUN pip3 install --no-cache-dir --prefer-binary --upgrade setuptools wheel
+# ---------------------------------------------------------------------------
+# wheels: PyICU publishes no wheels, so compile one here. Isolating it keeps
+# the compile out of the final image's layers and lets it cache on its own.
+# ---------------------------------------------------------------------------
+FROM system AS wheels
 
-# Install PyICU
-RUN pip3 install --no-binary=:pyicu: pyicu
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip3 wheel --no-binary=:all: --wheel-dir /wheels pyicu
+
+# ---------------------------------------------------------------------------
+# base: the published image
+# ---------------------------------------------------------------------------
+FROM system AS base
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip3 install --prefer-binary --upgrade pip setuptools wheel
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=bind,from=wheels,source=/wheels,target=/wheels \
+    pip3 install /wheels/*.whl

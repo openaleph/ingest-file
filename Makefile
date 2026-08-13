@@ -1,34 +1,26 @@
-INGEST=ghcr.io/openaleph/ingest-file
-INGEST=ghcr.io/openaleph/ingest-file
 COMPOSE=docker compose
-COMPOSE_E2E=docker compose -f docker-compose.e2e.yml
-DOCKER=$(COMPOSE) run --rm ingest-file
-IMAGE ?= ghcr.io/openaleph/ingest-file:latest
+IMAGE ?= ghcr.io/openaleph/ingest-file:main
+BASE_IMAGE ?= ghcr.io/openaleph/ingest-file-base:main
 
-.PHONY: build
+.PHONY: all build build-base build-test services shell lint format format-check \
+	test test-store test-lakehouse test-e2e restart tail stop clean dev documentation
 
 all: build shell
 
 build:
-	$(COMPOSE) build --no-rm --parallel
+	$(COMPOSE) build
 
 build-base:
-	docker build . -f Dockerfile.base -t ghcr.io/openaleph/ingest-file-base:latest
-
-build-cache:
-	docker build . --cache-from ghcr.io/openaleph/ingest-file:cache -t ghcr.io/openaleph/ingest-file:cache
+	docker build . -f Dockerfile.base -t $(BASE_IMAGE)
 
 build-test:
 	$(COMPOSE) build test-ingest-file
-
-build-macos:
-	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 $(COMPOSE) build --no-rm --parallel
 
 services:
 	$(COMPOSE) up -d --remove-orphans postgres redis
 
 shell: services
-	$(DOCKER) /bin/bash
+	$(COMPOSE) run --rm ingest-file /bin/bash
 
 lint:
 	ruff check .
@@ -39,16 +31,20 @@ format:
 format-check:
 	black --check .
 
-# The calamine extraction backend is covered in the same run: the tabular
-# suite re-runs itself with the flag toggled (see CalamineTabularIngestorTest).
-test: build-test services
-	PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 $(COMPOSE) run --rm test-ingest-file pytest
+# The suite runs twice, once per storage backend. The calamine extraction
+# backend is covered within each run: the tabular suite re-runs itself with the
+# flag toggled (see CalamineTabularIngestorTest).
+test: build-test test-store test-lakehouse
 
-test-arm: services
-	DEBUG=1 PYTHONDEVMODE=1 PYTHONTRACEMALLOC=1 PROCRASTINATE_APP=ingestors.tasks.app docker run --rm -v ./tests:/ingestors/tests $(IMAGE) sh -c "cd /ingestors && pip3 install --no-deps -r /ingestors/requirements-dev.txt && pip3 install --no-cache-dir procrastinate==3.2.2 && chown -R app:app /ingestors && pytest"
+# no build prerequisite: CI runs these against an image loaded by buildx
+test-store:
+	$(COMPOSE) run --rm -e INGESTORS_LAKEHOUSE=0 test-ingest-file
 
-test-e2e: build services
-	$(COMPOSE_E2E) run --rm ingest-file
+test-lakehouse:
+	$(COMPOSE) run --rm -e INGESTORS_LAKEHOUSE=1 test-ingest-file
+
+test-e2e:
+	cd e2e && ./test_e2e.sh
 
 restart: build
 	$(COMPOSE) up --force-recreate --no-deps --detach ingest-file

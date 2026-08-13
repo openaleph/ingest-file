@@ -1,3 +1,10 @@
+x-ingest-env: &ingest-env
+  OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
+  FTM_FRAGMENTS_URI: postgresql://ingest:ingest@postgres/ingest
+  LOG_FORMAT: TEXT # TEXT or JSON
+  PYTHONWARNINGS: "ignore"
+  TYPER_STANDARD_TRACEBACK: True
+
 services:
   postgres:
     image: postgres:17
@@ -12,23 +19,17 @@ services:
 
   ingest-file:
     build:
-      dockerfile: Dockerfile
+      context: .
+      target: runtime
     hostname: ingest
     tmpfs:
       - /tmp:mode=777
       - /data:mode=777
     environment:
-      OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
-      FTM_STORE_URI: postgresql://ingest:ingest@postgres/ingest
-      LOG_FORMAT: TEXT # TEXT or JSON
-      PYTHONWARNINGS: "ignore"
-      TYPER_STANDARD_TRACEBACK: True
-    entrypoint: ["/bin/sh", "-c", "echo 'openaleph-procrastinate init-db' && exec \"$@\"", "--"]
+      <<: *ingest-env
     volumes:
       - "./ingestors:/ingestors/ingestors"
       - "./data:/ingestors/data"
-      - "./requirements.txt:/ingestors/requirements.txt"
-      - "./setup.py:/ingestors/setup.py"
     depends_on:
       - postgres
       - redis
@@ -36,23 +37,18 @@ services:
   test-ingest-file:
     build:
       context: .
-      dockerfile: Dockerfile.test
+      target: test
     image: test-ingest-file
     hostname: ingest
     tmpfs:
       - /tmp:mode=777
+      # LAKEHOUSE_URI points here, so lakehouse output is ephemeral per run
       - /data:mode=777
     environment:
-      OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
-      FTM_STORE_URI: postgresql://ingest:ingest@postgres/ingest
-      LOG_FORMAT: TEXT # TEXT or JSON
+      <<: *ingest-env
       DEBUG: 1
-      PYTHONWARNINGS: "ignore"
-      TYPER_STANDARD_TRACEBACK: True
-    entrypoint: ["/bin/sh", "-c", "echo 'openaleph-procrastinate init-db' && exec \"$@\"", "--"]
+      PYTHONDEVMODE: 1
+      PYTHONTRACEMALLOC: 1
     volumes:
+      - "./ingestors:/ingestors/ingestors"
       - "./tests:/ingestors/tests"
-      - "./data:/ingestors/data"
-    depends_on:
-      - postgres
-      - redis

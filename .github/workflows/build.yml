@@ -26,7 +26,6 @@ jobs:
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=sha
-            type=raw,value=cache
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags') }}
 
       - name: Set up Docker Buildx
@@ -47,18 +46,18 @@ jobs:
           docker compose --version
           echo "${GITHUB_REF}"
 
-      - name: Build container
+      # loaded under the image name docker-compose.yml declares for the test
+      # service, so the test steps reuse it instead of building a second time
+      - name: Build test container
         uses: docker/build-push-action@v6
         with:
           context: .
+          target: test
           load: true
+          tags: test-ingest-file:latest
           platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Start services
-        run: |
-          make services
 
       - name: Install development dependencies
         run: make dev
@@ -70,13 +69,15 @@ jobs:
         run: make lint
 
       - name: Run tests
-        run: make test
+        run: make test-store test-lakehouse
 
+      # arm64 is emulated, so only pay for it on releases
       - name: Push docker images
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64 #,linux/arm64
+          target: runtime
+          platforms: ${{ startsWith(github.ref, 'refs/tags/') && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
