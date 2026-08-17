@@ -1,6 +1,11 @@
 x-ingest-env: &ingest-env
   OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
   FTM_FRAGMENTS_URI: postgresql://ingest:ingest@postgres/ingest
+  # the lakehouse journal defaults to an in-memory sqlite, which is per-process
+  # and so invisible to any other reader. the driver has to be spelled out: the
+  # journal hands the uri to `create_engine` as-is and bare `postgresql://`
+  # resolves to psycopg2, which we don't ship (only psycopg 3)
+  LAKEHOUSE_JOURNAL_URI: postgresql+psycopg://ingest:ingest@postgres/ingest
   LOG_FORMAT: TEXT # TEXT or JSON
   PYTHONWARNINGS: "ignore"
   TYPER_STANDARD_TRACEBACK: True
@@ -12,6 +17,14 @@ services:
       POSTGRES_USER: ingest
       POSTGRES_PASSWORD: ingest
       POSTGRES_DATABASE: ingest
+    # over tcp, not the socket: during initdb the entrypoint runs a temporary
+    # server that only listens on the socket, so a socket check reports ready
+    # before the database actually accepts connections
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ingest -d ingest"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
 
   redis:
     image: redis:alpine
@@ -52,3 +65,9 @@ services:
     volumes:
       - "./ingestors:/ingestors/ingestors"
       - "./tests:/ingestors/tests"
+    # both backends talk to postgres: the fragments store, the lakehouse journal
+    # and, either way, the tags cache. `run` brings it up for us, so `make
+    # test-*` works without a preceding `make services` (CI relies on that).
+    depends_on:
+      postgres:
+        condition: service_healthy
