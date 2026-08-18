@@ -33,6 +33,9 @@ class Settings(OpenAlephSettings):
     lakehouse: bool = False
     """Run against ftm-lakehouse storage backend"""
 
+    lakehouse_flush_size: int = 10_000
+    """Size cap until when the journal should be flushed to parquet"""
+
     _lakehouse_uri: str | None = None
     """Runtime override for the ftm-lakehouse location, used by the tests to
     isolate each case."""

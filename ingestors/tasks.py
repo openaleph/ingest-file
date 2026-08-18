@@ -17,6 +17,7 @@ from ingestors import __version__
 from ingestors.directory import DirectoryIngestor
 from ingestors.exc import ProcessingException
 from ingestors.manager import Manager
+from ingestors.support.cache import CacheSupport
 from ingestors.support.ocr import init_ocr
 
 SYSTEM = Info("ingestfile_system", "ingest-file system information")
@@ -27,6 +28,11 @@ init_ocr()
 
 app = make_app(__loader__.name)
 sync_app = make_app(__loader__.name, sync=True)
+cache = CacheSupport()
+
+
+def _emitted_count_key(dataset: str) -> str:
+    return cache.cache_key(dataset, "emitted")
 
 
 SKIP_ANALYSIS = ("Workbook", "Package", "Folder")
@@ -79,6 +85,15 @@ def ingest(job: DatasetJob) -> None:
 
     # FIXME
     gc.collect()
+
+    if manager.settings.lakehouse:
+        # Store emitted count to periodically flush lakehouse journal
+        key = _emitted_count_key(job.dataset)
+        emitted_total = cache.conn.incr(key, len(emitted))
+        job.log.info(f"Emitted total: {emitted_total}")
+        if emitted_total >= manager.settings.lakehouse_flush_size:
+            cache.conn.set(key, 0)
+            manager.writer._entities.flush()
 
     # exceptions are swallowed earlier, but we want to tell procrastinate
     # that this task fail if it threw any exception
