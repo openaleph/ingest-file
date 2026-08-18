@@ -47,7 +47,8 @@ class TestCase(unittest.TestCase):
         sls.ARCHIVE_TYPE = "file"
         sls.ARCHIVE_PATH = self.tmp_dir
         # same for the lakehouse backend: an isolated location per test
-        repository_settings._lakehouse_uri = self.tmp_dir
+        lakehouse_uri = os.environ.get("TEST_LAKEHOUSE_URI") or self.tmp_dir
+        repository_settings._lakehouse_uri = lakehouse_uri
         os.environ["FTM_STORE_URI"] = f"sqlite:///{self.tmp_dir}/ftm.store"
         sls.TAGS_DATABASE_URI = os.environ["FTM_STORE_URI"]
         # `CacheSupport` resolves the tags db from the ingestors settings, not
@@ -58,6 +59,7 @@ class TestCase(unittest.TestCase):
         self.manager.emit_entity = types.MethodType(emit_entity, self.manager)
         self.manager.entities = []
         self.dataset = get_entity_store(self.manager.dataset)
+        self.dataset.delete()
 
     def fixture(self, fixture_path):
         """Returns a fixture path and a dummy entity"""
