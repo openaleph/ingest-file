@@ -10,12 +10,10 @@ from anystore.exceptions import DoesNotExist
 from anystore.logging import get_logger
 from anystore.logic.io import stream
 from anystore.store import get_store
-from anystore.util import join_uri, make_checksum, uri_to_path
+from anystore.util import join_uri, uri_to_path
 from followthemoney import EntityProxy
 from ftm_lakehouse import get_archive as get_lakehouse_archive
 from ftm_lakehouse import get_entities
-from ftm_lakehouse.core.conventions import tag
-from ftm_lakehouse.core.settings import CHECKSUM_ALGORITHM
 from ftmq.query import M, Query
 from ftmq.store.fragments import get_fragments
 from ftmq.store.fragments.utils import safe_fragment
@@ -57,7 +55,12 @@ class Archive(Protocol):
 class EntityStore(Protocol):
     """Read and write access to the entities of one dataset."""
 
-    def put(self, entity: EntityProxy, fragment: str | None = None) -> None: ...
+    def put(
+        self,
+        entity: EntityProxy,
+        fragment: str | None = None,
+        origin: str = OP_INGEST,
+    ) -> None: ...
 
     def flush(self) -> None: ...
 
@@ -92,22 +95,11 @@ class ServicelayerArchive:
 class LakehouseArchive:
     def __init__(self, dataset: str) -> None:
         self._archive = get_lakehouse_archive(dataset, lakehouse_uri(dataset))
-        self._entities = get_entities(dataset, lakehouse_uri(dataset))
 
     def archive_file(
         self, file_path: Path, mime_type: str | None = None, origin: str = OP_INGEST
     ) -> str:
-        with file_path.open("rb") as fh:
-            checksum = make_checksum(fh, algorithm=CHECKSUM_ALGORITHM)
-        file = self._archive.store(
-            file_path,
-            checksum=checksum,
-            mimeType=mime_type,
-            id=checksum,
-            origin=origin,
-        )
-        if origin == tag.CRAWL_ORIGIN:
-            self._entities.add(file.to_entity(), origin=tag.CRAWL_ORIGIN)
+        file = self._archive.store(file_path, mimeType=mime_type, origin=origin)
         return file.checksum
 
     def load_file(
@@ -133,7 +125,12 @@ class FragmentStore:
         )
         self._writer = self._db.bulk()
 
-    def put(self, entity: EntityProxy, fragment: str | None = None) -> None:
+    def put(
+        self,
+        entity: EntityProxy,
+        fragment: str | None = None,
+        origin: str = OP_INGEST,
+    ) -> None:
         self._writer.put(entity.to_dict(), fragment=safe_fragment(fragment))
 
     def flush(self) -> None:
@@ -152,19 +149,26 @@ class FragmentStore:
 class LakehouseStore:
     def __init__(self, dataset: str) -> None:
         self._entities = get_entities(dataset, lakehouse_uri(dataset))
-        self._buffer: DefaultDict[str | None, list[EntityProxy]] = defaultdict(list)
+        self._buffer: DefaultDict[tuple[str, str | None], list[EntityProxy]] = (
+            defaultdict(list)
+        )
 
-    def put(self, entity: EntityProxy, fragment: str | None = None) -> None:
-        self._buffer[fragment].append(entity)
+    def put(
+        self,
+        entity: EntityProxy,
+        fragment: str | None = None,
+        origin: str = OP_INGEST,
+    ) -> None:
+        self._buffer[(origin, fragment)].append(entity)
 
     def flush(self) -> None:
         """Flush from buffer to journal. Flushes journal to parquet if it's
         full, but final flush to parquet needs to be invoked manually by
         callers"""
         with self._entities.writer(OP_INGEST) as bulk:
-            for fragment, entities in self._buffer.items():
+            for (origin, fragment), entities in self._buffer.items():
                 for entity in entities:
-                    bulk.add_entity(entity, fragment=fragment)
+                    bulk.add_entity(entity, origin=origin, fragment=fragment)
         self._buffer.clear()
 
     def iterate(self, entity_id: str | None = None) -> EntityProxies:

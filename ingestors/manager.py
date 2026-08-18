@@ -122,9 +122,14 @@ class Manager:
             "mutable": False,
         }
 
-    def emit_entity(self, entity: EntityProxy, fragment: str | None = None):
+    def emit_entity(
+        self,
+        entity: EntityProxy,
+        fragment: str | None = None,
+        origin: str = OP_INGEST,
+    ):
         entity = self.ns.apply(entity)
-        self.writer.put(entity, fragment)
+        self.writer.put(entity, fragment, origin=origin)
         with self.emitted.writer() as bulk:
             if self.settings.procrastinate_dehydrate_entities:
                 bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))

@@ -22,9 +22,9 @@ from ingestors.tasks import app
 TEST_DATASET = "test"
 
 
-def emit_entity(self, entity, fragment=None):
+def emit_entity(self, entity, fragment=None, origin=OP_INGEST):
     self.entities.append(entity)
-    self.writer.put(entity, fragment=fragment)
+    self.writer.put(entity, fragment=fragment, origin=origin)
     with self.emitted.writer() as bulk:
         bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
 

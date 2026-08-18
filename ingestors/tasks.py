@@ -106,6 +106,7 @@ def ingest_path(
             entity.make_id(checksum)
             entity.set("fileName", path.name)
             log.info(f"Queue: `{path.name}` ({checksum})", entity=entity.to_dict())
+            manager.emit_entity(entity, origin=tag.CRAWL_ORIGIN)
             manager.queue_entity(entity)
         if path.is_dir():
             DirectoryIngestor.crawl(manager, path, origin=tag.CRAWL_ORIGIN)

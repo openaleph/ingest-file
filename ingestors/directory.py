@@ -1,4 +1,5 @@
 from followthemoney import model
+from ftm_lakehouse.core.conventions import tag
 
 from ingestors.ingestor import Ingestor
 from ingestors.settings import OP_INGEST
@@ -37,10 +38,14 @@ class DirectoryIngestor(Ingestor):
                     child.make_id(name)
                 child.schema = model.get("Folder")
                 child.add("mimeType", cls.MIME_TYPE)
-                manager.emit_entity(child)
+                manager.emit_entity(child, origin=origin)
                 cls.crawl(manager, sub_path, parent=child, origin=origin)
             else:
                 checksum = manager.store(sub_path, origin=origin)
                 child.make_id(name, checksum)
                 child.set("contentHash", checksum)
+                if origin == tag.CRAWL_ORIGIN:
+                    # the crawl is what discovered this file: record it under
+                    # its own origin
+                    manager.emit_entity(child, origin=origin)
                 manager.queue_entity(child)
