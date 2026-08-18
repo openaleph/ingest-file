@@ -2,7 +2,8 @@
 
 from normality.cleaning import collapse_spaces
 
-from ingestors.exc import ENCRYPTED_MSG
+from ingestors.exc import EMPTY_MSG, ENCRYPTED_MSG
+from ingestors.manager import Manager
 from tests.support import TestCase
 
 
@@ -15,7 +16,13 @@ class PDFIngestorTest(TestCase):
     def test_match_empty(self):
         fixture_path, entity = self.fixture("empty.pdf")
         self.manager.ingest(fixture_path, entity)
-        self.assertNotEqual(entity.first("mimeType"), "application/pdf")
+        self.assertEqual(entity.first("processingStatus"), Manager.STATUS_FAILURE)
+        self.assertEqual(entity.first("processingError"), EMPTY_MSG)
+        # the emitted entity keeps its file properties
+        self.assertEqual(entity.first("fileName"), "empty.pdf")
+        self.assertEqual(int(entity.first("fileSize")), 0)
+        self.assertIsNotNone(entity.first("contentHash"))
+        self.assertIsNotNone(entity.first("mimeType"))
 
     def test_ingest_binary_mode(self):
         fixture_path, entity = self.fixture("readme.pdf")
