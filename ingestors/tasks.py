@@ -1,3 +1,4 @@
+import functools
 import gc
 from pathlib import Path
 
@@ -31,6 +32,7 @@ sync_app = make_app(__loader__.name, sync=True)
 cache = CacheSupport()
 
 
+@functools.cache
 def _emitted_count_key(dataset: str) -> str:
     return cache.cache_key(dataset, "emitted")
 
