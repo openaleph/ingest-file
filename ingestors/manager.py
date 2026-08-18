@@ -27,7 +27,7 @@ from servicelayer.extensions import get_extensions
 
 from ingestors import __version__
 from ingestors.directory import DirectoryIngestor
-from ingestors.exc import ENCRYPTED_MSG, ProcessingException
+from ingestors.exc import EMPTY_MSG, ENCRYPTED_MSG, ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.misc.tika import TikaIngestor
 from ingestors.settings import Settings
@@ -237,6 +237,13 @@ class Manager:
         ingestor_name = None
 
         try:
+            # Handle zero-byte files before auction. Resolve mimeType
+            # then raise so the emitted entity keeps its file properties.
+            if file_size == 0:
+                if not entity.has("mimeType"):
+                    entity.add("mimeType", self.MAGIC.from_file(file_path.as_posix()))
+                raise ProcessingException(EMPTY_MSG)
+
             ingestor_class = self.auction(file_path, entity)
             ingestor_name = ingestor_class.__name__
             log.info(f"Ingestor [{repr(entity)}]: {ingestor_name}")
