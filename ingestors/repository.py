@@ -10,12 +10,12 @@ from anystore.exceptions import DoesNotExist
 from anystore.logging import get_logger
 from anystore.logic.io import stream
 from anystore.store import get_store
-from anystore.util import join_uri, uri_to_path
+from anystore.util import join_uri, make_checksum, uri_to_path
 from followthemoney import EntityProxy
 from ftm_lakehouse import get_archive as get_lakehouse_archive
 from ftm_lakehouse import get_entities
 from ftm_lakehouse.core.conventions import tag
-from ftm_lakehouse.util import make_checksum
+from ftm_lakehouse.core.settings import CHECKSUM_ALGORITHM
 from ftmq.query import M, Query
 from ftmq.store.fragments import get_fragments
 from ftmq.store.fragments.utils import safe_fragment
@@ -98,7 +98,7 @@ class LakehouseArchive:
         self, file_path: Path, mime_type: str | None = None, origin: str = OP_INGEST
     ) -> str:
         with file_path.open("rb") as fh:
-            checksum = make_checksum(fh)
+            checksum = make_checksum(fh, algorithm=CHECKSUM_ALGORITHM)
         file = self._archive.store(
             file_path,
             checksum=checksum,
