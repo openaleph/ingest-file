@@ -112,3 +112,22 @@ def ingest_path(
     emitted = manager.get_emitted()
     log.info(f"Emitted {len(emitted)} entities.", emitted=[e.id for e in emitted])
     manager.close()
+
+
+def ingest_entity(
+    dataset: str,
+    entity: EntityProxy,
+    languages: list[str] | None = None,
+    foreign_id: str | None = None,
+):
+    if foreign_id:
+        foreign_id = dataset_name_check(foreign_id)
+    context = {"languages": languages or [], "namespace": foreign_id or dataset}
+    manager = Manager(sync_app, dataset, context)
+    log = get_logger(__name__, dataset=dataset, context=context, entity_id=entity.id)
+    if not entity.schema.is_a("Document") or not entity.has("contentHash"):
+        log.warn("Skip ingest, not of schema `Document` or missing `contentHash`")
+        return
+    log.info(f"Queue: `{entity.first('fileName')}` ({entity.first('contentHash')})")
+    manager.queue_entity(entity)
+    manager.close()
