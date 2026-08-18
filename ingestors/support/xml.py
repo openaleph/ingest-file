@@ -29,3 +29,11 @@ class XMLSupport(object):
             return etree.parse(file_path, parser)
         except (ParserError, ParseError, XMLSyntaxError) as exc:
             raise ProcessingException("Failed to parse XML: %s" % exc) from exc
+
+    def parse_xml_string(self, xml_string: str, **kwargs):
+        try:
+            parser = self.get_xml_parser(**kwargs)
+            return etree.fromstring(xml_string.encode(), parser)
+        except (ParserError, ParseError, XMLSyntaxError) as exc:
+            log.warning("Failed to parse XML string: %s", exc)
+            return None
