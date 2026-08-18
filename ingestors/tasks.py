@@ -90,7 +90,7 @@ def ingest(job: DatasetJob) -> None:
         # Store emitted count to periodically flush lakehouse journal
         key = _emitted_count_key(job.dataset)
         emitted_total = cache.conn.incr(key, len(emitted))
-        job.log.info(f"Emitted total: {emitted_total}")
+        job.log.debug(f"Emitted total: {emitted_total}")
         if emitted_total >= manager.settings.lakehouse_flush_size:
             cache.conn.set(key, 0)
             manager.writer._entities.flush()
