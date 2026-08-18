@@ -13,6 +13,7 @@ RUN pip3 install --no-cache-dir --no-deps -r requirements.txt
 ENV LD_PRELOAD=libgomp.so.1 \
     ARCHIVE_TYPE=file \
     ARCHIVE_PATH=/data \
+    LAKEHOUSE_URI=/data \
     OPENALEPH_DB_URI=postgresql://aleph:aleph@postgres/aleph \
     REDIS_URL=redis://redis:6379/0 \
     TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata \
@@ -38,14 +39,13 @@ CMD ["procrastinate", "worker", "-q", "ingest"]
 FROM source AS test
 
 COPY requirements-dev.txt ./
-RUN pip3 install --no-cache-dir --no-deps -r requirements-dev.txt \
-    && pip3 install --no-cache-dir --no-deps -e .
+RUN pip3 install --no-cache-dir --no-deps -r requirements-dev.txt
+RUN pip3 install --no-cache-dir --no-deps -e .
 
 COPY tests ./tests
 
 RUN chown -R app:app /ingestors
 
-ENV DEBUG=1 \
-    LAKEHOUSE_URI=/data
+ENV DEBUG=1
 
 CMD ["pytest", "tests"]
