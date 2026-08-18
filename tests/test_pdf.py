@@ -234,6 +234,29 @@ class PDFIngestorTest(TestCase):
 
             assert expected[page_no] in page_text
 
+    def test_ingest_pdf_metadata(self):
+        fixture_path, entity = self.fixture("udhr_ger.pdf")
+        self.manager.ingest(fixture_path, entity)
+
+        self.assertEqual(
+            entity.first("title"),
+            "Resolution 217 A (III) der Generalversammlung vom 10",
+        )
+        self.assertEqual(entity.first("author"), "OHCHR")
+
+    def test_ingest_pdf_xmp_metadata(self):
+        fixture_path, entity = self.fixture("xmp-meta.pdf")
+        self.manager.ingest(fixture_path, entity)
+
+        self.assertEqual(
+            entity.first("title"), "XMP Specification Part 2: Additional Properties"
+        )
+        self.assertIn("Adobe Systems Incorporated", entity.get("author"))
+        self.assertEqual(entity.first("authoredAt"), "2022-02-21T11:04:24")
+        self.assertIn(
+            "uuid:2787bba1-e336-4796-830c-a96ae8465299", entity.get("messageId")
+        )
+
     def test_pdf_type3_fonts(self):
         """From https://github.com/pymupdf/PyMuPDF/issues/1943"""
         fixture_path, entity = self.fixture("example.pdf")
