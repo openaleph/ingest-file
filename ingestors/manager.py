@@ -10,6 +10,7 @@ from banal import ensure_list
 from followthemoney import EntityProxy, StatementEntity, model
 from followthemoney.helpers import entity_filename
 from followthemoney.namespace import Namespace
+from ftmq.store.fragments.loader import DEFAULT_FRAGMENT
 from ftmq.store.fragments.utils import safe_fragment
 from ftmq.store.memory import MemoryStore
 from ftmq.util import ensure_entity
@@ -125,11 +126,13 @@ class Manager:
     def emit_entity(
         self,
         entity: EntityProxy,
-        fragment: str | None = None,
+        fragment: str = DEFAULT_FRAGMENT,
         origin: str = OP_INGEST,
     ):
         entity = self.ns.apply(entity)
-        self.writer.put(entity, fragment, origin=origin)
+        fragment = fragment or DEFAULT_FRAGMENT
+        origin = origin or OP_INGEST
+        self.writer.put(entity, fragment, origin)
         with self.emitted.writer() as bulk:
             if self.settings.procrastinate_dehydrate_entities:
                 bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))

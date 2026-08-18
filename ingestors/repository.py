@@ -16,6 +16,7 @@ from ftm_lakehouse import get_archive as get_lakehouse_archive
 from ftm_lakehouse import get_entities
 from ftmq.query import M, Query
 from ftmq.store.fragments import get_fragments
+from ftmq.store.fragments.loader import DEFAULT_FRAGMENT
 from ftmq.store.fragments.utils import safe_fragment
 from ftmq.types import EntityProxies
 from normality import safe_filename
@@ -58,7 +59,7 @@ class EntityStore(Protocol):
     def put(
         self,
         entity: EntityProxy,
-        fragment: str | None = None,
+        fragment: str = DEFAULT_FRAGMENT,
         origin: str = OP_INGEST,
     ) -> None: ...
 
@@ -128,7 +129,7 @@ class FragmentStore:
     def put(
         self,
         entity: EntityProxy,
-        fragment: str | None = None,
+        fragment: str = DEFAULT_FRAGMENT,
         origin: str = OP_INGEST,
     ) -> None:
         self._writer.put(entity.to_dict(), fragment=safe_fragment(fragment))
@@ -156,10 +157,10 @@ class LakehouseStore:
     def put(
         self,
         entity: EntityProxy,
-        fragment: str | None = None,
+        fragment: str = DEFAULT_FRAGMENT,
         origin: str = OP_INGEST,
     ) -> None:
-        self._buffer[(origin, fragment)].append(entity)
+        self._buffer[(origin, safe_fragment(fragment))].append(entity)
 
     def flush(self) -> None:
         """Flush from buffer to journal. Flushes journal to parquet if it's
