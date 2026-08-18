@@ -16,6 +16,7 @@ from ftm_lakehouse import get_archive as get_lakehouse_archive
 from ftm_lakehouse import get_entities
 from ftmq.query import M, Query
 from ftmq.store.fragments import get_fragments
+from ftmq.store.fragments.loader import DEFAULT_FRAGMENT
 from ftmq.store.fragments.utils import safe_fragment
 from ftmq.types import EntityProxies
 from normality import safe_filename
@@ -159,6 +160,7 @@ class LakehouseStore:
         fragment: str | None = None,
         origin: str = OP_INGEST,
     ) -> None:
+        fragment = safe_fragment(fragment) or DEFAULT_FRAGMENT
         self._buffer[(origin, fragment)].append(entity)
 
     def flush(self) -> None:
