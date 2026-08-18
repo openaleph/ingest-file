@@ -2173,7 +2173,7 @@ s3 = ["s3fs (>2024.2.0)"]
 type = "git"
 url = "https://github.com/openaleph/ftm-lakehouse.git"
 reference = "HEAD"
-resolved_reference = "146eef2809fcfdab7a36e509020aaae9e1a113b1"
+resolved_reference = "7c00a7ecfc07726124e445286bf1b2bc93a14617"
 
 [[package]]
 name = "ftmq"
@@ -2216,7 +2216,7 @@ sql = ["sqlalchemy (>=2.0.51,<3.0.0)"]
 type = "git"
 url = "https://github.com/dataresearchcenter/ftmq.git"
 reference = "refactor/ql"
-resolved_reference = "67fc8280d01de09d83f3586f470e59a0cd16d2df"
+resolved_reference = "818ddd720a434ad5ffacfec123c48b8f0f0435b8"
 
 [[package]]
 name = "greenlet"
@@ -2407,18 +2407,18 @@ license = ["ukkonen"]
 
 [[package]]
 name = "idna"
-version = "3.18"
+version = "3.19"
 description = "Internationalized Domain Names in Applications (IDNA)"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "idna-3.18-py3-none-any.whl", hash = "sha256:7f952cbe720b688055e3f87de14f5c3e5fdaa8bc3928985c4077ca689de849a2"},
-    {file = "idna-3.18.tar.gz", hash = "sha256:ffb385a7e039654cef1ab9ef32c6fafe283c0c0467bba1d9029738ce4a14a848"},
+    {file = "idna-3.19-py3-none-any.whl", hash = "sha256:815e7be7a7806d54abb586dc943addc79e8b2ee16915059658cbeff4b1b43bf4"},
+    {file = "idna-3.19.tar.gz", hash = "sha256:5e0811a4383b21dc5838069f801c4fb62113b7447663d2530d2bd6e77b49bf15"},
 ]
 
 [package.extras]
-all = ["mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.6.2)"]
+all = ["coverage (>=7.10.0)", "hypothesis (>=6.141.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.16.0)", "ty (>=0.0.37)"]
 
 [[package]]
 name = "imohash"
