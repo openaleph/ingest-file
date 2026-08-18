@@ -5,6 +5,7 @@ from anystore.logging import get_logger
 from followthemoney import registry
 from followthemoney.dataset.util import dataset_name_check
 from followthemoney.proxy import EntityProxy
+from ftm_lakehouse.core.conventions import tag
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.app import make_app
 from openaleph_procrastinate.model import DatasetJob
@@ -100,14 +101,14 @@ def ingest_path(
     if path is not None:
         if path.is_file():
             entity = manager.make_entity("Document")
-            checksum = manager.store(path)
+            checksum = manager.store(path, origin=tag.CRAWL_ORIGIN)
             entity.set("contentHash", checksum)
             entity.make_id(checksum)
             entity.set("fileName", path.name)
             log.info(f"Queue: `{path.name}` ({checksum})", entity=entity.to_dict())
             manager.queue_entity(entity)
         if path.is_dir():
-            DirectoryIngestor.crawl(manager, path)
+            DirectoryIngestor.crawl(manager, path, origin=tag.CRAWL_ORIGIN)
     emitted = manager.get_emitted()
     log.info(f"Emitted {len(emitted)} entities.", emitted=[e.id for e in emitted])
     manager.close()

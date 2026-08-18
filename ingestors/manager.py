@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from pathlib import Path
 from tempfile import mkdtemp
 from timeit import default_timer
 from typing import Any
@@ -27,7 +28,7 @@ from ingestors.exc import ENCRYPTED_MSG, ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.misc.tika import TikaIngestor
 from ingestors.repository import get_archive, get_entity_store
-from ingestors.settings import Settings
+from ingestors.settings import OP_INGEST, Settings
 from ingestors.util import filter_text, remove_directory
 
 log = logging.getLogger(__name__)
@@ -166,11 +167,15 @@ class Manager:
         with self.app.open():
             defer.ingest(self.app, self.dataset, [entity], **self.context)
 
-    def store(self, file_path, mime_type=None):
+    def store(
+        self, file_path: Path, mime_type: str | None = None, origin: str = OP_INGEST
+    ):
         file_path = ensure_path(file_path)
         mime_type = normalize_mimetype(mime_type)
         if file_path is not None and file_path.is_file():
-            return self.archive.archive_file(file_path, mime_type=mime_type)
+            return self.archive.archive_file(
+                file_path, mime_type=mime_type, origin=origin
+            )
 
     def load(self, content_hash, file_name=None):
         # log.info("Local archive name: %s", file_name)

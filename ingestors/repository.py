@@ -14,6 +14,7 @@ from anystore.util import join_uri, uri_to_path
 from followthemoney import EntityProxy
 from ftm_lakehouse import get_archive as get_lakehouse_archive
 from ftm_lakehouse import get_entities
+from ftm_lakehouse.core.conventions import tag
 from ftm_lakehouse.util import make_checksum
 from ftmq.query import M, Query
 from ftmq.store.fragments import get_fragments
@@ -44,7 +45,9 @@ def lakehouse_uri(dataset: str) -> str | None:
 class Archive(Protocol):
     """Blob storage for the files being ingested."""
 
-    def archive_file(self, file_path: Path, mime_type: str | None = None) -> str: ...
+    def archive_file(
+        self, file_path: Path, mime_type: str | None = None, origin: str = OP_INGEST
+    ) -> str: ...
 
     def load_file(
         self, content_hash: str, temp_path: Path, file_name: str | None
@@ -75,7 +78,9 @@ class ServicelayerArchive:
             publication_bucket=sls.PUBLICATION_BUCKET,
         )
 
-    def archive_file(self, file_path: Path, mime_type: str | None = None) -> str:
+    def archive_file(
+        self, file_path: Path, mime_type: str | None = None, origin: str = OP_INGEST
+    ) -> str:
         return self._archive.archive_file(file_path, mime_type=mime_type)
 
     def load_file(
@@ -87,8 +92,11 @@ class ServicelayerArchive:
 class LakehouseArchive:
     def __init__(self, dataset: str) -> None:
         self._archive = get_lakehouse_archive(dataset, lakehouse_uri(dataset))
+        self._entities = get_entities(dataset, lakehouse_uri(dataset))
 
-    def archive_file(self, file_path: Path, mime_type: str | None = None) -> str:
+    def archive_file(
+        self, file_path: Path, mime_type: str | None = None, origin: str = OP_INGEST
+    ) -> str:
         with file_path.open("rb") as fh:
             checksum = make_checksum(fh)
         file = self._archive.store(
@@ -96,8 +104,10 @@ class LakehouseArchive:
             checksum=checksum,
             mimeType=mime_type,
             id=checksum,
-            origin=OP_INGEST,
+            origin=origin,
         )
+        if origin == tag.CRAWL_ORIGIN:
+            self._entities.add(file.to_entity(), origin=tag.CRAWL_ORIGIN)
         return file.checksum
 
     def load_file(
@@ -167,14 +177,7 @@ class LakehouseStore:
         return self._entities.get(entity_id, flush_first=True)
 
     def delete(self) -> None:
-        # FIXME: there is no public api to drop a whole dataset yet
-        if self._entities._is_api:
-            log.error(
-                "Can't delete dataset in api mode",
-                dataset=self._entities.dataset,
-                uri=self._entities.uri,
-            )
-            return
+        self._entities.flush()
         self._entities._statements.destroy()
 
 
