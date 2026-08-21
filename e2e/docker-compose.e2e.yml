@@ -73,7 +73,7 @@ services:
       AWS_SECRET_ACCESS_KEY: openaleph
       LAKEHOUSE_URI: s3://openaleph
       LAKEHOUSE_JOURNAL_URI: postgresql://ingest:ingest@postgres/ingest
-      INGESTORS_LAKEHOUSE: 0
+      OPENALEPH_LAKEHOUSE: 0
     depends_on:
       - minio
       - postgres

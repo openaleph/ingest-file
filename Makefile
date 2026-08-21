@@ -38,10 +38,10 @@ test: build-test test-store test-lakehouse
 
 # no build prerequisite: CI runs these against an image loaded by buildx
 test-store:
-	$(COMPOSE) run --rm -e INGESTORS_LAKEHOUSE=0 test-ingest-file
+	$(COMPOSE) run --rm -e OPENALEPH_LAKEHOUSE=0 test-ingest-file
 
 test-lakehouse:
-	$(COMPOSE) run --rm -e INGESTORS_LAKEHOUSE=1 test-ingest-file
+	$(COMPOSE) run --rm -e OPENALEPH_LAKEHOUSE=1 test-ingest-file
 
 test-e2e:
 	cd e2e && ./test_e2e.sh

@@ -6,12 +6,12 @@ from anystore.cli import ErrorHandler
 from anystore.logging import configure_logging, get_logger
 from ftmq.io import smart_read_proxies, smart_write_proxies
 from ftmq.query import M, Query
+from openaleph_procrastinate.repository import get_entity_store
 from rich import print
 from servicelayer.tags import Tags
 from typing_extensions import Annotated
 
 from ingestors import __version__
-from ingestors.repository import get_entity_store
 from ingestors.settings import Settings
 from ingestors.tasks import ingest_entity, ingest_path
 

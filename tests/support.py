@@ -7,15 +7,16 @@ import unittest
 from tempfile import mkdtemp
 
 from followthemoney import StatementEntity
+from ftm_lakehouse.repository.factories import clear_caches as clear_lakehouse_caches
+from normality import stringify
+from openaleph_procrastinate.repository import get_archive, get_entity_store
 from openaleph_procrastinate.util import make_file_entity
 from procrastinate.testing import InMemoryConnector
 from servicelayer import settings as sls
 from servicelayer.archive.util import ensure_path
 from servicelayer.tags import Tags
 
-from ingestors.manager import Manager, get_archive
-from ingestors.repository import get_entity_store
-from ingestors.repository import settings as repository_settings
+from ingestors.manager import Manager
 from ingestors.settings import OP_INGEST, Settings
 from ingestors.tasks import app
 
@@ -23,8 +24,12 @@ TEST_DATASET = "test"
 
 
 def emit_entity(self, entity, fragment=None, origin=OP_INGEST):
+    """Stand-in for `Manager.emit_entity` that records what was emitted and,
+    unlike the real one, leaves the entity ids un-namespaced so the tests can
+    look them up by the id they made. The fragment is coerced the same way the
+    manager does it, the backends take it as-is."""
     self.entities.append(entity)
-    self.writer.put(entity, fragment=fragment, origin=origin)
+    self.writer.put(entity, stringify(fragment), origin=origin)
     with self.emitted.writer() as bulk:
         bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
 
@@ -32,10 +37,19 @@ def emit_entity(self, entity, fragment=None, origin=OP_INGEST):
 class TestCase(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = mkdtemp()
-        # clear cached func calls, they are keyed on the dataset only and would
-        # otherwise hand back stores pointing at a previous test's tmp dir
+        # the lakehouse backend takes its location from `LAKEHOUSE_URI` (the
+        # repositories no longer accept an explicit uri), so point it at an
+        # isolated directory per test. `TEST_LAKEHOUSE_URI` keeps the escape
+        # hatch for running the suite against a shared location.
+        os.environ["LAKEHOUSE_URI"] = (
+            os.environ.get("TEST_LAKEHOUSE_URI") or self.tmp_dir
+        )
+        # clear cached func calls, they are keyed on the dataset (resp. the
+        # dataset uri) only and would otherwise hand back stores pointing at a
+        # previous test's tmp dir. `get_entity_store` is deliberately uncached
+        # upstream, so there is nothing to clear for it.
         get_archive.cache_clear()
-        get_entity_store.cache_clear()
+        clear_lakehouse_caches()
         # Force tests to use fake configuration
         self.assertIsInstance(app.connector, InMemoryConnector)
         # `App.run_worker` registers a notification listener bound to the loop
@@ -46,9 +60,6 @@ class TestCase(unittest.TestCase):
         sls.REDIS_URL = None
         sls.ARCHIVE_TYPE = "file"
         sls.ARCHIVE_PATH = self.tmp_dir
-        # same for the lakehouse backend: an isolated location per test
-        lakehouse_uri = os.environ.get("TEST_LAKEHOUSE_URI") or self.tmp_dir
-        repository_settings._lakehouse_uri = lakehouse_uri
         os.environ["FTM_STORE_URI"] = f"sqlite:///{self.tmp_dir}/ftm.store"
         sls.TAGS_DATABASE_URI = os.environ["FTM_STORE_URI"]
         # `CacheSupport` resolves the tags db from the ingestors settings, not

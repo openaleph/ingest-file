@@ -26,9 +26,9 @@ docker compose -f docker-compose.e2e.yml down --remove-orphans -v
 # initialize db
 docker compose -f docker-compose.e2e.yml run --rm ingest-file openaleph-procrastinate init-db
 # defer ingest tasks and add files to archive
-docker compose -f docker-compose.e2e.yml run -e INGESTORS_LAKEHOUSE=1 --rm ingest-file ingestors ingest -d fixtures /fixtures
+docker compose -f docker-compose.e2e.yml run -e OPENALEPH_LAKEHOUSE=1 --rm ingest-file ingestors ingest -d fixtures /fixtures
 # run one-shot ingest worker
-docker compose -f docker-compose.e2e.yml run -e INGESTORS_LAKEHOUSE=1 --rm ingest-file
+docker compose -f docker-compose.e2e.yml run -e OPENALEPH_LAKEHOUSE=1 --rm ingest-file
 # run one-shot analyze worker
 docker compose -f docker-compose.e2e.yml run --rm analyze
 

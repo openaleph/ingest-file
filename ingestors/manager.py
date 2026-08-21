@@ -16,6 +16,7 @@ from ftmq.util import ensure_entity
 from normality import stringify
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.app import App
+from openaleph_procrastinate.repository import get_archive, get_entity_store
 from openaleph_procrastinate.util import make_file_entity
 from prometheus_client import Counter, Histogram
 from rigour.mime import normalize_mimetype
@@ -27,7 +28,6 @@ from ingestors.directory import DirectoryIngestor
 from ingestors.exc import EMPTY_MSG, ENCRYPTED_MSG, ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.misc.tika import TikaIngestor
-from ingestors.repository import get_archive, get_entity_store
 from ingestors.settings import OP_INGEST, Settings
 from ingestors.util import filter_text, remove_directory
 
@@ -129,7 +129,10 @@ class Manager:
         origin: str = OP_INGEST,
     ):
         entity = self.ns.apply(entity)
-        self.writer.put(entity, fragment, origin=origin)
+        # the repositories hand the fragment through to the backend as-is, so
+        # non-string keys (e.g. a row or component index) have to be coerced
+        # here – the lakehouse writes it into a string arrow column
+        self.writer.put(entity, stringify(fragment), origin=origin)
         with self.emitted.writer() as bulk:
             if self.settings.procrastinate_dehydrate_entities:
                 bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))

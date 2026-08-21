@@ -19,7 +19,7 @@ class DocumentIngestorTest(TestCase):
         self.manager.ingest(fixture_path, entity)
 
         self.assertEqual(len(self.get_emitted()), 3)
-        self.assertEqual(len(list(self.dataset.iterate(entity_id=entity.id))), 1)
+        self.assertEqual(len(list(self.dataset.iterate(entity_ids=entity.id))), 1)
         self.assertTrue(
             any(
                 "The Level 3 Bookmark" in x

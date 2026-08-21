@@ -2,6 +2,7 @@ import os
 from unittest import mock
 
 from ingestors.manager import Manager
+from ingestors.settings import Settings
 from ingestors.tasks import app
 from tests.support import TEST_DATASET, TestCase
 
@@ -25,6 +26,11 @@ class ManagerTest(TestCase):
         return emitted[0]
 
     def test_emit_entity_dehydrates_by_default(self):
+        if Settings().lakehouse:
+            # the lakehouse backend takes entities from the job payload instead
+            # of re-fetching them, so it forces dehydration off (see
+            # `OpenAlephSettings.enforce_lakehouse_payloads`)
+            self.skipTest("dehydration is disabled for the lakehouse backend")
         with mock.patch.dict(os.environ):
             os.environ.pop("OPENALEPH_PROCRASTINATE_DEHYDRATE_ENTITIES", None)
             manager = self.make_manager()
