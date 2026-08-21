@@ -1767,19 +1767,20 @@ files = [
 
 [[package]]
 name = "deltalake"
-version = "1.6.2"
+version = "1.6.3"
 description = "Native Delta Lake Python binding based on delta-rs with Pandas integration"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "deltalake-1.6.2-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:e317a46212f4b7fda6a20feb45a336aa0b95241366d14edb3fd4f481a087efa4"},
-    {file = "deltalake-1.6.2-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:6dd5efcf165c5418a02afe6de4b9d88c268c6c4eae2a4c38d40eab72bc69c8ee"},
-    {file = "deltalake-1.6.2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:00ca11b3081345a922173efc5e6582edf2019554f184d9a1e961e4f888974dae"},
-    {file = "deltalake-1.6.2-cp310-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:46caeee8ea14b89975305d6d36abef99246f7ff7b1fc1194b9395d92f6db3533"},
-    {file = "deltalake-1.6.2-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:bec019bbe82b06d0947758342849978dc3167d374edf99c8ae8af0ae4bf3ac6b"},
-    {file = "deltalake-1.6.2-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:e5bf6d4ba40023e45e7b3eb2f948bcd648af7cc38463f8b60af0bf5f6278231c"},
-    {file = "deltalake-1.6.2-cp310-abi3-win_amd64.whl", hash = "sha256:235c06c1a0041afb1a52d98672d67a2fe6a38813bbea889335ff1eea6dbea5b5"},
+    {file = "deltalake-1.6.3-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:c25928df2a30a19dec3f86ffd931fd59b7f175b5781ba998b34001eb4d49e1f7"},
+    {file = "deltalake-1.6.3-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:8cec745b5dff6581c0b26c5136e3f9eea7ac715a684fe4459b5c37c66407ae02"},
+    {file = "deltalake-1.6.3-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1a5163ed5550f5b83ba6f9a95b5e3dff09934a3165fb80ee0ab8e5919782ac6c"},
+    {file = "deltalake-1.6.3-cp310-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:d5aa5f89367deca941ed5e8496b6f6521b42ff0380609ff7a02f771ae9ae7abe"},
+    {file = "deltalake-1.6.3-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:8f2de230b5cd979b3b984db3b9a24bf14722d4b46a4d062b41fe3fd2e5bfbd68"},
+    {file = "deltalake-1.6.3-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:b51d0109b0a86b336c7254a01495536d69c72593663d8de0bc320aa4523c0502"},
+    {file = "deltalake-1.6.3-cp310-abi3-win_amd64.whl", hash = "sha256:7920a60510376f3c90feb62d182063b0202f117411e73ff9f23ffe969b800dce"},
+    {file = "deltalake-1.6.3.tar.gz", hash = "sha256:b7176c9d2a48b3ad339902e6216cdde813857b9628ef53e972889c71d2836fc4"},
 ]
 
 [package.dependencies]
@@ -2290,7 +2291,7 @@ develop = false
 
 [package.dependencies]
 anystore = ">=1.2.6,<2.0.0"
-deltalake = {version = ">=1.6.2,<2.0.0", optional = true}
+deltalake = {version = ">=1.6.3,<2.0.0", optional = true}
 duckdb = {version = ">=1.5.5,<2.0.0", optional = true}
 followthemoney = ">=4.10.2,<5.0.0"
 nomenklatura = ">=4.13.2,<5.0.0"
@@ -2298,7 +2299,7 @@ normality = ">=3.1.0,<4.0.0"
 orjson = ">=3.10.18,<4.0.0"
 pandas = {version = ">=3.0.5,<4.0.0", optional = true}
 psycopg = {version = ">=3.2.9,<4.0.0", extras = ["pool"], optional = true}
-pyarrow = {version = ">=25.0.0,<26.0.0", optional = true}
+pyarrow = {version = ">=25.0.1,<26.0.0", optional = true}
 pyrql = ">=0.7.11,<1.0.0"
 rigour = ">=2.3.1,<3.0.0"
 sqlalchemy = {version = ">=2.0.51,<3.0.0", optional = true}
@@ -2307,8 +2308,8 @@ typer = ">=0.26.8,<1"
 [package.extras]
 aleph = ["alephclient (>=2.6.0,<3.0.0)", "furl (>=2.1.4,<3.0.0)"]
 api = ["fastapi (>=0.139.2,<0.140.0)", "furl (>=2.1.4,<3.0.0)", "granian (>=2.7.9,<3.0.0)"]
-duckdb = ["duckdb-engine (>=0.17.0,<0.18.0)", "sqlalchemy (>=2.0.51,<3.0.0)"]
-lake = ["deltalake (>=1.6.2,<2.0.0)", "duckdb (>=1.5.5,<2.0.0)", "pandas (>=3.0.5,<4.0.0)", "pyarrow (>=25.0.0,<26.0.0)"]
+duckdb = ["duckdb (>=1.5.5,<2.0.0)", "duckdb-engine (>=0.17.0,<0.18.0)", "sqlalchemy (>=2.0.51,<3.0.0)"]
+lake = ["deltalake (>=1.6.3,<2.0.0)", "duckdb (>=1.5.5,<2.0.0)", "pandas (>=3.0.5,<4.0.0)", "pyarrow (>=25.0.1,<26.0.0)"]
 level = ["plyvel (>=1.5.1,<2.0.0)"]
 postgres = ["psycopg[pool] (>=3.2.9,<4.0.0)", "sqlalchemy (>=2.0.51,<3.0.0)"]
 redis = ["fakeredis (>=2.37.0,<3.0.0)", "redis (>=5.2.1,<6.0.0)"]
@@ -2319,7 +2320,7 @@ sql = ["sqlalchemy (>=2.0.51,<3.0.0)"]
 type = "git"
 url = "https://github.com/dataresearchcenter/ftmq.git"
 reference = "refactor/ql"
-resolved_reference = "3687b4996e5f071a9dbf2911ee88c202846ff4e4"
+resolved_reference = "c68da37220363b81db4f776f79b67c340325ee98"
 
 [[package]]
 name = "granian"
@@ -4185,7 +4186,7 @@ pydantic-settings = ">=2.15.0,<3.0.0"
 type = "git"
 url = "https://github.com/openaleph/openaleph-procrastinate.git"
 reference = "HEAD"
-resolved_reference = "3a4724a007b8900b1f7e28246ae6a0b8b51b8082"
+resolved_reference = "c7299a0e1d2583ed42782989f73eafcf8a0b6566"
 
 [[package]]
 name = "openaleph-servicelayer"
