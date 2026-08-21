@@ -1,9 +1,7 @@
-import functools
 import gc
 from pathlib import Path
 
 from anystore.logging import get_logger
-from followthemoney import registry
 from followthemoney.dataset.util import dataset_name_check
 from followthemoney.proxy import EntityProxy
 from ftm_lakehouse.core.conventions import tag
@@ -18,7 +16,6 @@ from ingestors import __version__
 from ingestors.directory import DirectoryIngestor
 from ingestors.exc import ProcessingException
 from ingestors.manager import Manager
-from ingestors.support.cache import CacheSupport
 from ingestors.support.ocr import init_ocr
 
 SYSTEM = Info("ingestfile_system", "ingest-file system information")
@@ -29,25 +26,21 @@ init_ocr()
 
 app = make_app(__loader__.name)
 sync_app = make_app(__loader__.name, sync=True)
-cache = CacheSupport()
 
 
-@functools.cache
-def _emitted_count_key(dataset: str) -> str:
-    return cache.cache_key(dataset, "emitted")
-
-
+# container schemata that carry no text of their own. Compared by exact name:
+# `is_a` would also match everything extending them, and `Email` extends
+# `Folder` (it holds its attachments), which would exclude mailbox NER.
 SKIP_ANALYSIS = ("Workbook", "Package", "Folder")
 
 
 def should_analyze(e: EntityProxy) -> bool:
+    """Whether an emitted entity should be handed to `ftm-analyze`. This runs on
+    whatever `Manager.get_emitted` returns, which with the default
+    `procrastinate_dehydrate_entities` is a stub without any text, so it must
+    decide on the schema alone."""
     if e.schema.is_a("Analyzable"):
-        for schema in SKIP_ANALYSIS:
-            if e.schema.is_a(schema):
-                return False
-        for txt in e.get_type_values(registry.text):
-            if txt:
-                return True
+        return e.schema.name not in SKIP_ANALYSIS
     return False
 
 

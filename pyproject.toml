@@ -113,8 +113,6 @@ poetry-plugin-export = ">=1.8"
 
 [tool.pytest_env]
 DEBUG = 1
-OPENALEPH_ANALYZE_DEFER = 0
-OPENALEPH_INDEX_DEFER = 0
 PROCRASTINATE_DB_URI = "sqlite:///:memory:"
 TIKA_PATH = "./contrib"
 INGESTORS_TIKA_FALLBACK = 1
