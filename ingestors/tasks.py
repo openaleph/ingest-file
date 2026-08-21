@@ -8,6 +8,7 @@ from ftm_lakehouse.core.conventions import tag
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.app import make_app
 from openaleph_procrastinate.model import DatasetJob
+from openaleph_procrastinate.settings import OpenAlephSettings
 from openaleph_procrastinate.tasks import task
 from prometheus_client import Info
 from servicelayer.archive.util import ensure_path
@@ -26,6 +27,7 @@ init_ocr()
 
 app = make_app(__loader__.name)
 sync_app = make_app(__loader__.name, sync=True)
+settings = OpenAlephSettings()
 
 
 # container schemata that carry no text of their own. Compared by exact name:
@@ -36,15 +38,14 @@ SKIP_ANALYSIS = ("Workbook", "Package", "Folder")
 
 def should_analyze(e: EntityProxy) -> bool:
     """Whether an emitted entity should be handed to `ftm-analyze`. This runs on
-    whatever `Manager.get_emitted` returns, which with the default
-    `procrastinate_dehydrate_entities` is a stub without any text, so it must
-    decide on the schema alone."""
+    whatever `Manager.get_emitted` returns (most likely stub entities without
+    full payload)"""
     if e.schema.is_a("Analyzable"):
         return e.schema.name not in SKIP_ANALYSIS
     return False
 
 
-@task(app=app, retry=defer.tasks.ingest.retries)
+@task(app=app, retry=defer.tasks.ingest.retries, tracer_uri=settings.redis_url)
 def ingest(job: DatasetJob) -> None:
     to_analyze: list[EntityProxy] = []
     to_index: list[EntityProxy] = []
