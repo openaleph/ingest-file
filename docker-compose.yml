@@ -29,6 +29,11 @@ services:
   redis:
     image: redis:alpine
     command: ["redis-server", "--save", "3600", "10"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
 
   ingest-file:
     build:
@@ -44,8 +49,10 @@ services:
       - "./ingestors:/ingestors/ingestors"
       - "./data:/ingestors/data"
     depends_on:
-      - postgres
-      - redis
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
 
   test-ingest-file:
     build:
@@ -69,5 +76,7 @@ services:
     # and, either way, the tags cache. `run` brings it up for us, so `make
     # test-*` works without a preceding `make services` (CI relies on that).
     depends_on:
+      redis:
+        condition: service_healthy
       postgres:
         condition: service_healthy
