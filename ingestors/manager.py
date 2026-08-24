@@ -271,6 +271,7 @@ class Manager:
 
     def close(self):
         self.writer.flush()
+        self.writer.close()
         remove_directory(self.work_path)
 
     def get_emitted(self) -> list[StatementEntity]:
