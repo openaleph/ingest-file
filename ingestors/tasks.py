@@ -15,7 +15,6 @@ from servicelayer.archive.util import ensure_path
 
 from ingestors import __version__
 from ingestors.directory import DirectoryIngestor
-from ingestors.exc import ProcessingException
 from ingestors.manager import Manager
 from ingestors.support.ocr import init_ocr
 
@@ -81,11 +80,6 @@ def ingest(job: DatasetJob) -> None:
 
     # FIXME
     gc.collect()
-
-    # exceptions are swallowed earlier, but we want to tell procrastinate
-    # that this task fail if it threw any exception
-    if manager.error:
-        raise ProcessingException(manager.error)
 
 
 def ingest_path(

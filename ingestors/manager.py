@@ -94,7 +94,6 @@ class Manager:
         self.work_path = ensure_path(mkdtemp(prefix="ingestor-"))
         self.emitted = MemoryStore()
         self.archive = get_archive(self.dataset)
-        self.error = None
 
     def make_entity(self, schema, parent=None):
         schema = model.get(schema)
@@ -255,8 +254,6 @@ class Manager:
             log.exception(f"[{repr(entity)}] Failed to process: {pexc}")
             INGESTIONS_FAILED.labels(ingestor=ingestor_name).inc()
             entity.set("processingError", stringify(pexc))
-            # tell procrastinate we had an error
-            self.error = stringify(pexc)
         finally:
             self.finalize(entity)
 
