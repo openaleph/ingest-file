@@ -41,9 +41,9 @@ dependencies = [
     "python-calamine (>=0.7.0,<0.8.0)",
     # servicelayer extras requirements
     "boto3 (>=1.11.9,<2.0.0)",
-    "openaleph-procrastinate (>=5.3.2,<6.0.0)",
+    "openaleph-procrastinate (>=5.3.3,<6.0.0)",
     "openaleph-servicelayer (>=1.24.0,<2.0.0)",
-    "ftm-lakehouse[postgres] (>=0.5.0,<0.6.0)",
+    "ftm-lakehouse (>=0.5.1,<0.6.0)",
     "tesserocr (>=2.11.0,<3.0.0)",
 ]
 
