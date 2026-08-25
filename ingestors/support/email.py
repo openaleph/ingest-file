@@ -25,7 +25,12 @@ class EmailIdentity(object):
         We want to create a Person entity even if we only have
         a valid name, or a valid e-mail.
         """
+        # `label` and `entity` are set up front, before the early return
+        # below: callers read them off every identity they build, and
+        # `CalendarIngestor.address_entity` does it without a guard.
         self.email = None
+        self.label = None
+        self.entity = None
         if email:
             self.email = ascii_text(stringify(email))
             # "     mailto:  uSEr@example.com  "
@@ -49,15 +54,12 @@ class EmailIdentity(object):
 
         # This should be using formataddr, but I cannot figure out how
         # to use that without encoding the name.
-        self.label = None
         if self.name is not None and self.email is not None:
             self.label = "%s <%s>" % (self.name, self.email)
         elif self.name is None and self.email is not None:
             self.label = self.email
         elif self.email is None and self.name is not None:
             self.label = self.name
-
-        self.entity = None
 
         # e-mail dumps might be organized in folders named after the e-mail address
         # which would otherwise result in merging a Folder entity with a Person entity
@@ -174,8 +176,8 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
         if isinstance(identities, types.GeneratorType):
             identities = list(identities)
         for identity in ensure_list(identities):
-            # if the EmailIdentity obj has an invalid email attr, skip
-            if not hasattr(identity, "entity"):
+            # the header carried no usable address, so there is no Person
+            if identity.entity is None:
                 continue
             if eprop is not None:
                 entity.add(eprop, identity.entity)
