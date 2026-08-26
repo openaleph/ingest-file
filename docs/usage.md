@@ -46,3 +46,33 @@ DEBUG=1 ingestors ingest -d my_dataset ./path/to/files
 ## CLI Reference
 
 [CLI reference](./reference/cli.md)
+
+## Minimal Out-Of-The-Box  Example
+Note that supplying a sqlite database is not valid in `OPENALEPH_DB_URI`.
+Assuming a postgres database `ingestdb` reachable at `localhost:5432`:
+
+```bash
+docker run -it --rm \
+    -v "$PWD":/data \
+    -e ARCHIVE_PATH=/data/archive \
+    -e FTM_STORE_URI=sqlite:////data/followthemoney.store \
+    -e OPENALEPH_DB_URI=postgresql://user:password@localhost:5432/ingestdb \
+    -e DEBUG=1 \
+    --network=host \
+    ghcr.io/openaleph/ingest-file \
+    ingestors ingest -d my_dataset /data/example.pdf
+```
+
+Which does the following:  
+Given a file in the current directory called `example.pdf`,
+ingest the file and output the resulting dataset to the file `./followthemoney.store`,
+an sqlite database.
+This also produces the directory `./archive`, which will contain the file
+you just ingested.
+
+Note, that this still requires setting up the database beforehand using 
+```bash
+docker run \
+    ...    \
+    openaleph-procrastinate init-db
+```
