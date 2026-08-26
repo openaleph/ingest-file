@@ -2,12 +2,14 @@ import logging
 import re
 import types
 from email.utils import parseaddr, parsedate_to_datetime
+from functools import cached_property
 from typing import List
 
 from banal import ensure_list
 from followthemoney.types import registry
 from ftmq.store.fragments.utils import safe_fragment
 from normality import ascii_text, safe_filename, squash_spaces, stringify
+from servicelayer.archive.util import checksum as file_checksum
 
 from ingestors.support.cache import CacheSupport
 from ingestors.support.html import HTMLSupport
@@ -79,7 +81,6 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
 
     MID_RE = re.compile(r"<([^>]*)>")
     ENCODED_HEADER_PATTERN = re.compile(r"=\?{1}(.+)\?{1}([B|Q])\?{1}(.+)\?{1}=.*")
-    attachments_checksums = set()
 
     # Generic MIME types that email clients often use incorrectly for attachments.
     # When these are encountered, let python-magic detect the actual content type.
@@ -89,6 +90,14 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
         "application/x-binary",
         "text/plain",
     )
+
+    @cached_property
+    def attachments_checksums(self) -> set:
+        """Digests of the attachments already ingested from the message at hand,
+        so `RFC822Ingestor`'s ripmime sweep doesn't ingest them a second time.
+        Hashed with `file_checksum` which is always sha1 regardless of backend
+        implementation."""
+        return set()
 
     def ingest_attachment(self, entity, name, mime_type, body):
         has_body = body is not None and len(body)
@@ -105,6 +114,7 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
                 fh.write(body)
 
         checksum = self.manager.store(file_path, mime_type=mime_type)
+        self.attachments_checksums.add(file_checksum(file_path))
         file_path.unlink()
 
         child = self.manager.make_entity("Document", parent=entity)
@@ -115,7 +125,6 @@ class EmailSupport(TempFileSupport, HTMLSupport, CacheSupport):
         # let python-magic detect the actual content type during ingestion.
         if mime_type and mime_type not in self.GENERIC_MIME_TYPES:
             child.add("mimeType", mime_type)
-        self.attachments_checksums.add(checksum)
         self.manager.queue_entity(child)
 
     def get_header(self, msg, *headers) -> List:
