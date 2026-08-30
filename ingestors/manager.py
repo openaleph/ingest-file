@@ -10,6 +10,7 @@ from banal import ensure_list
 from followthemoney import EntityProxy, StatementEntity, model
 from followthemoney.helpers import entity_filename
 from followthemoney.namespace import Namespace
+from ftmq.store.fragments.loader import DEFAULT_FRAGMENT
 from ftmq.store.fragments.utils import safe_fragment
 from ftmq.store.memory import MemoryStore
 from ftmq.util import ensure_entity
@@ -25,6 +26,7 @@ from servicelayer.extensions import get_extensions
 
 from ingestors import __version__
 from ingestors.directory import DirectoryIngestor
+from ingestors.email.olm import MIME as OPF_MESSAGE_MIME
 from ingestors.exc import EMPTY_MSG, ENCRYPTED_MSG, ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.misc.tika import TikaIngestor
@@ -32,6 +34,12 @@ from ingestors.settings import OP_INGEST, Settings
 from ingestors.util import filter_text, remove_directory
 
 log = logging.getLogger(__name__)
+
+# Marker types ingest-file puts on children of its own to route them to a
+# specific ingestor. libmagic cannot produce them – an OLM message is just an
+# xml file, and the child carries no file name to match on either – so they are
+# the one kind of declared mimeType `Manager.auction` must not overrule.
+ROUTING_MIME_TYPES = frozenset([OPF_MESSAGE_MIME])
 
 
 INGESTIONS_SUCCEEDED = Counter(
@@ -131,7 +139,7 @@ class Manager:
         # the repositories hand the fragment through to the backend as-is, so
         # non-string keys (e.g. a row or component index) have to be coerced
         # here – the lakehouse writes it into a string arrow column
-        self.writer.put(entity, stringify(fragment), origin=origin)
+        self.writer.put(entity, stringify(fragment) or DEFAULT_FRAGMENT, origin=origin)
         with self.emitted.writer() as bulk:
             if self.settings.procrastinate_dehydrate_entities:
                 bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
@@ -148,11 +156,15 @@ class Manager:
             self.emit_entity(doc, fragment=safe_fragment(fragment))
 
     def auction(self, file_path, entity) -> type[Ingestor]:
-        if not entity.has("mimeType"):
-            if file_path.is_dir():
-                entity.add("mimeType", DirectoryIngestor.MIME_TYPE)
-                return DirectoryIngestor
-            entity.add("mimeType", self.MAGIC.from_file(file_path.as_posix()))
+        if file_path.is_dir():
+            entity.set("mimeType", DirectoryIngestor.MIME_TYPE)
+            return DirectoryIngestor
+
+        # The ingestor that wins decides the entity's schema, so it has to be a
+        # function of the file instead of the `mimeType` prop. Therefore sniff
+        # the bytes and let it overrule what a mail header or a crawler claimed.
+        if not ROUTING_MIME_TYPES.intersection(entity.get("mimeType")):
+            entity.set("mimeType", self.MAGIC.from_file(file_path.as_posix()))
 
         if "application/encrypted" in entity.get("mimeType"):
             raise ProcessingException(ENCRYPTED_MSG)
