@@ -2215,14 +2215,14 @@ tqdm = ["tqdm"]
 
 [[package]]
 name = "ftm-lakehouse"
-version = "0.5.2"
+version = "0.6.0"
 description = "Data standard, storage and retrieval for structured and unstructured FollowTheMoney data"
 optional = false
 python-versions = "<3.15,>=3.11"
 groups = ["main"]
 files = [
-    {file = "ftm_lakehouse-0.5.2-py3-none-any.whl", hash = "sha256:d9562d89dc1a839450cf625a2ea63a7fc395939ca5b4bb064439ad88b622bbcf"},
-    {file = "ftm_lakehouse-0.5.2.tar.gz", hash = "sha256:fc9426b0b33ae7a9b7fd45f078fb475f1745a097cfbb7ef26a5a3b4765388493"},
+    {file = "ftm_lakehouse-0.6.0-py3-none-any.whl", hash = "sha256:56189a8bd7bcbc85ce2c61d80ec30dce1fd2efa64ff04c9a0d034f4172c6e71c"},
+    {file = "ftm_lakehouse-0.6.0.tar.gz", hash = "sha256:75ab6c7dcb848cd5499cc4348a6b2cf98b7761feeeffe37ea6725a8761a9c5e1"},
 ]
 
 [package.dependencies]
@@ -4054,7 +4054,7 @@ develop = false
 anystore = {version = ">=1.2.7,<2.0.0", extras = ["http", "s3"]}
 cachetools = "<6"
 followthemoney = ">=4.10.1,<5.0.0"
-ftm-lakehouse = {version = ">=0.5.0,<0.6.0", extras = ["postgres"]}
+ftm-lakehouse = {version = ">=0.6.0,<0.7.0", extras = ["postgres"]}
 ftmq = ">=5.0.0,<6.0.0"
 openaleph-servicelayer = ">=1.24.0,<2.0.0"
 procrastinate = ">=3.9.0,<4.0.0"
@@ -4067,7 +4067,7 @@ pydantic-settings = ">=2.15.0,<3.0.0"
 type = "git"
 url = "https://github.com/openaleph/openaleph-procrastinate.git"
 reference = "HEAD"
-resolved_reference = "67989579a9a57cfb9d678c27727bb9490698d0e5"
+resolved_reference = "51a6efb0718f5abf9d6b67186b6be6299d1c3f95"
 
 [[package]]
 name = "openaleph-servicelayer"
@@ -7132,4 +7132,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.15"
-content-hash = "cad62f710d22dfad765b3ef6817477049e49516daa38dca9554e7185def6f939"
+content-hash = "aae52c3a96d15d62931c6f6e0131385df18737dec86b067e14d28efcb358f4a9"
