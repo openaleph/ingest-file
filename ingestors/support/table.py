@@ -137,7 +137,9 @@ class CalamineSpreadsheetSupport(TableSupport):
                 # See https://github.com/alephdata/ingest-file/issues/171
                 self.manager.emit_entity(table, fragment="initial")
                 log.debug("Sheet: %s", name)
-                row_count = self.emit_row_tuples(table, self.calamine_generate_rows(sheet))
+                row_count = self.emit_row_tuples(
+                    table, self.calamine_generate_rows(sheet)
+                )
                 if row_count == 0:
                     table.set("processingError", EMPTY_SHEET_MSG)
                     table.set("processingStatus", self.manager.STATUS_FAILURE)
