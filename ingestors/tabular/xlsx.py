@@ -5,7 +5,7 @@ from anystore.types import Uri
 from followthemoney import EntityProxy, model
 from openpyxl import load_workbook
 
-from ingestors.exc import ProcessingException
+from ingestors.exc import EMPTY_SHEET_MSG, ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.ooxml import OOXMLSupport
 from ingestors.support.table import CalamineSpreadsheetSupport
@@ -68,9 +68,11 @@ class ExcelXMLIngestor(Ingestor, CalamineSpreadsheetSupport, OOXMLSupport):
                     # See https://github.com/alephdata/ingest-file/issues/171
                     self.manager.emit_entity(table, fragment="initial")
                     log.debug("Sheet: %s", name)
-                    self.emit_row_tuples(table, self.generate_rows(sheet))
-                    if table.has("csvHash"):
-                        self.manager.emit_entity(table)
+                    row_count = self.emit_row_tuples(table, self.generate_rows(sheet))
+                    if row_count == 0:
+                        table.set("processingError", EMPTY_SHEET_MSG)
+                        table.set("processingStatus", self.manager.STATUS_FAILURE)
+                    self.manager.emit_entity(table)
             except Exception as err:
                 raise ProcessingException("Cannot read Excel file: %s" % err) from err
             finally:
