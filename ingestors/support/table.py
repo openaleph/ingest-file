@@ -65,7 +65,7 @@ class TableSupport(EncodingSupport, TempFileSupport):
                 )
             csv_hash = self.manager.store(csv_path, mime_type=CSV)
             table.set("csvHash", csv_hash)
-        table.set("rowCount", row_count + 1)
+        table.set("rowCount", row_count)
         table.set("columns", registry.json.pack(headers))
         return row_count
 
