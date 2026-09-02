@@ -1,5 +1,6 @@
 import csv
 import logging
+from io import StringIO
 from itertools import chain
 
 from anystore.types import Uri
@@ -18,6 +19,14 @@ log = logging.getLogger(__name__)
 
 _MISSING = object()
 
+# Flush a text fragment once it holds this many rows or characters. The size cap
+# matters because `EntityProxy.add` silently drops a value that would push the
+# entity over `registry.text.total_size` (30M characters): as one CSV blob a
+# fragment is all-or-nothing, where the old list of cell values merely lost its
+# tail. It also bounds how much of the table is buffered in memory.
+FRAGMENT_ROWS = 10_000
+FRAGMENT_CHARS = 5 * 1024 * 1024
+
 
 class TableSupport(EncodingSupport, TempFileSupport):
     """Handle creating rows from an ingestor."""
@@ -26,7 +35,7 @@ class TableSupport(EncodingSupport, TempFileSupport):
 
     def _emit_value_rows(self, table, value_rows, headers):
         """Write rows of raw cell values (each aligned to ``headers``) to a CSV
-        and emit table metadata.
+        and emit table metadata. Chunks of csv are emitted as text fragments.
 
         Shared core for the dict- and tuple-based entry points: it sanitises
         cells, skips fully-empty rows, streams chunked text fragments and sets
@@ -35,34 +44,47 @@ class TableSupport(EncodingSupport, TempFileSupport):
         sanitize = sanitize_text
         csv_path = self.make_work_file(table.id)
         row_count = 0
-        cell_values: set[str] = set()
+        cell_count = 0
+        fragment_rows = 0
+        fragment_buffer = StringIO()
+
+        def flush_fragment():
+            self.manager.emit_text_fragment(
+                table, fragment_buffer.getvalue(), row_count
+            )
+            log.info(
+                "Table emit [%s]: %s cells from %s rows ...",
+                table,
+                cell_count,
+                row_count,
+            )
+            fragment_buffer.seek(0)
+            fragment_buffer.truncate(0)
+
         with open(csv_path, "w", encoding=self.DEFAULT_ENCODING) as fp:
             csv_writer = csv.writer(fp, dialect="unix")
+            csv_fragment = csv.writer(
+                fragment_buffer, dialect="unix", quoting=csv.QUOTE_MINIMAL
+            )
             for raw in value_rows:
                 values = [sanitize(v) or "" for v in raw]
                 if not any(values):
                     continue
+                cell_count += len(values)
                 csv_writer.writerow(values)
-                cell_values.update(values)
+                csv_fragment.writerow(values)
                 row_count += 1
-                if row_count % 10000 == 0:
-                    log.info(
-                        "Table emit [%s]: %s cell values from %s rows ...",
-                        table,
-                        len(cell_values),
-                        row_count,
-                    )
-                    self.manager.emit_text_fragment(table, list(cell_values), row_count)
-                    cell_values = set()
+                fragment_rows += 1
+                if (
+                    fragment_rows >= FRAGMENT_ROWS
+                    or fragment_buffer.tell() >= FRAGMENT_CHARS
+                ):
+                    flush_fragment()
+                    cell_count = 0
+                    fragment_rows = 0
         if row_count > 0:
-            if len(cell_values):
-                self.manager.emit_text_fragment(table, list(cell_values), row_count)
-                log.info(
-                    "Table emit [%s]: %s cell values from %s rows ...",
-                    table,
-                    len(cell_values),
-                    row_count,
-                )
+            if cell_count:
+                flush_fragment()
             csv_hash = self.manager.store(csv_path, mime_type=CSV)
             table.set("csvHash", csv_hash)
         table.set("rowCount", row_count + 1)
