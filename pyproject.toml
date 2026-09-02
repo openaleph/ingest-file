@@ -43,7 +43,7 @@ dependencies = [
     "boto3 (>=1.11.9,<2.0.0)",
     "openaleph-procrastinate @ git+https://github.com/openaleph/openaleph-procrastinate.git",
     "openaleph-servicelayer (>=1.24.0,<2.0.0)",
-    "ftm-lakehouse[postgres] (>=0.6.1,<0.7.0)",
+    "ftm-lakehouse[postgres] (>=0.7.0,<0.8.0)",
     "tesserocr (>=2.11.0,<3.0.0)",
 ]
 
