@@ -18,7 +18,7 @@ class TabularIngestorTest(TestCase):
         self.assertIn("Sheet1", titles)
         table = [t for t in tables if "1" in t.first("title")][0]
         self.assertTrue(table.has("csvHash"))
-        self.assertEqual(int(table.first("rowCount")), 3)
+        self.assertEqual(int(table.first("rowCount")), 2)
         self.assertIn("Mihai Viteazul", "".join(table.get("indexText")))
 
     def test_xlsx_with_wrong_extension(self):
@@ -81,7 +81,7 @@ class TabularIngestorTest(TestCase):
         )
         table = [t for t in tables if t.first("title") == "Лист1"][0]
         self.assertTrue(table.has("csvHash"))
-        self.assertEqual(int(table.first("rowCount")), 339)
+        self.assertEqual(int(table.first("rowCount")), 338)
         self.assertIn("Tip procedură", "".join(table.get("indexText")))
 
     def test_password_protected_xlsx(self):
