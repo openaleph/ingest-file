@@ -124,6 +124,8 @@ class LocalOCRService(object):
                 languages = self.language_list(languages)
                 with self.engine(languages) as api:
                     # TODO: play with contrast and sharpening the images.
+                    if image.mode not in ("RGB", "RGBA", "L"):
+                        image = image.convert("RGB")
                     start_time = time.time()
                     api.SetImage(image)
                     text = api.GetUTF8Text()
