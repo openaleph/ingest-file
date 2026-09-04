@@ -6,6 +6,7 @@ from odf.table import Table, TableCell, TableRow
 from odf.teletype import extractText
 from odf.text import P
 
+from ingestors.exc import EMPTY_SHEET_MSG
 from ingestors.ingestor import Ingestor
 from ingestors.support.opendoc import OpenDocumentSupport
 from ingestors.support.table import CalamineSpreadsheetSupport
@@ -79,6 +80,8 @@ class OpenOfficeSpreadsheetIngestor(
             # in the middle of processing.
             # See https://github.com/alephdata/ingest-file/issues/171
             self.manager.emit_entity(table, fragment="initial")
-            self.emit_row_tuples(table, self.generate_csv(sheet))
-            if table.has("csvHash"):
-                self.manager.emit_entity(table)
+            row_count = self.emit_row_tuples(table, self.generate_csv(sheet))
+            if row_count == 0:
+                table.set("processingError", EMPTY_SHEET_MSG)
+                table.set("processingStatus", self.manager.STATUS_FAILURE)
+            self.manager.emit_entity(table)

@@ -6,7 +6,7 @@ from anystore.types import Uri
 from followthemoney import EntityProxy, model
 from xlrd.biffh import XLRDError
 
-from ingestors.exc import ENCRYPTED_MSG, ProcessingException
+from ingestors.exc import EMPTY_SHEET_MSG, ENCRYPTED_MSG, ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.ole import OLESupport
 from ingestors.support.table import CalamineSpreadsheetSupport
@@ -70,9 +70,11 @@ class ExcelIngestor(Ingestor, CalamineSpreadsheetSupport, OLESupport):
                 # in the middle of processing.
                 # See https://github.com/alephdata/ingest-file/issues/171
                 self.manager.emit_entity(table, fragment="initial")
-                self.emit_row_tuples(table, self.generate_csv(sheet))
-                if table.has("csvHash"):
-                    self.manager.emit_entity(table)
+                row_count = self.emit_row_tuples(table, self.generate_csv(sheet))
+                if row_count == 0:
+                    table.set("processingError", EMPTY_SHEET_MSG)
+                    table.set("processingStatus", self.manager.STATUS_FAILURE)
+                self.manager.emit_entity(table)
         except XLRDError as err:
             raise ProcessingException("Invalid Excel file: %s" % err) from err
         finally:

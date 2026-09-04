@@ -10,7 +10,7 @@ from followthemoney.util import sanitize_text
 from python_calamine import CalamineError, CalamineWorkbook, PasswordError
 from rigour.mime.types import CSV
 
-from ingestors.exc import ENCRYPTED_MSG, ProcessingException
+from ingestors.exc import EMPTY_SHEET_MSG, ENCRYPTED_MSG, ProcessingException
 from ingestors.manager import Manager
 from ingestors.support.encoding import EncodingSupport
 from ingestors.support.temp import TempFileSupport
@@ -87,8 +87,9 @@ class TableSupport(EncodingSupport, TempFileSupport):
                 flush_fragment()
             csv_hash = self.manager.store(csv_path, mime_type=CSV)
             table.set("csvHash", csv_hash)
-        table.set("rowCount", row_count + 1)
+        table.set("rowCount", row_count)
         table.set("columns", registry.json.pack(headers))
+        return row_count
 
     def emit_row_dicts(self, table, rows, headers=None):
         rows = iter(rows)
@@ -158,8 +159,12 @@ class CalamineSpreadsheetSupport(TableSupport):
                 # See https://github.com/alephdata/ingest-file/issues/171
                 self.manager.emit_entity(table, fragment="initial")
                 log.debug("Sheet: %s", name)
-                self.emit_row_tuples(table, self.calamine_generate_rows(sheet))
-                if table.has("csvHash"):
-                    self.manager.emit_entity(table)
+                row_count = self.emit_row_tuples(
+                    table, self.calamine_generate_rows(sheet)
+                )
+                if row_count == 0:
+                    table.set("processingError", EMPTY_SHEET_MSG)
+                    table.set("processingStatus", self.manager.STATUS_FAILURE)
+                self.manager.emit_entity(table)
         except CalamineError as err:
             raise ProcessingException("Cannot read workbook: %s" % err) from err
