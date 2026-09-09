@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 
 from followthemoney import model
 from rigour.mime import normalize_mimetype
-from servicelayer.archive.util import checksum as servicelayer_checksum
+from servicelayer.archive.util import checksum as file_checksum
 
 from ingestors.email.helpers import fix_rfc822
 from ingestors.exc import ProcessingException
@@ -164,6 +164,11 @@ class RFC822Ingestor(Ingestor, EmailSupport, EncodingSupport):
         with TemporaryDirectory() as temp_dir:
             # -p = prefix filename to be used on files without a filename
             # --prefix = rename by putting unique code at the front of the filename
+            # --recursion-max 2 = the message and its direct parts only.
+            # Unbounded (the default), ripmime flattens the whole tree: a
+            # nested email yields its own attachments here as well, and since
+            # the nested email is queued as a child and swept again, every
+            # level would re-queue everything below it.
             cmd = [
                 "ripmime",
                 "-q",
@@ -174,6 +179,8 @@ class RFC822Ingestor(Ingestor, EmailSupport, EncodingSupport):
                 "-p",
                 ignore_prefix,
                 "--prefix",
+                "--recursion-max",
+                "2",
             ]
             try:
                 subprocess.run(
@@ -186,7 +193,10 @@ class RFC822Ingestor(Ingestor, EmailSupport, EncodingSupport):
                 temp_dir_path = Path(temp_dir)
                 for attachment_path in temp_dir_path.iterdir():
                     if not attachment_path.name.startswith(ignore_prefix):
-                        content_hash = servicelayer_checksum(attachment_path)
+                        # same digest `ingest_attachment` records, so an
+                        # attachment the mime walk already handled is not
+                        # ingested a second time
+                        content_hash = file_checksum(attachment_path)
                         if content_hash not in self.attachments_checksums:
                             mime_type = self.manager.MAGIC.from_file(
                                 attachment_path.as_posix()

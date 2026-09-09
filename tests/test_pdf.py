@@ -2,7 +2,8 @@
 
 from normality.cleaning import collapse_spaces
 
-from ingestors.exc import ENCRYPTED_MSG
+from ingestors.exc import EMPTY_MSG, ENCRYPTED_MSG
+from ingestors.manager import Manager
 from tests.support import TestCase
 
 
@@ -15,7 +16,13 @@ class PDFIngestorTest(TestCase):
     def test_match_empty(self):
         fixture_path, entity = self.fixture("empty.pdf")
         self.manager.ingest(fixture_path, entity)
-        self.assertNotEqual(entity.first("mimeType"), "application/pdf")
+        self.assertEqual(entity.first("processingStatus"), Manager.STATUS_FAILURE)
+        self.assertEqual(entity.first("processingError"), EMPTY_MSG)
+        # the emitted entity keeps its file properties
+        self.assertEqual(entity.first("fileName"), "empty.pdf")
+        self.assertEqual(int(entity.first("fileSize")), 0)
+        self.assertIsNotNone(entity.first("contentHash"))
+        self.assertIsNotNone(entity.first("mimeType"))
 
     def test_ingest_binary_mode(self):
         fixture_path, entity = self.fixture("readme.pdf")
@@ -27,7 +34,7 @@ class PDFIngestorTest(TestCase):
             "Ingestors extract useful information" " in a structured standard format",
             self.manager.entities[0].first("bodyText"),
         )
-        entities = list(self.dataset.iterate(entity_id=entity.id))
+        entities = list(self.dataset.iterate(entity_ids=entity.id))
         self.assertEqual(len(entities), 1)
         text = entities[0].first("indexText")
         self.assertIn("Ingestors extract useful information", text)
@@ -203,7 +210,8 @@ class PDFIngestorTest(TestCase):
         emitted = self.get_emitted()
         assert len(emitted) == 3
 
-        page = emitted[1]
+        # pick the first page
+        page = [e for e in emitted if e.first("index", quiet=True) == "1"][0]
         assert page.schema.name == "Page"
         assert "IRIDECEA HOLDINGS LIMITED" in "\n".join(page.get("bodyText"))
 
@@ -234,6 +242,29 @@ class PDFIngestorTest(TestCase):
 
             assert expected[page_no] in page_text
 
+    def test_ingest_pdf_metadata(self):
+        fixture_path, entity = self.fixture("udhr_ger.pdf")
+        self.manager.ingest(fixture_path, entity)
+
+        self.assertEqual(
+            entity.first("title"),
+            "Resolution 217 A (III) der Generalversammlung vom 10",
+        )
+        self.assertEqual(entity.first("author"), "OHCHR")
+
+    def test_ingest_pdf_xmp_metadata(self):
+        fixture_path, entity = self.fixture("xmp-meta.pdf")
+        self.manager.ingest(fixture_path, entity)
+
+        self.assertEqual(
+            entity.first("title"), "XMP Specification Part 2: Additional Properties"
+        )
+        self.assertIn("Adobe Systems Incorporated", entity.get("author"))
+        self.assertEqual(entity.first("authoredAt"), "2022-02-21T11:04:24")
+        self.assertIn(
+            "uuid:2787bba1-e336-4796-830c-a96ae8465299", entity.get("messageId")
+        )
+
     def test_pdf_type3_fonts(self):
         """From https://github.com/pymupdf/PyMuPDF/issues/1943"""
         fixture_path, entity = self.fixture("example.pdf")
@@ -242,7 +273,8 @@ class PDFIngestorTest(TestCase):
         emitted = self.get_emitted()
         assert len(emitted) == 10
 
-        page = emitted[0]
+        # get 8th page
+        page = [e for e in emitted if e.first("index", quiet=True) == "8"][0]
         assert page.schema.name == "Page"
         assert page.properties["index"][0] == "8"
         text = "\n".join(page.get("bodyText"))

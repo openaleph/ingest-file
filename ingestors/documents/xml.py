@@ -1,11 +1,11 @@
-from lxml import etree, html
 from followthemoney import model
+from lxml import etree, html
 
-from ingestors.ingestor import Ingestor
-from ingestors.support.xml import XMLSupport
-from ingestors.support.html import HTMLSupport
-from ingestors.support.encoding import EncodingSupport
 from ingestors.exc import ProcessingException
+from ingestors.ingestor import Ingestor
+from ingestors.support.encoding import EncodingSupport
+from ingestors.support.html import HTMLSupport
+from ingestors.support.xml import XMLSupport
 
 
 class XMLIngestor(Ingestor, EncodingSupport, XMLSupport, HTMLSupport):
@@ -15,8 +15,7 @@ class XMLIngestor(Ingestor, EncodingSupport, XMLSupport, HTMLSupport):
     EXTENSIONS = ["xml"]
     SCORE = 1
     MAX_SIZE = 4 * 1024 * 1024
-    XSLT = etree.XML(
-        b"""<?xml version="1.0" encoding="UTF-8"?>
+    XSLT = etree.XML(b"""<?xml version="1.0" encoding="UTF-8"?>
         <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
             version="1.0">
         <xsl:output omit-xml-declaration="yes" indent="yes"/>
@@ -52,8 +51,7 @@ class XMLIngestor(Ingestor, EncodingSupport, XMLSupport, HTMLSupport):
             </tr>
         </xsl:template>
 
-        </xsl:stylesheet>"""
-    )
+        </xsl:stylesheet>""")
 
     def ingest(self, file_path, entity):
         """Ingestor implementation."""

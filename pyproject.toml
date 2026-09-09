@@ -1,6 +1,6 @@
 [project]
 name = "ingestors"
-version = "5.3.1-rc5"
+version = "5.3.2"
 description = "Ingestors extract the contents of mixed unstructured documents into structured (followthemoney) data. "
 authors = [
     { name = "Friedrich Lindenberg", email = "friedrich@pudo.org" },
@@ -9,15 +9,13 @@ authors = [
 ]
 readme = "README.md"
 license = "AGPL-3.0"
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.12,<3.15"
 dependencies = [
     # base dependencies
     "banal (>=1.1.2,<2.0.0)",
     "normality (>=3.1.0,<4.0.0)",
-    "followthemoney (>=4.9.2,<5.0.0)",
-    "ftmq[postgres] (>=4.9.2,<5.0.0)",
-    # nomenklatura 4.11 removed Resolver.make_default, which ftmq still calls
-    "nomenklatura (>=4.10,<4.11)",
+    "followthemoney (>=4.11.0,<5.0.0)",
+    "ftmq (>=5.1.0,<6.0.0)",
     "pyicu (>=2.15.3,<3.0.0)",
     # ingest dependencies
     "dbf (>=0.99.11,<0.100.0)",
@@ -39,12 +37,14 @@ dependencies = [
     "cryptography (>=46.0.2,<47.0.0)",
     "prometheus-client (>=0.20.0,<0.21.0)",
     "sentry_sdk (==2.0.1)",
+    "tika (>=3.3.2,<4.0.0)",
+    "python-calamine (>=0.7.0,<0.8.0)",
     # servicelayer extras requirements
     "boto3 (>=1.11.9,<2.0.0)",
-    "openaleph-procrastinate @ git+https://github.com/openaleph/openaleph-procrastinate.git",
-    "openaleph-servicelayer (>=1.24.0,<2.0.0)",
-    "tika (>=3.1.0,<4.0.0)",
-    "python-calamine (>=0.7.0,<0.8.0)",
+    "openaleph-procrastinate (>=5.3.4,<6.0.0)",
+    "openaleph-servicelayer (>=1.25.0,<2.0.0)",
+    "ftm-lakehouse[postgres] (>=0.8.1,<0.9.0)",
+    "tesserocr (>=2.11.0,<3.0.0)",
 ]
 
 [project.scripts]
@@ -92,9 +92,6 @@ audio = "ingestors.media.audio:AudioIngestor"
 video = "ingestors.media.video:VideoIngestor"
 json = "ingestors.misc.jsonfile:JSONIngestor"
 
-[project.optional-dependencies]
-ocr = ["tesserocr (==2.6.2)"]
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
@@ -105,7 +102,7 @@ pytest-cov = "^7.0.0"
 click = "^8.2.1"
 pre-commit = "^4.2.0"
 bump2version = "^1.0.1"
-black = "^25.1.0"
+black = "^26.5.1"
 ruff = "^0.11.13"
 pytest-env = "^1.1.5"
 memray = "^1.17.2"
@@ -116,9 +113,6 @@ poetry-plugin-export = ">=1.8"
 
 [tool.pytest_env]
 DEBUG = 1
-OPENALEPH_ANALYZE_DEFER = 0
-OPENALEPH_INDEX_DEFER = 0
-PROCRASTINATE_DB_URI = "memory://"
-FTM_FRAGMENTS_URI = "sqlite:///ingest_test.db"
+PROCRASTINATE_DB_URI = "sqlite:///:memory:"
 TIKA_PATH = "./contrib"
 INGESTORS_TIKA_FALLBACK = 1

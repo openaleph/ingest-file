@@ -2,41 +2,48 @@ import gc
 from pathlib import Path
 
 from anystore.logging import get_logger
-from followthemoney import registry
+from followthemoney.dataset.util import dataset_name_check
 from followthemoney.proxy import EntityProxy
+from ftm_lakehouse.core.conventions import tag
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.app import make_app
 from openaleph_procrastinate.model import DatasetJob
+from openaleph_procrastinate.settings import OpenAlephSettings
 from openaleph_procrastinate.tasks import task
 from prometheus_client import Info
 from servicelayer.archive.util import ensure_path
 
 from ingestors import __version__
 from ingestors.directory import DirectoryIngestor
-from ingestors.exc import ProcessingException
 from ingestors.manager import Manager
+from ingestors.support.ocr import init_ocr
 
 SYSTEM = Info("ingestfile_system", "ingest-file system information")
 SYSTEM.info({"ingestfile_version": __version__})
 
+# tasks run in a worker thread, this has to happen here on the main thread
+init_ocr()
+
 app = make_app(__loader__.name)
 sync_app = make_app(__loader__.name, sync=True)
+settings = OpenAlephSettings()
 
-IGNORE_ANALYSIS = ("Workbook", "Table", "Package", "Folder")
+# container schemata that carry no text of their own. Compared by exact name:
+# `is_a` would also match everything extending them, and `Email` extends
+# `Folder` (it holds its attachments), which would exclude mailbox NER.
+SKIP_ANALYSIS = ("Workbook", "Package", "Folder")
 
 
 def should_analyze(e: EntityProxy) -> bool:
+    """Whether an emitted entity should be handed to `ftm-analyze`. This runs on
+    whatever `Manager.get_emitted` returns (most likely stub entities without
+    full payload)"""
     if e.schema.is_a("Analyzable"):
-        for schema in IGNORE_ANALYSIS:
-            if e.schema.is_a(schema):
-                return False
-        for txt in e.get_type_values(registry.text):
-            if txt:
-                return True
+        return e.schema.name not in SKIP_ANALYSIS
     return False
 
 
-@task(app=app, retry=defer.tasks.ingest.retries)
+@task(app=app, retry=defer.tasks.ingest.retries, tracer_uri=settings.redis_url)
 def ingest(job: DatasetJob) -> None:
     to_analyze: list[EntityProxy] = []
     to_index: list[EntityProxy] = []
@@ -73,30 +80,50 @@ def ingest(job: DatasetJob) -> None:
     # FIXME
     gc.collect()
 
-    # exceptions are swallowed earlier, but we want to tell procrastinate
-    # that this task fail if it threw any exception
-    if manager.error:
-        raise ProcessingException(manager.error)
-
 
 def ingest_path(
-    dataset: str, path: Path, languages: list[str], foreign_id: str | None = None
+    dataset: str,
+    path: Path,
+    languages: list[str] | None = None,
+    foreign_id: str | None = None,
 ):
-    context = {"languages": languages, "namespace": foreign_id or dataset}
+    if foreign_id:
+        foreign_id = dataset_name_check(foreign_id)
+    context = {"languages": languages or [], "namespace": foreign_id or dataset}
     manager = Manager(sync_app, dataset, context)
     path = ensure_path(path)
     log = get_logger(__name__, dataset=dataset, context=context, path=path)
     if path is not None:
         if path.is_file():
             entity = manager.make_entity("Document")
-            checksum = manager.store(path)
+            checksum = manager.store(path, origin=tag.CRAWL_ORIGIN)
             entity.set("contentHash", checksum)
             entity.make_id(checksum)
             entity.set("fileName", path.name)
             log.info(f"Queue: `{path.name}` ({checksum})", entity=entity.to_dict())
+            manager.emit_entity(entity, origin=tag.CRAWL_ORIGIN)
             manager.queue_entity(entity)
         if path.is_dir():
-            DirectoryIngestor.crawl(manager, path)
+            DirectoryIngestor.crawl(manager, path, origin=tag.CRAWL_ORIGIN)
     emitted = manager.get_emitted()
     log.info(f"Emitted {len(emitted)} entities.", emitted=[e.id for e in emitted])
+    manager.close()
+
+
+def ingest_entity(
+    dataset: str,
+    entity: EntityProxy,
+    languages: list[str] | None = None,
+    foreign_id: str | None = None,
+):
+    if foreign_id:
+        foreign_id = dataset_name_check(foreign_id)
+    context = {"languages": languages or [], "namespace": foreign_id or dataset}
+    manager = Manager(sync_app, dataset, context)
+    log = get_logger(__name__, dataset=dataset, context=context, entity_id=entity.id)
+    if not entity.schema.is_a("Document") or not entity.has("contentHash"):
+        log.warn("Skip ingest, not of schema `Document` or missing `contentHash`")
+        return
+    log.info(f"Queue: `{entity.first('fileName')}` ({entity.first('contentHash')})")
+    manager.queue_entity(entity)
     manager.close()

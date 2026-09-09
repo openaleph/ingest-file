@@ -1,8 +1,8 @@
 import logging
+
 import chardet
-from normality import stringify, guess_encoding
-from normality.encoding import guess_file_encoding, normalize_result
-from normality.encoding import normalize_encoding
+from normality import guess_encoding, stringify
+from normality.encoding import guess_file_encoding, normalize_encoding, normalize_result
 
 from ingestors.exc import ProcessingException
 

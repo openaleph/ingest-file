@@ -1,3 +1,15 @@
+x-ingest-env: &ingest-env
+  OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
+  FTM_FRAGMENTS_URI: postgresql://ingest:ingest@postgres/ingest
+  # the lakehouse journal defaults to an in-memory sqlite, which is per-process
+  # and so invisible to any other reader. the driver has to be spelled out: the
+  # journal hands the uri to `create_engine` as-is and bare `postgresql://`
+  # resolves to psycopg2, which we don't ship (only psycopg 3)
+  LAKEHOUSE_JOURNAL_URI: postgresql+psycopg://ingest:ingest@postgres/ingest
+  LOG_FORMAT: TEXT # TEXT or JSON
+  PYTHONWARNINGS: "ignore"
+  TYPER_STANDARD_TRACEBACK: True
+
 services:
   postgres:
     image: postgres:17
@@ -5,54 +17,66 @@ services:
       POSTGRES_USER: ingest
       POSTGRES_PASSWORD: ingest
       POSTGRES_DATABASE: ingest
+    # over tcp, not the socket: during initdb the entrypoint runs a temporary
+    # server that only listens on the socket, so a socket check reports ready
+    # before the database actually accepts connections
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ingest -d ingest"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
 
   redis:
     image: redis:alpine
     command: ["redis-server", "--save", "3600", "10"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
 
   ingest-file:
     build:
-      dockerfile: Dockerfile
+      context: .
+      target: runtime
     hostname: ingest
     tmpfs:
       - /tmp:mode=777
       - /data:mode=777
     environment:
-      OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
-      FTM_STORE_URI: postgresql://ingest:ingest@postgres/ingest
-      LOG_FORMAT: TEXT # TEXT or JSON
-      PYTHONWARNINGS: "ignore"
-      TYPER_STANDARD_TRACEBACK: True
-    entrypoint: ["/bin/sh", "-c", "echo 'openaleph-procrastinate init-db' && exec \"$@\"", "--"]
+      <<: *ingest-env
     volumes:
       - "./ingestors:/ingestors/ingestors"
       - "./data:/ingestors/data"
-      - "./requirements.txt:/ingestors/requirements.txt"
-      - "./setup.py:/ingestors/setup.py"
     depends_on:
-      - postgres
-      - redis
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
 
   test-ingest-file:
     build:
       context: .
-      dockerfile: Dockerfile.test
+      target: test
     image: test-ingest-file
     hostname: ingest
     tmpfs:
       - /tmp:mode=777
+      # LAKEHOUSE_URI points here, so lakehouse output is ephemeral per run
       - /data:mode=777
     environment:
-      OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
-      FTM_STORE_URI: postgresql://ingest:ingest@postgres/ingest
-      LOG_FORMAT: TEXT # TEXT or JSON
+      <<: *ingest-env
       DEBUG: 1
-      PYTHONWARNINGS: "ignore"
-      TYPER_STANDARD_TRACEBACK: True
-    entrypoint: ["/bin/sh", "-c", "echo 'openaleph-procrastinate init-db' && exec \"$@\"", "--"]
+      PYTHONDEVMODE: 1
+      PYTHONTRACEMALLOC: 1
     volumes:
+      - "./ingestors:/ingestors/ingestors"
       - "./tests:/ingestors/tests"
-      - "./data:/ingestors/data"
+    # both backends talk to postgres: the fragments store, the lakehouse journal
+    # and, either way, the tags cache. `run` brings it up for us, so `make
+    # test-*` works without a preceding `make services` (CI relies on that).
     depends_on:
-      - postgres
-      - redis
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy

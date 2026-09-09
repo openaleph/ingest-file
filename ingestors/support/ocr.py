@@ -17,6 +17,22 @@ log = logging.getLogger(__name__)
 TESSERACT_LOCALE = "C"
 
 
+def init_ocr() -> None:
+    """Import tesserocr while still on the main thread.
+
+    tesserocr initialises cysignals on import, which installs signal handlers,
+    and `signal.signal` raises "signal only works in main thread of the main
+    interpreter" anywhere else. Procrastinate runs sync tasks in a worker
+    thread (`sync_to_async(..., thread_sensitive=False)`) and the ingestor
+    modules are only imported when the auction first runs, so without this the
+    import lands in that thread and every OCR attempt fails.
+    """
+    try:
+        import tesserocr  # noqa: F401
+    except Exception as exc:
+        log.warning("Cannot initialise OCR engine: %s", exc)
+
+
 @cache
 def get_ocr_service() -> "LocalOCRService":
     return LocalOCRService()
@@ -93,15 +109,23 @@ class LocalOCRService(object):
         try:
             image = Image.open(BytesIO(data))
             image.load()
+            # tesserocr re-encodes the image in its source format and decodes it
+            # again through leptonica. The manylinux wheels bundle a leptonica
+            # built without GIF and JPEG-2000 support, so those formats fail with
+            # "pixReadMem: function not present". Clearing the format makes
+            # tesserocr take its format-agnostic path instead.
+            image.format = None
         except Exception as exc:
-            log.error("Cannot open image data using Pillow: %s", exc)
-            return ""
+            log.exception("Cannot open image data using Pillow: %s", exc)
+            return None
 
         try:
             with temp_locale(TESSERACT_LOCALE):
                 languages = self.language_list(languages)
                 with self.engine(languages) as api:
                     # TODO: play with contrast and sharpening the images.
+                    if image.mode not in ("RGB", "RGBA", "L"):
+                        image = image.convert("RGB")
                     start_time = time.time()
                     api.SetImage(image)
                     text = api.GetUTF8Text()
@@ -118,8 +142,10 @@ class LocalOCRService(object):
                     )
                     return text
         except Exception as exc:
-            log.error("OCR error: %s", exc)
-            return ""
+            # returning None (not "") so that `extract_ocr_text` doesn't cache
+            # the failure for this content hash
+            log.exception("OCR error: %s", exc)
+            return None
         finally:
             if image is not None:
                 image.close()

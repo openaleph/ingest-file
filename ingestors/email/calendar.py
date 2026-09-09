@@ -27,6 +27,9 @@ class CalendarIngestor(Ingestor, EncodingSupport):
     SCORE = 10
 
     def address_entity(self, address):
+        """The `Person` for a calendar address, or `None` when the component
+        carries none (`event.ical` has neither ORGANIZER nor ATTENDEE) or the
+        address is unusable."""
         identity = EmailIdentity(self.manager, None, address)
         return identity.entity
 

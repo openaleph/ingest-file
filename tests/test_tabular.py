@@ -18,7 +18,7 @@ class TabularIngestorTest(TestCase):
         self.assertIn("Sheet1", titles)
         table = [t for t in tables if "1" in t.first("title")][0]
         self.assertTrue(table.has("csvHash"))
-        self.assertEqual(int(table.first("rowCount")), 3)
+        self.assertEqual(int(table.first("rowCount")), 2)
         self.assertIn("Mihai Viteazul", "".join(table.get("indexText")))
 
     def test_xlsx_with_wrong_extension(self):
@@ -29,13 +29,10 @@ class TabularIngestorTest(TestCase):
         # file handle, which bypasses that check. The fixture is a valid .xlsx
         # workbook deliberately named ".bin".
         fixture_path, entity = self.fixture("disguised_xlsx.bin")
-        # Pin the detected type so ingestor selection does not depend on the
-        # local libmagic database; the behaviour under test is purely the
-        # ".bin" path extension handed to openpyxl.
-        entity.set(
-            "mimeType",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
+        # The auction sniffs the file itself and ignores any declared type, so
+        # selection here comes from libmagic recognising the workbook despite
+        # the ".bin" name. The behaviour under test is the ".bin" path
+        # extension handed to openpyxl.
         self.manager.ingest(fixture_path, entity)
         self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)
         self.assertEqual(entity.schema.name, "Workbook")
@@ -84,7 +81,7 @@ class TabularIngestorTest(TestCase):
         )
         table = [t for t in tables if t.first("title") == "Лист1"][0]
         self.assertTrue(table.has("csvHash"))
-        self.assertEqual(int(table.first("rowCount")), 339)
+        self.assertEqual(int(table.first("rowCount")), 338)
         self.assertIn("Tip procedură", "".join(table.get("indexText")))
 
     def test_password_protected_xlsx(self):

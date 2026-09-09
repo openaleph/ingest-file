@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 from pprint import pprint  # noqa
 
-from .support import TestCase
+from openaleph_procrastinate import defer
+
+from ingestors.tasks import app
+from tests.support import TestCase
+
+ATTACHMENT_NAME = "7b2fd116582e4b66be0451b4755fff1d.png"
 
 
 class RFC822Test(TestCase):
@@ -167,3 +172,46 @@ class RFC822Test(TestCase):
                 "This is the body of a plaintext message.",
             ],
         )
+
+
+class AttachmentFanoutTest(TestCase):
+    """`RFC822Ingestor` walks the mime tree and then sweeps the same message
+    with ripmime to catch what a broken message hides from the parser. Both
+    passes queue what they find, so the sweep has to recognise the attachments
+    the walk already handled – otherwise every message queues its attachments
+    twice, and since an attached message is queued as a child and swept again,
+    that doubling compounds with every level of nesting."""
+
+    def queued(self) -> list[dict]:
+        """The entities queued for ingestion, straight off the connector."""
+        return [
+            entity
+            for job in app.connector.jobs.values()
+            if job["queue_name"] == defer.tasks.ingest.queue
+            for entity in job["args"]["payload"]["entities"]
+        ]
+
+    def test_attachment_queued_once(self):
+        """The sweep hashes the file it extracted to compare it against the
+        attachments already ingested. Comparing that against the *archive*
+        checksum instead never matches on the lakehouse, which hashes sha256
+        where the legacy archive hashes sha1."""
+        fixture_path, entity = self.fixture("fnf.msg")
+        self.manager.ingest(fixture_path, entity)
+        self.assertSuccess(entity)
+
+        queued = self.queued()
+        self.assertEqual(len(queued), 1, [e["id"] for e in queued])
+        self.assertEqual(queued[0]["properties"]["fileName"], [ATTACHMENT_NAME])
+
+    def test_nested_message_not_flattened(self):
+        """An unbounded ripmime sweep hands back the whole tree, so the inner
+        image would be queued here as well as under the message it belongs to.
+        Only the direct attachment may be queued."""
+        fixture_path, entity = self.fixture("email_nested_attachment.eml")
+        self.manager.ingest(fixture_path, entity)
+        self.assertSuccess(entity)
+
+        queued = self.queued()
+        self.assertEqual(len(queued), 1, [e["id"] for e in queued])
+        self.assertEqual(queued[0]["properties"]["fileName"], ["inner.eml"])
