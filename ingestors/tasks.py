@@ -28,7 +28,6 @@ app = make_app(__loader__.name)
 sync_app = make_app(__loader__.name, sync=True)
 settings = OpenAlephSettings()
 
-
 # container schemata that carry no text of their own. Compared by exact name:
 # `is_a` would also match everything extending them, and `Email` extends
 # `Folder` (it holds its attachments), which would exclude mailbox NER.
