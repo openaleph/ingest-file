@@ -10,11 +10,12 @@ from ingestors.exc import EMPTY_SHEET_MSG, ENCRYPTED_MSG, ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.ole import OLESupport
 from ingestors.support.table import CalamineSpreadsheetSupport
+from ingestors.support.tika import TikaSupport
 
 log = logging.getLogger(__name__)
 
 
-class ExcelIngestor(Ingestor, CalamineSpreadsheetSupport, OLESupport):
+class ExcelIngestor(Ingestor, CalamineSpreadsheetSupport, OLESupport, TikaSupport):
     MIME_TYPES = [
         "application/excel",
         "application/x-excel",
@@ -79,3 +80,5 @@ class ExcelIngestor(Ingestor, CalamineSpreadsheetSupport, OLESupport):
             raise ProcessingException("Invalid Excel file: %s" % err) from err
         finally:
             book.release_resources()
+
+        self.ingest_embedded(file_path, parent=entity)
