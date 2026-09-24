@@ -108,9 +108,6 @@ pytest-env = "^1.1.5"
 memray = "^1.17.2"
 fakeredis = "<2.31"
 
-[tool.poetry.requires-plugins]
-poetry-plugin-export = ">=1.8"
-
 [tool.pytest_env]
 DEBUG = 1
 PROCRASTINATE_DB_URI = "sqlite:///:memory:"
