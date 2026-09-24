@@ -4,6 +4,7 @@ from pathlib import Path
 from anystore.logging import get_logger
 from followthemoney.dataset.util import dataset_name_check
 from followthemoney.proxy import EntityProxy
+from ftm_lakehouse import get_documents
 from ftm_lakehouse.core.conventions import tag
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.app import make_app
@@ -82,20 +83,41 @@ def ingest(job: DatasetJob) -> None:
     gc.collect()
 
 
+def get_crawled(dataset: str, base: Path) -> set[str]:
+    """Local paths of the files a previous crawl of `base` recorded, read from
+    the lakehouse documents export scoped to the crawl origin. It lists each
+    file by its folder path below the crawl root and its name, so it only
+    matches up when crawling from the same relative root again."""
+    documents = get_documents(dataset)
+    return {
+        base.joinpath(document.relative_path).as_posix()
+        for document in documents.stream(tag.CRAWL_ORIGIN)
+    }
+
+
 def ingest_path(
     dataset: str,
     path: Path,
     languages: list[str] | None = None,
     foreign_id: str | None = None,
+    incremental: bool = False,
 ):
     if foreign_id:
         foreign_id = dataset_name_check(foreign_id)
+    if incremental and not settings.lakehouse:
+        raise ValueError("Incremental ingest requires `OPENALEPH_LAKEHOUSE=1`")
     context = {"languages": languages or [], "namespace": foreign_id or dataset}
     manager = Manager(sync_app, dataset, context)
     path = ensure_path(path)
     log = get_logger(__name__, dataset=dataset, context=context, path=path)
     if path is not None:
-        if path.is_file():
+        crawled: set[str] = set()
+        if incremental:
+            crawled = get_crawled(dataset, path if path.is_dir() else path.parent)
+            log.info(f"Incremental: {len(crawled)} files already crawled.")
+        if path.is_file() and path.as_posix() in crawled:
+            log.info(f"Skip already crawled: `{path.name}`")
+        elif path.is_file():
             entity = manager.make_entity("Document")
             checksum = manager.store(path, origin=tag.CRAWL_ORIGIN)
             entity.set("contentHash", checksum)
@@ -105,7 +127,9 @@ def ingest_path(
             manager.emit_entity(entity, origin=tag.CRAWL_ORIGIN)
             manager.queue_entity(entity)
         if path.is_dir():
-            DirectoryIngestor.crawl(manager, path, origin=tag.CRAWL_ORIGIN)
+            DirectoryIngestor.crawl(
+                manager, path, origin=tag.CRAWL_ORIGIN, skip=crawled
+            )
     emitted = manager.get_emitted()
     log.info(f"Emitted {len(emitted)} entities.", emitted=[e.id for e in emitted])
     manager.close()

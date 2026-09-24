@@ -65,10 +65,18 @@ def cli_ingest(
     languages: Annotated[
         Optional[list[str]], typer.Option(help="3-letter language code (ISO 639)")
     ] = None,
+    incremental: Annotated[
+        bool,
+        typer.Option(
+            "--incremental",
+            help="Skip the files listed in the lakehouse documents crawl export "
+            "(requires OPENALEPH_LAKEHOUSE=1)",
+        ),
+    ] = False,
 ):
     """Queue a local directory for ingest."""
     with ErrorHandler(log):
-        ingest_path(dataset, path, languages or [], foreign_id)
+        ingest_path(dataset, path, languages or [], foreign_id, incremental)
 
         if settings.debug:
             from openaleph_procrastinate.settings import DeferSettings
