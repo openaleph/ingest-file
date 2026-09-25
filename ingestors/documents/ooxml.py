@@ -5,9 +5,10 @@ from followthemoney import model
 from ingestors.ingestor import Ingestor
 from ingestors.support.ooxml import OOXMLSupport
 from ingestors.support.pdf import PDFSupport
+from ingestors.support.tika import TikaSupport
 
 
-class OfficeOpenXMLIngestor(Ingestor, OOXMLSupport, PDFSupport):
+class OfficeOpenXMLIngestor(Ingestor, OOXMLSupport, PDFSupport, TikaSupport):
     """Office/Word document ingestor class.
 
     Converts the document to PDF and extracts the text.
@@ -48,6 +49,8 @@ class OfficeOpenXMLIngestor(Ingestor, OOXMLSupport, PDFSupport):
             self.pdf_alternative_extract(
                 entity, pdf_path, self.manager, checksum=entity.first("pdfHash")
             )
+
+        self.ingest_embedded(file_path, parent=entity)
 
     @classmethod
     def match(cls, file_path, entity):
