@@ -19,7 +19,6 @@ class ExcelXMLIngestor(Ingestor, CalamineSpreadsheetSupport, OOXMLSupport, TikaS
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # noqa: B950
         "application/vnd.openxmlformats-officedocument.spreadsheetml.template",  # noqa: B950
         "application/vnd.ms-excel.sheet.macroenabled.12",
-        "application/vnd.ms-excel.sheet.binary.macroenabled.12",
         "application/vnd.ms-excel.template.macroenabled.12",
         "application/vnd.ms-excel.sheet.macroEnabled.main+xml",
     ]

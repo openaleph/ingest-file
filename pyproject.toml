@@ -91,6 +91,7 @@ svg = "ingestors.media.svg:SVGIngestor"
 audio = "ingestors.media.audio:AudioIngestor"
 video = "ingestors.media.video:VideoIngestor"
 json = "ingestors.misc.jsonfile:JSONIngestor"
+xlsb = "ingestors.tabular.xlsb:ExcelBinaryIngestor"
 
 [build-system]
 requires = ["poetry-core"]

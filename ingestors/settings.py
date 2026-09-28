@@ -27,7 +27,7 @@ class Settings(OpenAlephSettings):
     tika_fallback: bool = False
     """Use Apache Tika as a text extraction fallback"""
 
-    calamine: bool = False
+    calamine: bool = True
     """Use the Rust calamine implementation (python-calamine) for spreadsheets"""
 
     lakehouse_flush_size: int = 10_000
