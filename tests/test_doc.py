@@ -79,4 +79,4 @@ class DocumentIngestorTest(TestCase):
         pages = self.get_emitted("Page")
         page2 = next(p for p in pages if p.first("index") == "2")
         self.assertEqual(len(pages), 2)
-        self.assertNotIn("ingest-file", page2.first("bodyText") or "")
+        self.assertNotIn("ingest-file", page2.first("bodyText"))
