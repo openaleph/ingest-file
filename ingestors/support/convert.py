@@ -114,6 +114,8 @@ class DocumentConvertSupport(CacheSupport, TempFileSupport):
         try:
             # convert(inpath, indata, outpath, convert_to, filtername,
             #         filter_options, update_index, infiltername, password)
+            # `password` needs unoserver >= 3.5 (the listener image ships
+            # 3.7), older servers fault on the 9th argument.
             result = proxy.convert(
                 inpath,
                 indata,

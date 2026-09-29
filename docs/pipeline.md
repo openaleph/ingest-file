@@ -103,7 +103,7 @@ Depending on the file type, other investors may be used to ingest the file and t
 First, the ingestor extracts metadata from the document, for example the document title, author, and creation/modification timestamps.
 
 ### Convert to PDF
-For further processing and previewing in the OpenAleph web UI, ingest-file converts many common Office-like file types to a PDF file. It uses a headless LibreOffice subprocess to convert the Word file (previously retrieved from the storage backend) to a PDF file
+For further processing and previewing in the OpenAleph web UI, ingest-file converts many common Office-like file types to a PDF file. It uses a headless LibreOffice subprocess to convert the Word file (previously retrieved from the storage backend) to a PDF file, or, if configured, a persistent LibreOffice listener which saves the process start for every document (see [LibreOffice listener](setup.md#libreoffice-listener-unoserver)).
 
 The resulting PDF file is stored using the configured storage backend (in the same way the source Word file was stored, i.e. a SHA1 hash is computed and used to derive the path the PDF file is stored at).
 

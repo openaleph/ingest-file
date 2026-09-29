@@ -45,6 +45,9 @@ services:
       - /data:mode=777
     environment:
       <<: *ingest-env
+      # convert office documents through the unoserver service below instead
+      # of spawning libreoffice per document
+      # INGESTORS_UNOSERVER_URI: http://unoserver:2003
     volumes:
       - "./ingestors:/ingestors/ingestors"
       - "./data:/ingestors/data"
@@ -53,6 +56,19 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+
+  # optional persistent libreoffice listener, one per worker (it converts one
+  # document at a time). Behind a profile so nothing else starts it:
+  # `docker compose --profile unoserver up -d unoserver`
+  unoserver:
+    image: ghcr.io/openaleph/ingest-file-unoserver:main
+    profiles:
+      - unoserver
+    # unoserver exits with status 0 after a conversion timeout, so `on-failure`
+    # would leave it down
+    restart: unless-stopped
+    tmpfs:
+      - /tmp:mode=777
 
   test-ingest-file:
     build:

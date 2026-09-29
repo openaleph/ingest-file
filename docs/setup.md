@@ -100,6 +100,27 @@ OPENALEPH_DB_URI=postgresql://user:password@host/database
 OPENALEPH_PROCRASTINATE_DB_URI=postgresql://user:password@host/database
 ```
 
+### LibreOffice listener (unoserver)
+
+Office documents are converted to PDF with LibreOffice. By default every document spawns a fresh LibreOffice process, which costs a second or more per document before any work is done. Optionally, the conversion can go through a persistent [unoserver](https://github.com/unoconv/unoserver) listener instead, which keeps LibreOffice running between documents.
+
+The listener is published as its own image, built on the same base image (and so the same LibreOffice and fonts) as ingest-file itself: [ghcr.io/openaleph/ingest-file-unoserver](https://github.com/openaleph/ingest-file/pkgs/container/ingest-file-unoserver). It listens on port `2003`. Point the worker at it:
+
+```bash
+INGESTORS_UNOSERVER_URI=http://unoserver:2003
+```
+
+The supplied `docker-compose.yml` contains an example service, started with `docker compose --profile unoserver up -d unoserver`. A listener you run yourself needs unoserver 3.5 or newer; older versions reject every conversion.
+
+A few rules for deploying it:
+
+- **One listener per worker.** A listener converts one document at a time, so workers sharing a listener queue up behind each other.
+- **Always restart it.** unoserver exits when LibreOffice dies or a conversion runs into its timeout, and expects to be restarted. It exits with status `0` after a timeout, so use `restart: always` / `unless-stopped` (or a Kubernetes Deployment), not `on-failure`.
+- **Don't address a separate container as `localhost`.** A `localhost` listener is assumed to share the worker's filesystem and is handed file paths. A listener in another container (including a sidecar in the same Kubernetes pod) must be addressed by its service name or IP so the file contents are sent instead.
+- **Keep its timeout below the worker's.** The image kills a conversion after 280 seconds (`--conversion-timeout 280`), below the worker's `INGESTORS_CONVERT_TIMEOUT` (300 seconds), so a stuck document fails once instead of being retried by spawning. Arguments given to the container are appended and override the defaults, e.g. `--conversion-timeout 100`.
+
+If the listener can't be reached, the worker logs a warning and falls back to spawning LibreOffice for that document. A document LibreOffice can't convert fails right away, as spawning would fail the same way.
+
 ## Redis
 
 Accepts any valid redis url (including a password). If `REDIS_URL` is not set, an in-memory cache is used which doesn't persist.

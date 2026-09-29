@@ -147,6 +147,28 @@ ENV LANG='en_US.UTF-8' \
 RUN groupadd -g 1000 -r app \
     && useradd -m -u 1000 -s /bin/false -g app app
 
+# unoserver keeps LibreOffice running between conversions (see
+# INGESTORS_UNOSERVER_URI). It needs the `uno` bindings, which debian only ships
+# for its own python3 (pulled in by libreoffice), so it's installed for that
+# interpreter rather than the image's.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip3 --python /usr/bin/python3 install --break-system-packages unoserver==3.7
+
+# ---------------------------------------------------------------------------
+# unoserver: the listener as its own image, on exactly the libreoffice and
+# fonts the workers fall back to spawning. Defined ahead of `base` so that one
+# stays the default build target.
+# ---------------------------------------------------------------------------
+FROM system AS unoserver
+
+USER app
+EXPOSE 2003
+
+# The server-side kill stays below the client's INGESTORS_CONVERT_TIMEOUT (300s)
+# so a wedged document fails outright instead of being retried by spawning.
+# Arguments given to the container are appended and override these.
+ENTRYPOINT ["unoserver", "--interface", "0.0.0.0", "--conversion-timeout", "280"]
+
 # ---------------------------------------------------------------------------
 # wheels: PyICU publishes no wheels, so compile one here. Isolating it keeps
 # the compile out of the final image's layers and lets it cache on its own.

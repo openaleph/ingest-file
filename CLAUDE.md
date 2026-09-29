@@ -163,6 +163,11 @@ pytest -s tests/test_doc.py::TestClass::test_method -xvs
 Settings managed via `ingestors/settings.py` using Pydantic. Environment variables prefixed with `INGESTORS_`:
 
 - `INGESTORS_CONVERT_TIMEOUT` - LibreOffice conversion timeout (default: 300s)
+- `INGESTORS_UNOSERVER_URI` - Convert through a persistent unoserver listener
+  (`ghcr.io/openaleph/ingest-file-unoserver`, built from the `unoserver` stage of
+  `Dockerfile.base`) instead of spawning LibreOffice; unreachable falls back to
+  spawn. `localhost` means "shared filesystem" (paths are sent), any other host
+  gets the bytes
 - `INGESTORS_TIKA_FALLBACK` - Enable Apache Tika fallback for unknown formats
 - `INGESTORS_LAKEHOUSE_FLUSH_SIZE` - Emitted entities until the lakehouse journal is
   flushed to parquet (default: 10000)
