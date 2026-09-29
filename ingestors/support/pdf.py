@@ -170,6 +170,8 @@ class PDFSupport(DocumentConvertSupport, OCRSupport, XMLSupport):
         else:
             for image_index, image in enumerate(images, start=1):
                 xref = image[0]
+                if not page.get_image_rects(xref):
+                    continue
                 img = pdf_doc.extract_image(xref)
                 if img:
                     image_path = os.path.join(
