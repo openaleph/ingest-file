@@ -1,6 +1,6 @@
 [project]
 name = "ingestors"
-version = "5.3.3-rc1"
+version = "5.3.3-rc3"
 description = "Ingestors extract the contents of mixed unstructured documents into structured (followthemoney) data. "
 authors = [
     { name = "Friedrich Lindenberg", email = "friedrich@pudo.org" },
@@ -15,7 +15,7 @@ dependencies = [
     "banal (>=1.1.2,<2.0.0)",
     "normality (>=3.1.0,<4.0.0)",
     "followthemoney (>=4.11.0,<5.0.0)",
-    "ftmq (>=5.1.0,<6.0.0)",
+    "ftmq (>=5.1.1,<6.0.0)",
     "pyicu (>=2.15.3,<3.0.0)",
     # ingest dependencies
     "dbf (>=0.99.11,<0.100.0)",
@@ -43,7 +43,7 @@ dependencies = [
     "boto3 (>=1.11.9,<2.0.0)",
     "openaleph-procrastinate (>=5.3.4,<6.0.0)",
     "openaleph-servicelayer (>=1.25.0,<2.0.0)",
-    "ftm-lakehouse[postgres] (>=0.8.1,<0.9.0)",
+    "ftm-lakehouse[postgres] (>=0.8.3,<0.9.0)",
     "tesserocr (>=2.11.0,<3.0.0)",
 ]
 
@@ -108,9 +108,6 @@ ruff = "^0.11.13"
 pytest-env = "^1.1.5"
 memray = "^1.17.2"
 fakeredis = "<2.31"
-
-[tool.poetry.requires-plugins]
-poetry-plugin-export = ">=1.8"
 
 [tool.pytest_env]
 DEBUG = 1

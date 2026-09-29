@@ -39,11 +39,11 @@ class TikaSupport(CacheSupport, TempFileSupport):
     ):
         parsed = unpack.from_file(parent_file.open("rb"))
         attachments = parsed.get("attachments") or {}
-        log.critical(f"Tika extracted {len(attachments.items())} attachments")
+        log.info(f"Tika extracted {len(attachments.items())} attachments.")
         for name, data in attachments.items():
-            log.critical(f"Analyzing attachment: {name}")
+            log.debug(f"Analyzing attachment: {name}")
             if not data:
-                log.critical(f"Attachment {name} has no data")
+                log.error(f"Attachment {name} has no data")
                 continue
             file_name = safe_filename(name, default="embedded")
             file_path = self.make_work_file(file_name)
@@ -57,7 +57,7 @@ class TikaSupport(CacheSupport, TempFileSupport):
             child.make_id(name, checksum)
             child.add("contentHash", checksum)
             child.add("fileName", name)
-            log.critical(
+            log.info(
                 f"Queuing {name} with content hash {checksum} and parent {parent.id}"
             )
             self.manager.queue_entity(child)

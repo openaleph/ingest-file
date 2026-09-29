@@ -23,7 +23,16 @@ class DirectoryIngestor(Ingestor):
         self.crawl(self.manager, file_path, parent=entity)
 
     @classmethod
-    def crawl(cls, manager, file_path, parent=None, origin: str = OP_INGEST):
+    def crawl(
+        cls,
+        manager,
+        file_path,
+        parent=None,
+        origin: str = OP_INGEST,
+        skip: set[str] | None = None,
+    ):
+        """Emit the folders and store and queue the files below `file_path`,
+        leaving out the files whose local path is in `skip`."""
         for path in file_path.iterdir():
             name = path.name
             if name is None or name in cls.SKIP_ENTRIES:
@@ -39,7 +48,9 @@ class DirectoryIngestor(Ingestor):
                 child.schema = model.get("Folder")
                 child.add("mimeType", cls.MIME_TYPE)
                 manager.emit_entity(child, origin=origin)
-                cls.crawl(manager, sub_path, parent=child, origin=origin)
+                cls.crawl(manager, sub_path, parent=child, origin=origin, skip=skip)
+            elif skip and sub_path.as_posix() in skip:
+                continue
             else:
                 checksum = manager.store(sub_path, origin=origin)
                 child.make_id(name, checksum)
