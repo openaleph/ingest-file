@@ -1,11 +1,7 @@
 x-ingest-env: &ingest-env
   OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
   FTM_FRAGMENTS_URI: postgresql://ingest:ingest@postgres/ingest
-  # the lakehouse journal defaults to an in-memory sqlite, which is per-process
-  # and so invisible to any other reader. the driver has to be spelled out: the
-  # journal hands the uri to `create_engine` as-is and bare `postgresql://`
-  # resolves to psycopg2, which we don't ship (only psycopg 3)
-  LAKEHOUSE_JOURNAL_URI: postgresql+psycopg://ingest:ingest@postgres/ingest
+  LAKEHOUSE_JOURNAL_URI: postgresql://ingest:ingest@postgres/ingest
   LOG_FORMAT: TEXT # TEXT or JSON
   PYTHONWARNINGS: "ignore"
   TYPER_STANDARD_TRACEBACK: True
@@ -17,9 +13,6 @@ services:
       POSTGRES_USER: ingest
       POSTGRES_PASSWORD: ingest
       POSTGRES_DATABASE: ingest
-    # over tcp, not the socket: during initdb the entrypoint runs a temporary
-    # server that only listens on the socket, so a socket check reports ready
-    # before the database actually accepts connections
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ingest -d ingest"]
       interval: 2s
@@ -45,9 +38,9 @@ services:
       - /data:mode=777
     environment:
       <<: *ingest-env
-      # convert office documents through the unoserver service below instead
+      # convert office documents through the unoserver services below instead
       # of spawning libreoffice per document
-      # INGESTORS_UNOSERVER_URI: http://unoserver:2003
+      # INGESTORS_UNOSERVER_URI: http://unoserver-lb:2003
     volumes:
       - "./ingestors:/ingestors/ingestors"
       - "./data:/ingestors/data"
@@ -57,9 +50,8 @@ services:
       postgres:
         condition: service_healthy
 
-  # optional persistent libreoffice listener, one per worker (it converts one
-  # document at a time). Behind a profile so nothing else starts it:
-  # `docker compose --profile unoserver up -d unoserver`
+  # optional persistent libreoffice listener. It converts one document at a
+  # time, so scale it to the number of concurrent workers.
   unoserver:
     image: ghcr.io/openaleph/ingest-file-unoserver:main
     profiles:
@@ -69,6 +61,17 @@ services:
     restart: unless-stopped
     tmpfs:
       - /tmp:mode=777
+
+  # hands each conversion to an idle unoserver replica and queues while all are
+  # busy.
+  unoserver-lb:
+    image: haproxy:lts-alpine
+    profiles:
+      - unoserver
+    restart: unless-stopped
+    configs:
+      - source: unoserver-lb
+        target: /usr/local/etc/haproxy/haproxy.cfg
 
   test-ingest-file:
     build:
@@ -96,3 +99,25 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+
+configs:
+  unoserver-lb:
+    content: |
+      defaults
+        mode tcp
+        timeout connect 5s
+        # a conversion may take up to the worker's INGESTORS_CONVERT_TIMEOUT
+        timeout client 300s
+        timeout server 300s
+        # how long a conversion waits for an idle replica
+        timeout queue 60s
+
+      resolvers docker
+        nameserver dns 127.0.0.11:53
+
+      listen unoserver
+        bind :2003
+        balance leastconn
+        # a slot for each address docker's dns returns for `unoserver` (up to
+        # 16), each taking one conversion at a time
+        server-template uno 1-16 unoserver:2003 resolvers docker init-addr none maxconn 1
