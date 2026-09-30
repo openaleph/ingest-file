@@ -1,12 +1,17 @@
 import unittest
 from pathlib import Path
 from tempfile import mkdtemp
+from unittest import mock
 
 from followthemoney import EntityProxy, StatementEntity, model, registry
 from followthemoney.namespace import Namespace
+from ftm_lakehouse import get_documents, get_entities
+from ftm_lakehouse.core.conventions import tag
+from ftm_lakehouse.operation import ExportKind, export
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.util import make_file_entity
 
+from ingestors.manager import Manager
 from ingestors.settings import OP_INGEST, Settings
 from ingestors.tasks import SKIP_ANALYSIS, app, ingest_path, should_analyze
 from tests.support import TEST_DATASET, TestCase
@@ -68,6 +73,80 @@ class IngestPathTest(TestCase):
 
         # validation happens before anything is stored
         self.assertEqual(list(self.dataset.iterate()), [])
+
+    def test_ingest_path_incremental(self):
+        """Files the documents crawl export lists are neither stored nor queued
+        again. They are matched by their path below the crawl root, so a file
+        of the same name in another folder is still new."""
+        root = self.make_tree()
+        root.joinpath("top.txt").write_text("top")
+        if not Settings().lakehouse:
+            with self.assertRaises(ValueError):
+                ingest_path(TEST_DATASET, root, incremental=True)
+            self.assertEqual(list(self.dataset.iterate()), [])
+            return
+
+        ingest_path(TEST_DATASET, root)
+        get_entities(TEST_DATASET).flush()
+        export(TEST_DATASET, ExportKind.documents)
+        crawled = {
+            document.relative_path: document.id
+            for document in get_documents(TEST_DATASET).stream(tag.CRAWL_ORIGIN)
+        }
+        self.assertEqual(set(crawled), {"sub/hello.txt", "top.txt"})
+        root.joinpath("sub", "new.txt").write_text("new")
+        root.joinpath("other").mkdir()
+        root.joinpath("other", "hello.txt").write_text("hello again")
+
+        with (
+            mock.patch.object(
+                Manager, "store", autospec=True, side_effect=Manager.store
+            ) as store,
+            mock.patch.object(
+                Manager, "queue_entity", autospec=True, side_effect=Manager.queue_entity
+            ) as queue,
+        ):
+            ingest_path(TEST_DATASET, root, incremental=True)
+            # a single file is looked up against its parent directory
+            ingest_path(TEST_DATASET, root.joinpath("top.txt"), incremental=True)
+
+        # the crawled files are still in the dataset, but not crawled again:
+        # neither queued for ingest nor stored, only the new files are
+        present = {entity.id for entity in self.dataset.iterate()}
+        self.assertLessEqual(set(crawled.values()), present)
+        queued = {call.args[1].id for call in queue.call_args_list}
+        self.assertTrue(queued.isdisjoint(crawled.values()))
+        stored = {call.args[1] for call in store.call_args_list}
+        self.assertEqual(
+            stored,
+            {root.joinpath("sub", "new.txt"), root.joinpath("other", "hello.txt")},
+        )
+
+    def test_duplicate_file_keeps_all_parents(self):
+        """Identical files in several folders are one entity, emitted once per
+        folder by separate jobs. Each placement is a fragment of its own, so no
+        emission supersedes the parent of another – while the file properties
+        still are superseded (one `processedAt`, not one per job)."""
+        self.dataset.delete()
+        root = Path(mkdtemp(dir=self.tmp_dir))
+        for folder in ("a", "b", "c"):
+            root.joinpath(folder).mkdir()
+            root.joinpath(folder, "dup.txt").write_text("same content")
+
+        ingest_path(TEST_DATASET, root)
+        app.run_worker(queues=[OP_INGEST], wait=False)
+        if Settings().lakehouse:
+            # supersession is applied on merge only
+            entities = get_entities(TEST_DATASET)
+            entities.flush()
+            entities.merge(force=True)
+
+        folders = {e.id for e in self.dataset.iterate() if e.schema.is_a("Folder")}
+        self.assertEqual(len(folders), 3)
+        (dup,) = [e for e in self.dataset.iterate() if e.first("fileName") == "dup.txt"]
+        self.assertEqual(set(dup.get("parent")), folders)
+        self.assertEqual(set(dup.get("ancestors")), folders)
+        self.assertEqual(len(dup.get("processedAt")), 1)
 
 
 class ShouldAnalyzeTest(unittest.TestCase):

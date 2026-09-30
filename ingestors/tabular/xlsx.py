@@ -9,16 +9,16 @@ from ingestors.exc import EMPTY_SHEET_MSG, ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.ooxml import OOXMLSupport
 from ingestors.support.table import CalamineSpreadsheetSupport
+from ingestors.support.tika import TikaSupport
 
 log = logging.getLogger(__name__)
 
 
-class ExcelXMLIngestor(Ingestor, CalamineSpreadsheetSupport, OOXMLSupport):
+class ExcelXMLIngestor(Ingestor, CalamineSpreadsheetSupport, OOXMLSupport, TikaSupport):
     MIME_TYPES = [
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # noqa: B950
         "application/vnd.openxmlformats-officedocument.spreadsheetml.template",  # noqa: B950
         "application/vnd.ms-excel.sheet.macroenabled.12",
-        "application/vnd.ms-excel.sheet.binary.macroenabled.12",
         "application/vnd.ms-excel.template.macroenabled.12",
         "application/vnd.ms-excel.sheet.macroEnabled.main+xml",
     ]
@@ -77,6 +77,8 @@ class ExcelXMLIngestor(Ingestor, CalamineSpreadsheetSupport, OOXMLSupport):
                 raise ProcessingException("Cannot read Excel file: %s" % err) from err
             finally:
                 book.close()
+
+        self.ingest_embedded(file_path, parent=entity)
 
     @classmethod
     def match(cls, file_path, entity):

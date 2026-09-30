@@ -28,6 +28,22 @@ services:
       timeout: 5s
       retries: 30
 
+  tika:
+    # not `latest`, that is Tika 4.x. 3.3.1.0 is the newest 3.x image, one patch
+    # behind the jar the Dockerfile bakes in (no 3.3.2 image is published)
+    image: apache/tika:3.3.1.0
+    # appended to the image entrypoint `java ... TikaServerCli -h 0.0.0.0`
+    command: ["-c", "/tika-config.xml"]
+    configs:
+      - source: tika-config
+        target: /tika-config.xml
+    # the image has neither curl nor wget
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9998"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
   ingest-file:
     build:
       context: .
@@ -48,6 +64,8 @@ services:
       redis:
         condition: service_healthy
       postgres:
+        condition: service_healthy
+      tika:
         condition: service_healthy
 
   # optional persistent libreoffice listener. It converts one document at a
@@ -99,8 +117,28 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      tika:
+        condition: service_healthy
 
 configs:
+  # Tika parses in one forked JVM, and a watchdog restarts it when a parse
+  # exceeds taskTimeoutMillis or runs out of memory, failing every request in
+  # flight. Concurrent parses share the heap: size -Xmx for the sum of the
+  # `procrastinate worker --concurrency` of all ingest workers
+  tika-config:
+    content: |
+      <?xml version="1.0" encoding="UTF-8"?>
+      <properties>
+        <server>
+          <params>
+            <taskTimeoutMillis>300000</taskTimeoutMillis>
+            <forkedJvmArgs>
+              <arg>-Xmx2g</arg>
+            </forkedJvmArgs>
+          </params>
+        </server>
+      </properties>
+      
   unoserver-lb:
     content: |
       defaults

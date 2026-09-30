@@ -102,6 +102,16 @@ class TabularIngestorTest(TestCase):
         status = self.manager.entities[0].first("processingStatus")
         self.assertEqual("failure", status)
 
+    def test_xlsb(self):
+        fixture_path, entity = self.fixture("testbin.xlsb")
+        self.manager.ingest(fixture_path, entity)
+        self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)
+        self.assertEqual(entity.schema.name, "Workbook")
+        tables = self.get_emitted("Table")
+        self.assertEqual(len(tables), 1)
+        self.assertEqual(tables[0].first("title"), "Sheet1")
+        self.assertIn("abc", "".join(tables[0].get("indexText")))
+
 
 class CalamineTabularIngestorTest(TabularIngestorTest):
     """Re-run the full tabular suite with the calamine extraction backend
