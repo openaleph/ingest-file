@@ -102,9 +102,21 @@ OPENALEPH_PROCRASTINATE_DB_URI=postgresql://user:password@host/database
 
 ### LibreOffice listener (unoserver)
 
-Office documents are converted to PDF with LibreOffice. By default every document spawns a fresh LibreOffice process, which costs a second or more per document before any work is done. Optionally, the conversion can go through a persistent [unoserver](https://github.com/unoconv/unoserver) listener instead, which keeps LibreOffice running between documents.
+Office documents are converted to PDF with LibreOffice, through a [unoserver](https://github.com/unoconv/unoserver) listener that keeps LibreOffice running between documents. Starting LibreOffice for every document instead costs a second or more per document before any work is done.
 
-The listener is published as its own image, built on the same base image (and so the same LibreOffice and fonts) as ingest-file itself: [ghcr.io/openaleph/ingest-file-unoserver](https://github.com/openaleph/ingest-file/pkgs/container/ingest-file-unoserver). It listens on port `2003`. Point the worker at it:
+#### Inline (default)
+
+Without further configuration, every worker thread starts a listener of its own the first time it converts a document, and keeps it for the next ones. It listens on free ports on `127.0.0.1`, has its own LibreOffice profile, and is handed file paths.
+
+- Starting a listener takes about 6 seconds, once per thread. It is started again when it has exited, e.g. after a conversion ran into `INGESTORS_CONVERT_TIMEOUT`.
+- Each listener keeps a LibreOffice process in memory, so a worker holds as many of them as jobs it runs at once (`procrastinate worker --concurrency`). They are stopped when the worker exits.
+- If a thread's listener can't be started at all, that thread spawns LibreOffice per document instead, and logs a warning once.
+
+The docker image has unoserver installed. Elsewhere, it has to be installed for the Python that has LibreOffice's `uno` bindings, see `Dockerfile.base`.
+
+#### As a service
+
+The listener is also published as its own image, built on the same base image (and so the same LibreOffice and fonts) as ingest-file itself: [ghcr.io/openaleph/ingest-file-unoserver](https://github.com/openaleph/ingest-file/pkgs/container/ingest-file-unoserver). It listens on port `2003`. Point the worker at it, and no listeners are started inline:
 
 ```bash
 INGESTORS_UNOSERVER_URI=http://unoserver:2003
@@ -119,7 +131,7 @@ A few rules for deploying it:
 - **Don't address a separate container as `localhost`.** A `localhost` listener is assumed to share the worker's filesystem and is handed file paths. A listener in another container (including a sidecar in the same Kubernetes pod) must be addressed by its service name or IP so the file contents are sent instead.
 - **Keep its timeout below the worker's.** The image kills a conversion after 280 seconds (`--conversion-timeout 280`), below the worker's `INGESTORS_CONVERT_TIMEOUT` (300 seconds), so a stuck document fails once instead of being retried by spawning. Arguments given to the container are appended and override the defaults, e.g. `--conversion-timeout 100`.
 
-If the listener can't be reached, the worker logs a warning and falls back to spawning LibreOffice for that document. A document LibreOffice can't convert fails right away, as spawning would fail the same way.
+In both modes, if the listener can't be reached, or stops answering, the worker logs a warning and falls back to spawning LibreOffice for that document; an inline listener that stopped answering is replaced for the next one. A document LibreOffice can't convert fails right away, as spawning would fail the same way.
 
 ## Redis
 

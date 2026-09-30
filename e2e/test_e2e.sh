@@ -44,8 +44,8 @@ psql -c "SELECT queue_name, task_name, status, COUNT(*) FROM procrastinate_jobs 
 docker compose -f docker-compose.e2e.yml down --remove-orphans -v
 
 
-#3 unoserver: convert through the listener image instead of spawning
-# libreoffice. Fails unless every document went through it and none fell back
+#3 unoserver: convert through the listener image instead of the workers' own
+# listeners. Fails unless every document went through it and none fell back
 # to spawning. One fixture per ingestor that converts to PDF.
 
 UNOSERVER_FIXTURES=("doc.doc" "hello world word.docx" "Plan.odt" "slides.ppt")

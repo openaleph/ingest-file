@@ -39,7 +39,7 @@ services:
     environment:
       <<: *ingest-env
       # convert office documents through the unoserver services below instead
-      # of spawning libreoffice per document
+      # of a listener per worker thread
       # INGESTORS_UNOSERVER_URI: http://unoserver-lb:2003
     volumes:
       - "./ingestors:/ingestors/ingestors"
