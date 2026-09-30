@@ -24,6 +24,9 @@ class Settings(OpenAlephSettings):
     convert_timeout: int = 300
     """Headless libreoffice document convert timeout in seconds"""
 
+    soffice_bin: str = "/usr/bin/libreoffice"
+    """Path to the LibreOffice/soffice binary"""
+
     tika_fallback: bool = False
     """Use Apache Tika as a text extraction fallback"""
 
