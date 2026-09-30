@@ -187,3 +187,11 @@ Backend specific, read by the libraries themselves:
   sqlite, which is invisible to any other process
 - `TEST_LAKEHOUSE_URI` - Test-only: run against this location instead of a per-test
   tmp dir
+
+Read by tika-python, on import:
+- `TIKA_SERVER_ENDPOINT` / `TIKA_CLIENT_ONLY` - Use an external Tika server (the
+  `tika` service in docker-compose). Without `TIKA_CLIENT_ONLY` tika-python starts the
+  jar in `TIKA_PATH` itself, and downloads it if missing. Any non-empty value enables
+  client-only mode, `"0"` too
+- `TIKA_PATH` - The Dockerfile bakes `tika-server.jar` + `.md5` into `/ingestors/contrib`;
+  pytest sets `./contrib`, relative to the working directory

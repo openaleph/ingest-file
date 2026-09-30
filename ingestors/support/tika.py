@@ -7,6 +7,7 @@ from followthemoney import EntityProxy
 from normality import collapse_spaces, safe_filename
 from tika import parser, unpack
 
+from ingestors.exc import ProcessingException
 from ingestors.support.cache import CacheSupport
 from ingestors.support.temp import TempFileSupport
 
@@ -21,12 +22,18 @@ class TikaSupport(CacheSupport, TempFileSupport):
         if cache_key:
             _cache_key = self.cache_key("tika", cache_key)
             result = self.tags.get(_cache_key)
-            if result is not None:
+            if result is not None and result.get("status") == 200:
                 log.info("Tika: cached result for checksum %s" % cache_key)
                 return result
 
         result = parser.from_file(fh)
         if isinstance(result, dict):
+            # tika-python doesn't raise on an error status, and with an empty
+            # body (e.g. a 503 while the server restarts) the result looks like
+            # a document without text – which must neither pass nor be cached
+            status = result.get("status")
+            if status != 200:
+                raise ProcessingException(f"Tika server returned status {status}")
             text = result.get("content")
             if text:
                 result["content"] = collapse_spaces(text)
