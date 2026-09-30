@@ -45,6 +45,22 @@ services:
   #   depends_on:
   #     - postgres
 
+  # only started by the unoserver pass, which points the worker at it
+  unoserver:
+    image: ${UNOSERVER_IMAGE:-ghcr.io/openaleph/ingest-file-unoserver:main}
+    tmpfs:
+      - /tmp:mode=777
+    # the port is bound before libreoffice is up, `info` only answers after
+    healthcheck:
+      test:
+        - CMD
+        - /usr/bin/python3
+        - -c
+        - import xmlrpc.client; xmlrpc.client.ServerProxy('http://127.0.0.1:2003').info()
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
   analyze:
     image: ghcr.io/dataresearchcenter/ftm-analyze:main
     command: procrastinate worker -q analyze --concurrency 8 --one-shot
