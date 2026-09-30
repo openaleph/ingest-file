@@ -20,8 +20,9 @@ services:
   redis:
     image: redis:alpine
 
+  # minio no longer publishes images, this is pigsty's community build
   minio:
-    image: quay.io/minio/minio
+    image: pgsty/minio
     ports:
       - "9000:9000"
       - "9001:9001"

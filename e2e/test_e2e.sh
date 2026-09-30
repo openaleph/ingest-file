@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# a failing step fails the test, instead of the run carrying on to a green exit
+set -e
+trap 'docker compose -f docker-compose.e2e.yml down --remove-orphans -v' EXIT
+
 export OPENALEPH_DB_URI=postgresql://ingest:ingest@localhost:54321/ingest
 
 #1 LAKEHOUSE=0
@@ -52,14 +56,12 @@ docker compose -f docker-compose.e2e.yml run --rm ingest-file sh -c 'for f; do i
 UNOSERVER_LOG=$(mktemp)
 docker compose -f docker-compose.e2e.yml run -T -e INGESTORS_UNOSERVER_URI=http://unoserver:2003 --rm ingest-file 2>&1 | tee "$UNOSERVER_LOG"
 
-converted=$(grep -c "Successfully converted .* via unoserver" "$UNOSERVER_LOG")
-spawned=$(grep -c "Starting LibreOffice" "$UNOSERVER_LOG")
+# grep -c exits 1 when it counts nothing
+converted=$(grep -c "Successfully converted .* via unoserver" "$UNOSERVER_LOG" || true)
+spawned=$(grep -c "Starting LibreOffice" "$UNOSERVER_LOG" || true)
 rm "$UNOSERVER_LOG"
 if [ "$converted" -ne ${#UNOSERVER_FIXTURES[@]} ] || [ "$spawned" -ne 0 ]; then
     docker compose -f docker-compose.e2e.yml logs unoserver
-    docker compose -f docker-compose.e2e.yml down --remove-orphans -v
     echo "unoserver: expected ${#UNOSERVER_FIXTURES[@]} conversions through the listener and none spawned, got $converted and $spawned"
     exit 1
 fi
-
-docker compose -f docker-compose.e2e.yml down --remove-orphans -v
