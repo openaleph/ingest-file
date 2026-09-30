@@ -25,13 +25,11 @@ class Settings(OpenAlephSettings):
     """Headless libreoffice document convert timeout in seconds"""
 
     unoserver_uri: str | None = None
-    """URI of a running unoserver XML-RPC listener (e.g. http://unoserver:2003)
-    to convert office documents to PDF with. Without it, every worker thread
-    starts a listener of its own on its first conversion and keeps it. Either
-    way, a document is converted by spawning a LibreOffice process when the
-    listener can't be reached or started. A `localhost` listener is assumed to
-    share the worker's filesystem and is handed file paths, any other host
-    gets the file contents sent over."""
+    """URI of a running unoserver XML-RPC listener 
+    to convert office documents to PDF with."""
+    
+    soffice_bin: str = "/usr/bin/libreoffice"
+    """Path to the LibreOffice/soffice binary"""
 
     tika_fallback: bool = False
     """Use Apache Tika as a text extraction fallback"""

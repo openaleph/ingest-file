@@ -3,8 +3,10 @@ from io import BytesIO
 from pathlib import PosixPath
 from typing import Any
 
+import olefile
 from followthemoney import EntityProxy
 from normality import collapse_spaces, safe_filename
+from oletools.oleobj import OleNativeStream
 from tika import parser, unpack
 
 from ingestors.exc import ProcessingException
@@ -12,6 +14,34 @@ from ingestors.support.cache import CacheSupport
 from ingestors.support.temp import TempFileSupport
 
 log = logging.getLogger(__name__)
+
+OLE_MAGIC = b"\xd0\xcf\x11\xe0"
+# https://www.loc.gov/preservation/digital/formats/fdd/fdd000392.shtml
+
+
+def _unwrap_ole_package(data: bytes) -> tuple[str, bytes] | None:
+    """Extract (filename, bytes) from an OLE Package (Ole10Native stream).
+    Returns None if data is not an OLE container or has no Package stream.
+    Spec: https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oleds/cc825ec3-f0ed-4023-97f6-13c323ac1172
+    """  # noqa: B950
+    if data[:4] != OLE_MAGIC:
+        return None
+    try:
+        with olefile.OleFileIO(BytesIO(data)) as ole:
+            ole10_streams = [
+                e for e in ole.listdir() if e and e[-1] == "\x01Ole10Native"
+            ]
+            entry = ole10_streams[0] if ole10_streams else None
+            if entry is None:
+                return None
+            raw = ole.openstream(entry).read()
+        obj = OleNativeStream(raw)
+        if not obj.filename or not obj.data:
+            return None
+        return obj.filename, obj.data
+    except Exception as exc:
+        log.warning("Failed to unpack OLE: %s", exc)
+        return None
 
 
 class TikaSupport(CacheSupport, TempFileSupport):
@@ -52,11 +82,14 @@ class TikaSupport(CacheSupport, TempFileSupport):
             if not data:
                 log.error(f"Attachment {name} has no data")
                 continue
+            unwrapped = _unwrap_ole_package(data)
+            if unwrapped is not None:
+                name, data = unwrapped
+                log.debug("Unwrapped OLE Package: %s", name)
             file_name = safe_filename(name, default="embedded")
             file_path = self.make_work_file(file_name)
             with open(file_path, "wb") as fh:
-                if data is not None:
-                    fh.write(data)
+                fh.write(data)
             # do not assign mime_type, hope the ingestor deduces it correctly
             checksum = self.manager.store(file_path)
             file_path.unlink()

@@ -310,7 +310,7 @@ class DocumentConvertSupport(CacheSupport, TempFileSupport):
         pathlib.Path(libreoffice_profile_dir).mkdir(parents=True)
 
         cmd = [
-            "/usr/bin/libreoffice",
+            settings.soffice_bin,
             '"-env:UserInstallation=file://{}"'.format(libreoffice_profile_dir),
             "--nologo",
             "--headless",
