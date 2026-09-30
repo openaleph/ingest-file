@@ -122,6 +122,32 @@ class IngestPathTest(TestCase):
             {root.joinpath("sub", "new.txt"), root.joinpath("other", "hello.txt")},
         )
 
+    def test_duplicate_file_keeps_all_parents(self):
+        """Identical files in several folders are one entity, emitted once per
+        folder by separate jobs. Each placement is a fragment of its own, so no
+        emission supersedes the parent of another – while the file properties
+        still are superseded (one `processedAt`, not one per job)."""
+        self.dataset.delete()
+        root = Path(mkdtemp(dir=self.tmp_dir))
+        for folder in ("a", "b", "c"):
+            root.joinpath(folder).mkdir()
+            root.joinpath(folder, "dup.txt").write_text("same content")
+
+        ingest_path(TEST_DATASET, root)
+        app.run_worker(queues=[OP_INGEST], wait=False)
+        if Settings().lakehouse:
+            # supersession is applied on merge only
+            entities = get_entities(TEST_DATASET)
+            entities.flush()
+            entities.merge(force=True)
+
+        folders = {e.id for e in self.dataset.iterate() if e.schema.is_a("Folder")}
+        self.assertEqual(len(folders), 3)
+        (dup,) = [e for e in self.dataset.iterate() if e.first("fileName") == "dup.txt"]
+        self.assertEqual(set(dup.get("parent")), folders)
+        self.assertEqual(set(dup.get("ancestors")), folders)
+        self.assertEqual(len(dup.get("processedAt")), 1)
+
 
 class ShouldAnalyzeTest(unittest.TestCase):
     """`should_analyze` decides whether the `ingest` task defers to

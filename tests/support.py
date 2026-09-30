@@ -8,6 +8,7 @@ from tempfile import mkdtemp
 
 from followthemoney import StatementEntity
 from ftm_lakehouse.repository.factories import clear_caches as clear_lakehouse_caches
+from ftmq.store.fragments.loader import DEFAULT_FRAGMENT
 from normality import stringify
 from openaleph_procrastinate.repository import get_archive, get_entity_store
 from openaleph_procrastinate.util import make_file_entity
@@ -16,7 +17,7 @@ from servicelayer import settings as sls
 from servicelayer.archive.util import ensure_path
 from servicelayer.tags import Tags
 
-from ingestors.manager import Manager
+from ingestors.manager import Manager, split_placement
 from ingestors.settings import OP_INGEST, Settings
 from ingestors.tasks import app
 
@@ -26,10 +27,12 @@ TEST_DATASET = "test"
 def emit_entity(self, entity, fragment=None, origin=OP_INGEST):
     """Stand-in for `Manager.emit_entity` that records what was emitted and,
     unlike the real one, leaves the entity ids un-namespaced so the tests can
-    look them up by the id they made. The fragment is coerced the same way the
-    manager does it, the backends take it as-is."""
+    look them up by the id they made. The fragment is coerced and the placement
+    split off the same way the manager does it, the backends take it as-is."""
     self.entities.append(entity)
-    self.writer.put(entity, stringify(fragment), origin=origin)
+    fragment = stringify(fragment) or DEFAULT_FRAGMENT
+    for part, part_fragment in split_placement(entity, fragment):
+        self.writer.put(part, part_fragment, origin=origin)
     with self.emitted.writer() as bulk:
         bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
 

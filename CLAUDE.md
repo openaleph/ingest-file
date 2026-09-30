@@ -95,6 +95,10 @@ nothing in this repo branches on it except where the two genuinely differ:
   is not (the stores buffer writes and sync tasks run in a thread pool)
 - Fragments must be strings — the lakehouse writes them into an Arrow string column —
   so `Manager.emit_entity` coerces them with `stringify`
+- Both backends supersede per fragment (legacy per row, the lakehouse per property on
+  merge), and identical files in several folders are one entity emitted once per
+  folder. So `emit_entity` writes `parent`/`ancestors` under a fragment of their own
+  per placement (`split_placement`), otherwise only the last copy's parent survives
 - The lakehouse takes entities from the job payload rather than re-fetching them, so
   `OpenAlephSettings` forces `procrastinate_dehydrate_entities` off when it is active
 - Content hashes differ between the backends: servicelayer uses sha1, the lakehouse

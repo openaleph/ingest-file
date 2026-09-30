@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from tempfile import mkdtemp
 from timeit import default_timer
-from typing import Any
+from typing import Any, Generator
 
 import magic
 from banal import ensure_list
@@ -40,6 +40,32 @@ log = logging.getLogger(__name__)
 # xml file, and the child carries no file name to match on either – so they are
 # the one kind of declared mimeType `Manager.auction` must not overrule.
 ROUTING_MIME_TYPES = frozenset([OPF_MESSAGE_MIME])
+
+# Where a file sits. Identical files in several folders are one entity, emitted
+# once per folder, so these must not share the fragment of the file properties.
+PLACEMENT_PROPS = ("parent", "ancestors")
+
+
+def split_placement(
+    entity: EntityProxy, fragment: str
+) -> Generator[tuple[EntityProxy, str], None, None]:
+    """Split an emission into the entity without its placement, written under
+    `fragment`, and its parent/ancestors, written under a fragment of their own
+    per distinct placement. Both backends supersede per fragment, so a copy in
+    another folder adds its parent instead of replacing the previous one, while
+    re-emitting the same copy still replaces its own."""
+    placement = sorted(
+        {v for prop in PLACEMENT_PROPS for v in entity.get(prop, quiet=True)}
+    )
+    if not placement:
+        yield entity, fragment
+        return
+    main = entity.clone()
+    stub = entity.clone()
+    for prop in list(entity.properties):
+        (main if prop in PLACEMENT_PROPS else stub).pop(prop)
+    yield main, fragment
+    yield stub, safe_fragment(" ".join(placement))
 
 
 INGESTIONS_SUCCEEDED = Counter(
@@ -139,7 +165,9 @@ class Manager:
         # the repositories hand the fragment through to the backend as-is, so
         # non-string keys (e.g. a row or component index) have to be coerced
         # here – the lakehouse writes it into a string arrow column
-        self.writer.put(entity, stringify(fragment) or DEFAULT_FRAGMENT, origin=origin)
+        fragment = stringify(fragment) or DEFAULT_FRAGMENT
+        for part, part_fragment in split_placement(entity, fragment):
+            self.writer.put(part, part_fragment, origin=origin)
         with self.emitted.writer() as bulk:
             if self.settings.procrastinate_dehydrate_entities:
                 bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
