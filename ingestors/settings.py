@@ -24,6 +24,10 @@ class Settings(OpenAlephSettings):
     convert_timeout: int = 300
     """Headless libreoffice document convert timeout in seconds"""
 
+    unoserver_uri: str | None = None
+    """URI of a running unoserver XML-RPC listener
+    to convert office documents to PDF with."""
+
     soffice_bin: str = "/usr/bin/libreoffice"
     """Path to the LibreOffice/soffice binary"""
 

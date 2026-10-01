@@ -84,6 +84,24 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # the listener from this commit's Dockerfile.base rather than the
+      # published one. Its own cache scope, as builds sharing one overwrite
+      # each other's cache
+      - name: Build unoserver container
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.base
+          target: unoserver
+          load: true
+          tags: ingest-file-unoserver:e2e
+          platforms: linux/amd64
+          cache-from: type=gha,scope=unoserver
+          cache-to: type=gha,scope=unoserver,mode=max
+
       - name: Run e2e test
         working-directory: ./e2e
+        env:
+          INGEST_IMAGE: ghcr.io/openaleph/ingest-file:${{ steps.meta.outputs.version }}
+          UNOSERVER_IMAGE: ingest-file-unoserver:e2e
         run: bash -c ./test_e2e.sh

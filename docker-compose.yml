@@ -1,16 +1,7 @@
 x-ingest-env: &ingest-env
   OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
   FTM_FRAGMENTS_URI: postgresql://ingest:ingest@postgres/ingest
-  # the lakehouse journal defaults to an in-memory sqlite, which is per-process
-  # and so invisible to any other reader. the driver has to be spelled out: the
-  # journal hands the uri to `create_engine` as-is and bare `postgresql://`
-  # resolves to psycopg2, which we don't ship (only psycopg 3)
-  LAKEHOUSE_JOURNAL_URI: postgresql+psycopg://ingest:ingest@postgres/ingest
-  # use the `tika` service instead of starting the jar baked into the image.
-  # tika-python reads these on import; any non-empty TIKA_CLIENT_ONLY enables
-  # client-only mode, "0" too – unset it to fall back to the inline server
-  TIKA_SERVER_ENDPOINT: http://tika:9998
-  TIKA_CLIENT_ONLY: 1
+  LAKEHOUSE_JOURNAL_URI: postgresql://ingest:ingest@postgres/ingest
   LOG_FORMAT: TEXT # TEXT or JSON
   PYTHONWARNINGS: "ignore"
   TYPER_STANDARD_TRACEBACK: True
@@ -22,9 +13,6 @@ services:
       POSTGRES_USER: ingest
       POSTGRES_PASSWORD: ingest
       POSTGRES_DATABASE: ingest
-    # over tcp, not the socket: during initdb the entrypoint runs a temporary
-    # server that only listens on the socket, so a socket check reports ready
-    # before the database actually accepts connections
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ingest -d ingest"]
       interval: 2s
@@ -66,6 +54,9 @@ services:
       - /data:mode=777
     environment:
       <<: *ingest-env
+      # convert office documents through the unoserver services below instead
+      # of a listener per worker thread
+      # INGESTORS_UNOSERVER_URI: http://unoserver-lb:2003
     volumes:
       - "./ingestors:/ingestors/ingestors"
       - "./data:/ingestors/data"
@@ -76,6 +67,29 @@ services:
         condition: service_healthy
       tika:
         condition: service_healthy
+
+  # optional persistent libreoffice listener. It converts one document at a
+  # time, so scale it to the number of concurrent workers.
+  unoserver:
+    image: ghcr.io/openaleph/ingest-file-unoserver:main
+    profiles:
+      - unoserver
+    # unoserver exits with status 0 after a conversion timeout, so `on-failure`
+    # would leave it down
+    restart: unless-stopped
+    tmpfs:
+      - /tmp:mode=777
+
+  # hands each conversion to an idle unoserver replica and queues while all are
+  # busy.
+  unoserver-lb:
+    image: haproxy:lts-alpine
+    profiles:
+      - unoserver
+    restart: unless-stopped
+    configs:
+      - source: unoserver-lb
+        target: /usr/local/etc/haproxy/haproxy.cfg
 
   test-ingest-file:
     build:
@@ -124,3 +138,24 @@ configs:
           </params>
         </server>
       </properties>
+      
+  unoserver-lb:
+    content: |
+      defaults
+        mode tcp
+        timeout connect 5s
+        # a conversion may take up to the worker's INGESTORS_CONVERT_TIMEOUT
+        timeout client 300s
+        timeout server 300s
+        # how long a conversion waits for an idle replica
+        timeout queue 60s
+
+      resolvers docker
+        nameserver dns 127.0.0.11:53
+
+      listen unoserver
+        bind :2003
+        balance leastconn
+        # a slot for each address docker's dns returns for `unoserver` (up to
+        # 16), each taking one conversion at a time
+        server-template uno 1-16 unoserver:2003 resolvers docker init-addr none maxconn 1

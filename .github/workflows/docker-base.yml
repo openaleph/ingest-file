@@ -46,9 +46,32 @@ jobs:
         with:
           context: .
           file: ./Dockerfile.base
+          target: base
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Docker meta (unoserver)
+        id: meta-unoserver
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/openaleph/ingest-file-unoserver
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags') }}
+      # shares every layer with the build above, so this only adds a manifest
+      - name: Build and push unoserver
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.base
+          target: unoserver
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta-unoserver.outputs.tags }}
+          labels: ${{ steps.meta-unoserver.outputs.labels }}
+          cache-from: type=gha
