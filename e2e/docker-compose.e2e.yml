@@ -22,7 +22,7 @@ services:
 
   # minio no longer publishes images, this is pigsty's community build
   minio:
-    image: pgsty/minio
+    image: docker.io/pgsty/silo:latest
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -34,6 +34,18 @@ services:
     tmpfs:
       - /data:mode=777
 
+  # creates the bucket once minio answers. `mc alias set` fails until then, and
+  # without the alias `mc mb minio/openaleph` would make a local directory
+  minio-init:
+    image: docker.io/pgsty/silo:latest
+    command:
+      - sh
+      - -c
+      - |
+        until mc alias set minio http://minio:9000 openaleph openaleph; do sleep 1; done
+        mc mb --ignore-existing --region eu-central-1 minio/openaleph
+    depends_on:
+      - minio
 
   # geocode:
   #   image: ghcr.io/openaleph/ftm-geocode
@@ -92,7 +104,11 @@ services:
       LAKEHOUSE_JOURNAL_URI: postgresql://ingest:ingest@postgres/ingest
       OPENALEPH_LAKEHOUSE: 0
     depends_on:
-      - minio
-      - postgres
-      - redis
-      - analyze
+      minio-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      analyze:
+        condition: service_started
