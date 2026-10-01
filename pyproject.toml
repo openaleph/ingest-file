@@ -46,7 +46,6 @@ dependencies = [
     "openaleph-servicelayer (>=1.25.0,<2.0.0)",
     "ftm-lakehouse[postgres] (>=0.8.4,<0.9.0)",
     "tesserocr (>=2.11.0,<3.0.0)",
-    "anystore @ git+https://github.com/dataresearchcenter/anystore.git",
 ]
 
 [project.scripts]

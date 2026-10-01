@@ -87,20 +87,20 @@ files = [
 
 [[package]]
 name = "aiobotocore"
-version = "3.9.1"
+version = "3.9.2"
 description = "Async client for aws services using botocore and aiohttp"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "aiobotocore-3.9.1-py3-none-any.whl", hash = "sha256:23aa448b4daff3fdce0714c962a2050b63c0222b5f2b5c17d0c874eb76a50ac0"},
-    {file = "aiobotocore-3.9.1.tar.gz", hash = "sha256:617d4a78da5adb6ae7d532835727ad388f73555f2ef129b9de1b1add73a43ee6"},
+    {file = "aiobotocore-3.9.2-py3-none-any.whl", hash = "sha256:363b4892423b272eb84afbb58000da0be6ccd0cf8a68b98438c957d05b841efc"},
+    {file = "aiobotocore-3.9.2.tar.gz", hash = "sha256:8e32238c5bd77717ab1ac90077ff51ab141d025528115ccc7cc9b50b2d176e5f"},
 ]
 
 [package.dependencies]
 aiohttp = ">=3.14.0,<4.0.0"
 aioitertools = ">=0.5.1,<1.0.0"
-botocore = ">=1.43.66,<1.43.76"
+botocore = ">=1.43.101,<1.43.107"
 jmespath = ">=0.7.1,<2.0.0"
 multidict = ">=6.0.0,<7.0.0"
 python-dateutil = ">=2.1,<3.0.0"
@@ -337,7 +337,7 @@ trio = ["trio (>=0.32.0)"]
 
 [[package]]
 name = "anystore"
-version = "1.5.0"
+version = "1.5.1"
 description = "Store and cache things anywhere"
 optional = false
 python-versions = ">=3.11,<3.15"
@@ -377,7 +377,7 @@ sql = ["sqlalchemy (>=2.1.1,<3.0.0)"]
 type = "git"
 url = "https://github.com/dataresearchcenter/anystore.git"
 reference = "HEAD"
-resolved_reference = "5cf75a7a9333c66cc28018b3c0dd876ea458b8c1"
+resolved_reference = "24ec0f80478fee14d7bb7cd10537de7476da2a21"
 
 [[package]]
 name = "arro3-core"
@@ -749,18 +749,18 @@ uvloop = ["uvloop (>=0.15.2) ; sys_platform != \"win32\"", "winloop (>=0.5.0) ; 
 
 [[package]]
 name = "boto3"
-version = "1.43.75"
-description = "The AWS SDK for Python"
+version = "1.43.106"
+description = "The AWS SDK for Python (Boto3)"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "boto3-1.43.75-py3-none-any.whl", hash = "sha256:08a79edb68e6a0d65d305eb90188639313650e155aed015e86eef59d8475dde0"},
-    {file = "boto3-1.43.75.tar.gz", hash = "sha256:86da93d3d5b46a58b03fa51b598ffa4aeaff485a3000affacf78491c105e44f0"},
+    {file = "boto3-1.43.106-py3-none-any.whl", hash = "sha256:fdf2e304f9e8864b8613591b18b36ee995560c9666033622eda1cb9057866880"},
+    {file = "boto3-1.43.106.tar.gz", hash = "sha256:c11ad4c429a983493ba10014c7af9831a455c2c0eea91c1cefff74530e480277"},
 ]
 
 [package.dependencies]
-botocore = ">=1.43.75,<1.44.0"
+botocore = ">=1.43.106,<1.44.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.19.0,<0.20.0"
 
@@ -769,14 +769,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.43.75"
+version = "1.43.106"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "botocore-1.43.75-py3-none-any.whl", hash = "sha256:121abc8b0b529bc4e29a28d1e8b096b20f26708cabe3d5ae4b3446747712aece"},
-    {file = "botocore-1.43.75.tar.gz", hash = "sha256:e8ed6b0f3cd398dfb9e08d7ca3a0b964152166a317a04e89c45ec91003327ffe"},
+    {file = "botocore-1.43.106-py3-none-any.whl", hash = "sha256:c1fb8818f9957cb5037f73db34ac1a12ba43562e31d6e7f9cb7e5fc64e1dba78"},
+    {file = "botocore-1.43.106.tar.gz", hash = "sha256:006870b3b4e40547232ad12c3bb4faec91bbbe0659aafaa3b7fa48a112c4ee97"},
 ]
 
 [package.dependencies]
@@ -1945,14 +1945,14 @@ files = [
 
 [[package]]
 name = "filelock"
-version = "4.0.7"
+version = "4.0.8"
 description = "A platform independent file lock."
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "filelock-4.0.7-py3-none-any.whl", hash = "sha256:a93c4d93269b339a6af4848342c7e940d0f9928ad95eff64764699e5f1bf8a6a"},
-    {file = "filelock-4.0.7.tar.gz", hash = "sha256:da5915714a70b55d167fdc7e251ad91302b0a36816fb574dfafae8f4f2c9bb21"},
+    {file = "filelock-4.0.8-py3-none-any.whl", hash = "sha256:325ff22f358c18443b1fcdfa0a7aa3faec4b500c2807c554719da4567b533d31"},
+    {file = "filelock-4.0.8.tar.gz", hash = "sha256:733d9b6b153fc63672f86104324186818b6bbe9dd7db84e9bb9887b6a04a2775"},
 ]
 
 [[package]]
@@ -5673,14 +5673,14 @@ filelock = ">=3.15.4"
 
 [[package]]
 name = "python-dotenv"
-version = "1.2.3"
+version = "1.2.4"
 description = "Read key-value pairs from a .env file and set them as environment variables"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "python_dotenv-1.2.3-py3-none-any.whl", hash = "sha256:904552145e8bfed22162c09dab1c2b9b54fefa7b23ba780f4f26ca0316b0f0d9"},
-    {file = "python_dotenv-1.2.3.tar.gz", hash = "sha256:a20a594dabeaa385725aa239d5244871c143ecb356add8a20fcf23773a6c3a35"},
+    {file = "python_dotenv-1.2.4-py3-none-any.whl", hash = "sha256:42269a8a5b3fd54ffa6f3d84b18abed50064717576b4ecf03dc4a55d8aa04fdc"},
+    {file = "python_dotenv-1.2.4.tar.gz", hash = "sha256:f0d53e69935a851c0dcc78f3ab7aaccd8cabef0b92382b576b824212902873c0"},
 ]
 
 [package.extras]
@@ -6948,14 +6948,14 @@ files = [
 
 [[package]]
 name = "virtualenv"
-version = "21.14.1"
+version = "21.14.2"
 description = "Virtual Python Environment builder"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "virtualenv-21.14.1-py3-none-any.whl", hash = "sha256:6fd04089fc0dc33549e7abdff70fc3b63d4e15799f2dbf3281f80d13b9fce522"},
-    {file = "virtualenv-21.14.1.tar.gz", hash = "sha256:719b189804e66678017d9f63bbfc590c44f6b96ab4829513806394f9b375929c"},
+    {file = "virtualenv-21.14.2-py3-none-any.whl", hash = "sha256:6a8b7fd4e4ee00ebcdc1c5ee8cffd035d1fe130e354e8c9a44f510aac8affdc1"},
+    {file = "virtualenv-21.14.2.tar.gz", hash = "sha256:571930928b11e43db690073ad8228162eca8a3f8fd3a87acdeae07df7dd57068"},
 ]
 
 [package.dependencies]
@@ -7293,4 +7293,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.15"
-content-hash = "3f60d26216b4a925fac9b2bc887d0b6b1a085a1fdf94e8a39651e11d2dc28406"
+content-hash = "a7f941100a74fc30dcfc7535bbfd6285107d9a0bde434b4d8958b385f9c163ce"
