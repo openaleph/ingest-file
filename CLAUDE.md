@@ -173,7 +173,10 @@ Settings managed via `ingestors/settings.py` using Pydantic. Environment variabl
   use and keeps it (`InlineUnoserver` in `support/convert.py`, like tika-python's
   inline server). Either way an unreachable or unstartable listener falls back to
   spawning LibreOffice per document. `localhost` means "shared filesystem" (paths
-  are sent), any other host gets the bytes
+  are sent), any other host gets the bytes. Listeners run LibreOffice on jemalloc
+  (`LD_PRELOAD`, `libjemalloc2` in the base image): on glibc's malloc a kept
+  LibreOffice grows with every document. Spawning reuses a profile per concurrent
+  conversion (`SpawnProfiles`), a fresh one makes LibreOffice start twice
 - `INGESTORS_TIKA_FALLBACK` - Enable Apache Tika fallback for unknown formats
 - `INGESTORS_LAKEHOUSE_FLUSH_SIZE` - Emitted entities until the lakehouse journal is
   flushed to parquet (default: 10000)
