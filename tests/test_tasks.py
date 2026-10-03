@@ -1,3 +1,4 @@
+import os
 import unittest
 from pathlib import Path
 from tempfile import mkdtemp
@@ -9,6 +10,7 @@ from ftm_lakehouse import get_documents, get_entities
 from ftm_lakehouse.core.conventions import tag
 from ftm_lakehouse.operation import ExportKind, export
 from openaleph_procrastinate import defer
+from openaleph_procrastinate.repository import get_archive
 from openaleph_procrastinate.util import make_file_entity
 
 from ingestors.manager import Manager
@@ -121,6 +123,46 @@ class IngestPathTest(TestCase):
             stored,
             {root.joinpath("sub", "new.txt"), root.joinpath("other", "hello.txt")},
         )
+
+    def test_ingest_path_threaded(self):
+        """With `INGESTORS_CRAWL_THREADS` > 1 the files are hashed and stored
+        in a thread pool while the folders are emitted and the files queued on
+        the calling thread."""
+        self.dataset.delete()
+        root = Path(mkdtemp(dir=self.tmp_dir))
+        expected = {"dup.txt": "same content"}
+        for folder in ("a", "b", "c"):
+            root.joinpath(folder).mkdir()
+            root.joinpath(folder, "dup.txt").write_text("same content")
+            root.joinpath(folder, f"{folder}.txt").write_text(folder)
+            expected[f"{folder}.txt"] = folder
+
+        with (
+            mock.patch.dict(os.environ, {"INGESTORS_CRAWL_THREADS": "4"}),
+            mock.patch.object(
+                Manager, "queue_entity", autospec=True, side_effect=Manager.queue_entity
+            ) as queue,
+        ):
+            ingest_path(TEST_DATASET, root)
+
+        queued = [call.args[1] for call in queue.call_args_list]
+        self.assertEqual(
+            sorted(e.first("fileName") for e in queued),
+            ["a.txt", "b.txt", "c.txt", "dup.txt", "dup.txt", "dup.txt"],
+        )
+        # the legacy store keeps the namespace signature, the queued children
+        # refer to their folders by the raw id
+        folders = {
+            Namespace.strip(e.id)
+            for e in self.dataset.iterate()
+            if e.schema.is_a("Folder")
+        }
+        self.assertEqual(len(folders), 3)
+        self.assertEqual({e.first("parent") for e in queued}, folders)
+        archive = get_archive(TEST_DATASET)
+        for entity in queued:
+            with archive.open(entity.first("contentHash")) as fh:
+                self.assertEqual(fh.read(), expected[entity.first("fileName")].encode())
 
     def test_duplicate_file_keeps_all_parents(self):
         """Identical files in several folders are one entity, emitted once per

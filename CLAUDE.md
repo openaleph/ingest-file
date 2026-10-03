@@ -103,9 +103,12 @@ nothing in this repo branches on it except where the two genuinely differ:
   `OpenAlephSettings` forces `procrastinate_dehydrate_entities` off when it is active
 - Content hashes differ between the backends: servicelayer uses sha1, the lakehouse
   sha256
-- `ingestors/tasks.py` counts emitted entities and flushes the lakehouse journal to
-  parquet once `INGESTORS_LAKEHOUSE_FLUSH_SIZE` is reached; the legacy store is
-  unaffected
+- Jobs flush the lakehouse journal to parquet through the task wrapper in
+  `openaleph-procrastinate` (`OPENALEPH_LAKEHOUSE_FLUSH_THRESHOLD`). The cli
+  producer (`CrawlManager` in `ingestors/tasks.py`) does it itself every
+  `INGESTORS_LAKEHOUSE_FLUSH_SIZE` emitted entities and on close – with the
+  default in-memory journal nothing else can – and does not keep what it emits
+  in memory (`Manager(collect=False)`); the legacy store is unaffected
 
 ### Ingestor Pattern
 
@@ -178,8 +181,14 @@ Settings managed via `ingestors/settings.py` using Pydantic. Environment variabl
   LibreOffice grows with every document. Spawning reuses a profile per concurrent
   conversion (`SpawnProfiles`), a fresh one makes LibreOffice start twice
 - `INGESTORS_TIKA_FALLBACK` - Enable Apache Tika fallback for unknown formats
-- `INGESTORS_LAKEHOUSE_FLUSH_SIZE` - Emitted entities until the lakehouse journal is
-  flushed to parquet (default: 10000)
+- `INGESTORS_LAKEHOUSE_FLUSH_SIZE` - Emitted entities after which the cli producer
+  flushes the lakehouse journal to parquet (default: 10000)
+- `INGESTORS_CRAWL_THREADS` - Threads hashing and storing files while `ingestors
+  ingest` crawls a directory (default: 1). Emitting and queueing stay on the
+  main thread. Measured 2026-10-03 against a local archive: 4 and 20 threads
+  were ~2x slower than sequential for 200 B and 256 KB files alike, the store
+  work is python under the GIL. Meant for a remote archive, where a store
+  waits on the network – not measured
 
 Inherited from OpenAleph (`OpenAlephSettings` in `openaleph-procrastinate`):
 - `OPENALEPH_DB_URI` - Postgres connection

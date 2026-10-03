@@ -1,13 +1,14 @@
 import gc
 from pathlib import Path
+from typing import Any
 
 from anystore.logging import get_logger
 from followthemoney.dataset.util import dataset_name_check
 from followthemoney.proxy import EntityProxy
-from ftm_lakehouse import get_documents
+from ftm_lakehouse import get_documents, get_entities
 from ftm_lakehouse.core.conventions import tag
 from openaleph_procrastinate import defer
-from openaleph_procrastinate.app import make_app
+from openaleph_procrastinate.app import App, make_app
 from openaleph_procrastinate.model import DatasetJob
 from openaleph_procrastinate.settings import OpenAlephSettings
 from openaleph_procrastinate.tasks import task
@@ -17,6 +18,7 @@ from servicelayer.archive.util import ensure_path
 from ingestors import __version__
 from ingestors.directory import DirectoryIngestor
 from ingestors.manager import Manager
+from ingestors.settings import OP_INGEST
 from ingestors.support.ocr import init_ocr
 
 SYSTEM = Info("ingestfile_system", "ingest-file system information")
@@ -82,6 +84,29 @@ def ingest(job: DatasetJob) -> None:
     gc.collect()
 
 
+class CrawlManager(Manager):
+    """The cli producer's manager for crawling a whole directory tree"""
+
+    def __init__(self, app: App, dataset: str, context: dict[str, Any]):
+        super().__init__(app, dataset, context, collect=False)
+        self.emitted_count = 0
+
+    def emit_entity(self, entity: EntityProxy, fragment=None, origin=OP_INGEST):
+        super().emit_entity(entity, fragment, origin)
+        self.emitted_count += 1
+        if self.emitted_count % self.settings.lakehouse_flush_size == 0:
+            self.flush_journal()
+
+    def flush_journal(self) -> None:
+        if self.settings.lakehouse:
+            self.writer.flush()
+            get_entities(self.dataset).flush()
+
+    def close(self) -> None:
+        super().close()
+        self.flush_journal()
+
+
 def get_crawled(dataset: str, base: Path) -> set[str]:
     """Local paths of the files a previous crawl of `base` recorded, read from
     the lakehouse documents export scoped to the crawl origin. It lists each
@@ -106,7 +131,7 @@ def ingest_path(
     if incremental and not settings.lakehouse:
         raise ValueError("Incremental ingest requires `OPENALEPH_LAKEHOUSE=1`")
     context = {"languages": languages or [], "namespace": foreign_id or dataset}
-    manager = Manager(sync_app, dataset, context)
+    manager = CrawlManager(sync_app, dataset, context)
     path = ensure_path(path)
     log = get_logger(__name__, dataset=dataset, context=context, path=path)
     if path is not None:
@@ -127,11 +152,14 @@ def ingest_path(
             manager.queue_entity(entity)
         if path.is_dir():
             DirectoryIngestor.crawl(
-                manager, path, origin=tag.CRAWL_ORIGIN, skip=crawled
+                manager,
+                path,
+                origin=tag.CRAWL_ORIGIN,
+                skip=crawled,
+                threads=manager.settings.crawl_threads,
             )
-    emitted = manager.get_emitted()
-    log.info(f"Emitted {len(emitted)} entities.", emitted=[e.id for e in emitted])
     manager.close()
+    log.info(f"Emitted {manager.emitted_count} entities.")
 
 
 def ingest_entity(
