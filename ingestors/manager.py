@@ -118,7 +118,9 @@ class Manager:
 
     MAGIC = magic.Magic(mime=True)
 
-    def __init__(self, app: App, dataset: str, context: dict[str, Any]):
+    def __init__(
+        self, app: App, dataset: str, context: dict[str, Any], collect: bool = True
+    ):
         self.settings = Settings()
         self.app = app
         self.dataset = dataset
@@ -126,6 +128,7 @@ class Manager:
         self.context = context
         self.ns = Namespace(self.context["namespace"])
         self.work_path = ensure_path(mkdtemp(prefix="ingestor-"))
+        self.collect = collect
         self.emitted = MemoryStore()
         self.archive = get_archive(self.dataset)
 
@@ -168,6 +171,8 @@ class Manager:
         fragment = stringify(fragment) or DEFAULT_FRAGMENT
         for part, part_fragment in split_placement(entity, fragment):
             self.writer.put(part, part_fragment, origin=origin)
+        if not self.collect:
+            return
         with self.emitted.writer() as bulk:
             if self.settings.procrastinate_dehydrate_entities:
                 bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
