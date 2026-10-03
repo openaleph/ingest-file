@@ -48,7 +48,8 @@ def should_analyze(e: EntityProxy) -> bool:
 def ingest(job: DatasetJob) -> None:
     to_analyze: list[EntityProxy] = []
     to_index: list[EntityProxy] = []
-    manager = Manager(sync_app, job.dataset, job.context)
+    # child jobs (archive members, attachments) stay in the job's batch
+    manager = Manager(sync_app, job.dataset, {**job.context, "batch": job.batch})
 
     try:
         for entity in job.get_entities():
@@ -73,7 +74,7 @@ def ingest(job: DatasetJob) -> None:
         f"Emitted {len(emitted)} entities.",
         emitted=[e.id for e in emitted],
     )
-    if to_analyze:
+    if to_analyze and job.context.get("analyze", True):  # opt-out per job
         defer.analyze(app, job.dataset, to_analyze, batch=job.batch, **job.context)
     if to_index:
         defer.index(app, job.dataset, to_index, batch=job.batch, **job.context)
@@ -100,12 +101,19 @@ def ingest_path(
     languages: list[str] | None = None,
     foreign_id: str | None = None,
     incremental: bool = False,
+    batch: str | None = None,
+    analyze: bool = True,
+    file_name: str | None = None,
 ):
     if foreign_id:
         foreign_id = dataset_name_check(foreign_id)
     if incremental and not settings.lakehouse:
         raise ValueError("Incremental ingest requires `OPENALEPH_LAKEHOUSE=1`")
     context = {"languages": languages or [], "namespace": foreign_id or dataset}
+    if batch:
+        context["batch"] = batch
+    if not analyze:
+        context["analyze"] = False
     manager = Manager(sync_app, dataset, context)
     path = ensure_path(path)
     log = get_logger(__name__, dataset=dataset, context=context, path=path)
@@ -121,8 +129,9 @@ def ingest_path(
             checksum = manager.store(path, origin=tag.CRAWL_ORIGIN)
             entity.set("contentHash", checksum)
             entity.make_id(checksum)
-            entity.set("fileName", path.name)
-            log.info(f"Queue: `{path.name}` ({checksum})", entity=entity.to_dict())
+            name = file_name or path.name
+            entity.set("fileName", name)
+            log.info(f"Queue: `{name}` ({checksum})", entity=entity.to_dict())
             manager.emit_entity(entity, origin=tag.CRAWL_ORIGIN)
             manager.queue_entity(entity)
         if path.is_dir():
