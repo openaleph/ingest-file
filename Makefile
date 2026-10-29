@@ -23,13 +23,13 @@ shell: services
 	$(COMPOSE) run --rm ingest-file /bin/bash
 
 lint:
-	ruff check .
+	poetry run ruff check .
 
 format:
-	black .
+	poetry run black .
 
 format-check:
-	black --check .
+	poetry run black --check .
 
 # The suite runs twice, once per storage backend. The calamine extraction
 # backend is covered within each run: the tabular suite re-runs itself with the
@@ -64,9 +64,8 @@ clean:
 	find . -type d -name __pycache__ -exec rm -r {} \+
 
 dev:
-	python3 -m pip install --upgrade pip
-	python3 -m pip install -q -r requirements-dev.txt
+	poetry install --with dev --all-extras
 
 documentation:
-	mkdocs build
-	putfs sync --overwrite ./site putfs://static.darc.zone/openaleph.org/docs/lib/ingest-file
+	poetry run mkdocs build
+	poetry run putfs sync --overwrite ./site putfs://static.darc.zone/openaleph.org/docs/lib/ingest-file

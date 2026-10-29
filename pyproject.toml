@@ -110,6 +110,19 @@ pytest-env = "^1.1.5"
 memray = "^1.17.2"
 fakeredis = "<2.31"
 
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.8.0"
+mkdocs-macros-plugin = "^1.5.0"
+mkdocstrings = {extras = ["python"], version = "^1.0.8"}
+mkdocs-autorefs = "^1.4.5"
+mkdocs-typer2 = "^0.4.1"
+pymdown-extensions = "^12.3"
+putfs = "^0.6.2"
+
 [tool.pytest_env]
 DEBUG = 1
 PROCRASTINATE_DB_URI = "sqlite:///:memory:"

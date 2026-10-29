@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Environment
 
-Always use the virtualenv at `.venv` when running commands (e.g. `.venv/bin/python`, `.venv/bin/pytest`).
+Use `poetry run <command>` for Python commands run on the host.
 
 ## Project Overview
 
@@ -24,7 +24,7 @@ Always use the virtualenv at `.venv` when running commands (e.g. `.venv/bin/pyth
 poetry install --with dev --all-extras
 
 # Setup pre-commit hooks
-pre-commit install
+poetry run pre-commit install
 
 # Build Docker containers (one multi-stage Dockerfile: deps -> source -> runtime/test)
 make build
@@ -35,8 +35,8 @@ make shell
 
 # Run tests (in virtualenv, not Docker). The suite picks its storage
 # backend from `OPENALEPH_LAKEHOUSE`, unset means the legacy stores
-pytest -s tests/
-OPENALEPH_LAKEHOUSE=1 pytest -s tests/
+poetry run pytest -s tests/
+OPENALEPH_LAKEHOUSE=1 poetry run pytest -s tests/
 
 # Run the containerised suite against both storage backends
 make test              # both
@@ -49,7 +49,7 @@ make format-check    # Check formatting
 make lint            # Lint with Ruff
 
 # Run pre-commit on all files
-pre-commit run --all-files
+poetry run pre-commit run --all-files
 ```
 
 ### CLI Usage (inside Docker shell)
@@ -156,13 +156,13 @@ instead. Tests that only hold for one backend guard on `Settings().lakehouse`.
 Run tests:
 ```bash
 # Run all tests
-pytest -s tests/
+poetry run pytest -s tests/
 
 # Run specific test file
-pytest -s tests/test_doc.py -xvs
+poetry run pytest -s tests/test_doc.py -xvs
 
 # Run specific test
-pytest -s tests/test_doc.py::TestClass::test_method -xvs
+poetry run pytest -s tests/test_doc.py::TestClass::test_method -xvs
 ```
 
 ## Configuration

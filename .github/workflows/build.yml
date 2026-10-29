@@ -59,6 +59,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Install Poetry
+        run: pipx install poetry==2.5.1
+
       - name: Install development dependencies
         run: make dev
 
