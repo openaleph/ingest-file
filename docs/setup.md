@@ -16,6 +16,12 @@ Because ingest-file uses a lot of dependencies, the best way to use it _out of t
 
     docker pull ghcr.io/openaleph/ingest-file
 
+The image also contains the HTTP api (`ingestors/api.py`: upload files into a dataset as a batch, poll the batch, make the lakehouse dataset).
+
+    docker run -p 8000:8000 ghcr.io/openaleph/ingest-file granian --interface asgi --host 0.0.0.0 ingestors.api:app
+
+It needs `OPENALEPH_LAKEHOUSE=1`, serves its documentation at `/` and has no authentication.
+
 ### Debian / Ubuntu
 
 For debian-like (linux) system, it is possible to install all dependencies locally so that docker is not needed. This is especially useful for rapid development / testing.
