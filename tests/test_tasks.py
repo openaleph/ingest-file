@@ -11,6 +11,7 @@ from ftm_lakehouse.core.conventions import tag
 from ftm_lakehouse.operation import ExportKind, export
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.repository import get_archive
+from openaleph_procrastinate.tasks import unpack_entities
 from openaleph_procrastinate.util import make_file_entity
 
 from ingestors.manager import Manager
@@ -243,17 +244,6 @@ class AnalyzeDeferTest(TestCase):
     sits in: running the `ingest` task has to leave a job on the analyze queue.
     Both stages defer into the `InMemoryConnector`, where the jobs sit until it
     is reset per test."""
-
-    def deferred_entities(self, queue: str) -> list[dict]:
-        return [
-            entity
-            for job in app.connector.jobs.values()
-            if job["queue_name"] == queue
-            for entity in job["args"]["payload"]["entities"]
-        ]
-
-    def deferred_schemata(self, queue: str) -> set[str]:
-        return {e["schema"] for e in self.deferred_entities(queue)}
 
     def ingest_fixture(self, name: str) -> None:
         path = Path(__file__).parent / "fixtures" / name

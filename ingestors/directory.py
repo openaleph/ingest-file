@@ -96,7 +96,7 @@ class DirectoryIngestor(Ingestor):
         files = cls.walk(manager, file_path, parent, origin, skip)
         if threads < 2:
             for child, path in files:
-                checksum = manager.store(path, origin=origin)
+                checksum = manager.store(path)
                 cls.queue(manager, child, path, checksum, origin)
             return
         pending: deque[tuple[EntityProxy, Path, Future[str]]] = deque()
@@ -108,8 +108,6 @@ class DirectoryIngestor(Ingestor):
 
         with ThreadPoolExecutor(threads) as pool:
             for child, path in files:
-                pending.append(
-                    (child, path, pool.submit(manager.store, path, origin=origin))
-                )
+                pending.append((child, path, pool.submit(manager.store, path)))
                 drain(2 * threads)
             drain(0)
