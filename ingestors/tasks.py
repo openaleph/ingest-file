@@ -163,7 +163,7 @@ def ingest_path(
             log.info(f"Skip already crawled: `{path.name}`")
         elif path.is_file():
             entity = manager.make_entity("Document")
-            checksum = manager.store(path, origin=tag.CRAWL_ORIGIN)
+            checksum = manager.store(path)
             entity.set("contentHash", checksum)
             entity.make_id(checksum)
             entity.set("fileName", path.name)

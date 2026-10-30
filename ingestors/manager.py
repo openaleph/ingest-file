@@ -227,15 +227,11 @@ class Manager:
                 log.info("Not queued, emitting placement only: %r", entity)
                 self.emit_entity(entity)
 
-    def store(
-        self, file_path: Path, mime_type: str | None = None, origin: str = OP_INGEST
-    ):
+    def store(self, file_path: Path, mime_type: str | None = None):
         file_path = ensure_path(file_path)
         mime_type = normalize_mimetype(mime_type)
         if file_path is not None and file_path.is_file():
-            return self.archive.archive_file(
-                file_path, mime_type=mime_type, origin=origin
-            )
+            return self.archive.archive_file(file_path, mime_type=mime_type)
 
     def load(self, content_hash, file_name=None):
         # log.info("Local archive name: %s", file_name)
