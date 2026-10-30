@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 from pprint import pprint  # noqa
 
-from openaleph_procrastinate import defer
-from openaleph_procrastinate.payload import unpack_entities
-
-from ingestors.tasks import app
 from tests.support import TestCase
 
 ATTACHMENT_NAME = "7b2fd116582e4b66be0451b4755fff1d.png"

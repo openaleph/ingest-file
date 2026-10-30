@@ -11,7 +11,6 @@ from ftm_lakehouse.core.conventions import tag
 from ftm_lakehouse.operation import ExportKind, export
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.repository import get_archive
-from openaleph_procrastinate.tasks import unpack_entities
 from openaleph_procrastinate.util import make_file_entity
 
 from ingestors.manager import Manager
