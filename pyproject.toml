@@ -1,6 +1,6 @@
 [project]
 name = "ingestors"
-version = "5.4.0-rc2"
+version = "5.4.0-rc3"
 description = "Ingestors extract the contents of mixed unstructured documents into structured (followthemoney) data. "
 authors = [
     { name = "Friedrich Lindenberg", email = "friedrich@pudo.org" },
@@ -14,8 +14,8 @@ dependencies = [
     # base dependencies
     "banal (>=1.1.2,<2.0.0)",
     "normality (>=3.1.0,<4.0.0)",
-    "followthemoney (>=4.11.0,<5.0.0)",
-    "ftmq (>=5.2.0,<6.0.0)",
+    "followthemoney (>=4.11.2,<5.0.0)",
+    "ftmq (>=5.3.1,<6.0.0)",
     "pyicu (>=2.15.3,<3.0.0)",
     # ingest dependencies
     "dbf (>=0.99.11,<0.100.0)",
@@ -42,9 +42,9 @@ dependencies = [
     "python-calamine (>=0.7.0,<0.8.0)",
     # servicelayer extras requirements
     "boto3 (>=1.11.9,<2.0.0)",
-    "openaleph-procrastinate @ git+https://github.com/openaleph/openaleph-procrastinate.git",
-    "openaleph-servicelayer (>=1.25.0,<2.0.0)",
-    "ftm-lakehouse[postgres] (>=0.8.4,<0.9.0)",
+    "openaleph-procrastinate @ git+https://github.com/openaleph/openaleph-procrastinate",
+    "openaleph-servicelayer (>=1.26.0,<2.0.0)",
+    "ftm-lakehouse[postgres] (>=0.10.0,<0.11.0)",
     "tesserocr (>=2.11.0,<3.0.0)",
 ]
 

@@ -21,12 +21,12 @@ Store files in archive and dispatch tasks. This accepts as well a single file as
 ingestors ingest -d my_dataset ./path/to/files`
 ```
 
-### Incremental ingestion
+### Resuming an ingest
 
-With the [lakehouse](https://openaleph.org/docs/lib/ftm-lakehouse) storage backend (`OPENALEPH_LAKEHOUSE=1`), `--incremental` skips the files a previous run already crawled. They are looked up in the dataset's documents crawl export (`exports/documents.crawl.csv`) by their path below the crawl root, so run it against the same (relative) root as before.
+With the [lakehouse](https://openaleph.org/docs/lib/ftm-lakehouse) storage backend (`OPENALEPH_LAKEHOUSE=1`), `--resume` skips the files a previous run already crawled. They are looked up in the dataset's documents crawl export (`exports/documents.crawl.csv`) by their path below the crawl root, so run it against the same (relative) root as before.
 
 ```bash
-ingestors ingest -d my_dataset --incremental ./path/to/files
+ingestors ingest -d my_dataset --resume ./path/to/files
 ```
 
 ### Start worker(s)

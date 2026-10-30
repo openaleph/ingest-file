@@ -2,6 +2,7 @@
 from pprint import pprint  # noqa
 
 from openaleph_procrastinate import defer
+from openaleph_procrastinate.payload import unpack_entities
 
 from ingestors.tasks import app
 from tests.support import TestCase
@@ -182,15 +183,6 @@ class AttachmentFanoutTest(TestCase):
     twice, and since an attached message is queued as a child and swept again,
     that doubling compounds with every level of nesting."""
 
-    def queued(self) -> list[dict]:
-        """The entities queued for ingestion, straight off the connector."""
-        return [
-            entity
-            for job in app.connector.jobs.values()
-            if job["queue_name"] == defer.tasks.ingest.queue
-            for entity in job["args"]["payload"]["entities"]
-        ]
-
     def test_attachment_queued_once(self):
         """The sweep hashes the file it extracted to compare it against the
         attachments already ingested. Comparing that against the *archive*
@@ -200,7 +192,7 @@ class AttachmentFanoutTest(TestCase):
         self.manager.ingest(fixture_path, entity)
         self.assertSuccess(entity)
 
-        queued = self.queued()
+        queued = self.deferred_entities("ingest")
         self.assertEqual(len(queued), 1, [e["id"] for e in queued])
         self.assertEqual(queued[0]["properties"]["fileName"], [ATTACHMENT_NAME])
 
@@ -212,6 +204,6 @@ class AttachmentFanoutTest(TestCase):
         self.manager.ingest(fixture_path, entity)
         self.assertSuccess(entity)
 
-        queued = self.queued()
+        queued = self.deferred_entities("ingest")
         self.assertEqual(len(queued), 1, [e["id"] for e in queued])
         self.assertEqual(queued[0]["properties"]["fileName"], ["inner.eml"])

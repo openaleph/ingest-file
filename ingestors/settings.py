@@ -40,6 +40,9 @@ class Settings(OpenAlephSettings):
     lakehouse_flush_size: int = 10_000
     """Size cap until when the journal should be flushed to parquet"""
 
+    crawl_threads: int = 1
+    """Crawl parallelization, worth raising if archive storage is over the network"""
+
     @property
     def tags_database_uri(self) -> str:
         """Resolve the tags database URI from fragments_uri, forcing psycopg3
