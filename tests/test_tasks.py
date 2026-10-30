@@ -8,7 +8,7 @@ from followthemoney import EntityProxy, StatementEntity, model, registry
 from followthemoney.namespace import Namespace
 from ftm_lakehouse import get_documents, get_entities
 from ftm_lakehouse.core.conventions import tag
-from ftm_lakehouse.operation import ExportKind, export
+from ftm_lakehouse.operation import export
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.repository import get_archive
 from openaleph_procrastinate.util import make_file_entity
@@ -89,8 +89,9 @@ class IngestPathTest(TestCase):
             return
 
         ingest_path(TEST_DATASET, root)
-        get_entities(TEST_DATASET).flush()
-        export(TEST_DATASET, ExportKind.documents)
+        repo = get_entities(TEST_DATASET)
+        repo.flush()
+        export(TEST_DATASET, repo.uri)
         crawled = {
             document.relative_path: document.id
             for document in get_documents(TEST_DATASET).stream(tag.CRAWL_ORIGIN)
