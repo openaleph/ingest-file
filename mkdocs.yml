@@ -13,17 +13,34 @@ theme:
     - toc.follow
     - content.code.copy
   custom_dir: docs/overrides
+  palette:
+    - media: "(prefers-color-scheme)"
+      scheme: slate
+      toggle:
+        icon: lucide/sun
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: lucide/moon
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: lucide/sun
+        name: Switch to light mode
 extra_css:
-  - stylesheets/extra.css
+  - https://dataresearchcenter.github.io/zensical-theme-darc/stylesheets/darc-zensical.css
 extra:
+  logo_light: https://openaleph.org/assets/Logo/RGB/Open-Aleph-Logo-RGB-Square-Pos.svg
   social:
-    - icon: material/mail
+    - icon: lucide/mail
       link: mailto:hi@dataresearchcenter.org
-    - icon: material/web
+    - icon: lucide/globe
       link: https://openaleph.org
-    - icon: material/github
-      link: https://github.com/openaleph/openaleph
-    - icon: material/linkedin
+    - icon: simple/github
+      link: https://github.com/openaleph/ingest-file
+    - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/company/dataresearchcenter/
 markdown_extensions:
   - tables
@@ -45,13 +62,15 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+watch:
+  - mkdocs_env.py
 plugins:
   - search
   - autorefs
-  - mkdocs-typer2:
-      pretty: true
   - macros:
       module_name: mkdocs_env
+      on_undefined: strict
+      on_error_fail: true
   - mkdocstrings:
       default_handler: python
       handlers:
@@ -68,10 +87,10 @@ nav:
   - pipeline.md
   - versioning.md
   - Reference:
-      - Mime types: ./reference/mime.md
-      - Command line: ./reference/cli.md
-      - Settings: ./reference/settings.md
-      - Ingestors: ./reference/ingestors.md
+      - Mime types: reference/mime.md
+      - Command line: reference/cli.md
+      - Settings: reference/settings.md
+      - Ingestors: reference/ingestors.md
   - OpenAleph:
       - About: https://openaleph.org/
       - User Guide: https://openaleph.org/docs
