@@ -209,10 +209,7 @@ class Manager:
                 best_score = score
                 best_cls = cls
         if best_cls is None:
-            if self.settings.tika_fallback:
-                best_cls = TikaIngestor
-            else:
-                raise ProcessingException("Format not supported")
+            best_cls = TikaIngestor
         return best_cls
 
     def queue_entity(self, entity):

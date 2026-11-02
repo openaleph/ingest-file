@@ -122,10 +122,8 @@ class TableSupport(EncodingSupport, TempFileSupport):
 
 class CalamineSpreadsheetSupport(TableSupport):
     """Spreadsheet extraction via python-calamine, a binding to the Rust
-    `calamine` crate. Reads xls, xlsx and ods with content-based format
-    detection, orders of magnitude faster than the pure-Python parsers.
-    It reads cell data only; document metadata (author, dates, generator)
-    must be extracted natively by the calling ingestor."""
+    `calamine` crate. Reads xls, xlsx, xlsb and ods with content-based format
+    detection."""
 
     def calamine_generate_rows(self, sheet):
         # start is None for empty sheets, where iter_rows() panics
@@ -133,8 +131,7 @@ class CalamineSpreadsheetSupport(TableSupport):
         if sheet.start is None:
             return
         # iter_rows() is lazy but trims leading empty columns; left-pad to
-        # keep absolute column positions, matching the native
-        # openpyxl/xlrd/odfpy behaviour.
+        # keep absolute column positions.
         padding = [None] * sheet.start[1]
         for row in sheet.iter_rows():
             yield padding + list(row) if padding else row

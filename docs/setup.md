@@ -149,7 +149,7 @@ REDIS_URL=redis://localhost
 
 ## Apache Tika
 
-[Apache Tika](https://tika.apache.org/) extracts the files embedded in Excel files and Office Open XML documents (e.g. docx), and it is the text extraction fallback for otherwise unsupported file types (`INGESTORS_TIKA_FALLBACK=1`). ingest-file talks to it via [tika-python](https://github.com/chrismattmann/tika-python), which reads its configuration from environment variables at import time.
+[Apache Tika](https://tika.apache.org/) extracts the files embedded in office documents (docx, xlsx, ods) and is the text extraction fallback for file types no ingestor handles. ingest-file talks to it via [tika-python](https://github.com/chrismattmann/tika-python), which reads its configuration from environment variables at import time.
 
 ### Inline (default)
 
