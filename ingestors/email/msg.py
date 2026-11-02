@@ -16,6 +16,7 @@ from ingestors.exc import ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.email import EmailSupport
 from ingestors.support.encoding import EncodingSupport
+from ingestors.support.shell import log_output
 
 log = logging.getLogger(__name__)
 
@@ -183,12 +184,14 @@ class RFC822Ingestor(Ingestor, EmailSupport, EncodingSupport):
                 "2",
             ]
             try:
-                subprocess.run(
+                result = subprocess.run(
                     cmd,
                     check=True,
-                    stdout=subprocess.DEVNULL,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                 )
+                log_output(result.stdout, "ripmime", log)
 
                 temp_dir_path = Path(temp_dir)
                 for attachment_path in temp_dir_path.iterdir():
@@ -207,6 +210,7 @@ class RFC822Ingestor(Ingestor, EmailSupport, EncodingSupport):
                                     entity, attachment_path.name, mime_type, payload
                                 )
             except subprocess.CalledProcessError as err:
+                log_output(err.output, "ripmime", log)
                 raise ProcessingException(f"Cannot extract attachments: {err}") from err
             except Exception as err:
                 raise ProcessingException(f"Cannot parse email: {err}") from err

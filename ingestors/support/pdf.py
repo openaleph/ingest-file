@@ -5,7 +5,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
-import fitz
+import pymupdf
 from followthemoney import model
 from lxml import etree
 
@@ -15,6 +15,11 @@ from ingestors.support.ocr import OCRSupport
 from ingestors.support.xml import XMLSupport
 
 log = logging.getLogger(__name__)
+
+# mupdf's errors reach us through pymupdf, which prints them to stdout: hand
+# them to logging instead. An explicit level, as it would otherwise be taken
+# from the root logger as it is on import
+pymupdf.set_messages(pylogging_name="pymupdf", pylogging_level=logging.WARNING)
 
 
 @dataclass
@@ -107,7 +112,7 @@ class PDFSupport(DocumentConvertSupport, OCRSupport, XMLSupport):
     def parse(self, file_path: str) -> PdfModel:
         """Takes a file_path to a pdf and returns a `PdfModel`"""
         pdf_model = PdfModel(metadata=None, xmp_metadata=None, pages=[])
-        with fitz.open(file_path) as pdf_doc:
+        with pymupdf.open(file_path) as pdf_doc:
             if pdf_doc.needs_pass:
                 raise UnauthorizedError
             pdf_model.metadata = pdf_doc.metadata
@@ -141,7 +146,7 @@ class PDFSupport(DocumentConvertSupport, OCRSupport, XMLSupport):
         self.extract_pages(pdf_model, entity, manager)
 
     def pdf_extract_page(
-        self, pdf_doc: fitz.Document, page: fitz.Page, page_number: int
+        self, pdf_doc: pymupdf.Document, page: pymupdf.Page, page_number: int
     ) -> PdfPageModel:
         """Extract the contents of a single PDF page, using OCR if need be."""
         # Extract text

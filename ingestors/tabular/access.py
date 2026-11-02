@@ -9,7 +9,7 @@ from followthemoney import model
 
 from ingestors.exc import ProcessingException
 from ingestors.ingestor import Ingestor
-from ingestors.support.shell import ShellSupport
+from ingestors.support.shell import ShellSupport, forward_output, log_output
 from ingestors.support.table import TableSupport
 
 log = logging.getLogger(__name__)
@@ -32,22 +32,39 @@ class AccessIngestor(Ingestor, TableSupport, ShellSupport):
         if mdb_tables is None:
             raise RuntimeError("mdb-tools is not available")
         try:
-            output = subprocess.check_output([mdb_tables, local_path])
-            return [
-                t.strip().decode("utf-8") for t in output.split(b" ") if len(t.strip())
-            ]
+            result = subprocess.run(
+                [mdb_tables, local_path],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
         except subprocess.CalledProcessError as cpe:
+            log_output(cpe.stderr, "mdb-tables", log)
             log.warning("Failed to open MDB: %s", cpe)
             raise ProcessingException("Failed to extract Access DB.") from cpe
+        log_output(result.stderr, "mdb-tables", log)
+        return [
+            t.strip().decode("utf-8")
+            for t in result.stdout.split(b" ")
+            if len(t.strip())
+        ]
 
     def generate_rows(self, file_path, table_name):
         mdb_export = self.find_command("mdb-export")
         if mdb_export is None:
             raise RuntimeError("mdb-tools is not available")
         args = [mdb_export, "-b", "strip", file_path, table_name]
-        with subprocess.Popen(args, stdout=subprocess.PIPE) as proc:
+        with subprocess.Popen(
+            args,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        ) as proc:
             if proc.stdout is None:
                 raise ProcessingException("Failed to create subprocess stdout pipe")
+            # its rows are read here, so only what it complains about is logged
+            forward_output(proc.stderr, "mdb-export", log)
             output = io.TextIOWrapper(proc.stdout, newline=os.linesep)
             headers = None
             for row in csv.reader((line for line in output), delimiter=","):
