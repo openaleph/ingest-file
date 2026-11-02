@@ -1,17 +1,10 @@
-import logging
-from xml.etree.ElementTree import ParseError
-
 from anystore.types import Uri
 from followthemoney import EntityProxy, model
-from openpyxl import load_workbook
 
-from ingestors.exc import EMPTY_SHEET_MSG, ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.support.ooxml import OOXMLSupport
 from ingestors.support.table import CalamineSpreadsheetSupport
 from ingestors.support.tika import TikaSupport
-
-log = logging.getLogger(__name__)
 
 
 class ExcelXMLIngestor(Ingestor, CalamineSpreadsheetSupport, OOXMLSupport, TikaSupport):
@@ -25,59 +18,10 @@ class ExcelXMLIngestor(Ingestor, CalamineSpreadsheetSupport, OOXMLSupport, TikaS
     EXTENSIONS = ["xlsx", "xlsm", "xltx", "xltm"]
     SCORE = 7
 
-    def generate_rows(self, sheet):
-        for row in sheet.rows:
-            try:
-                yield [c.value for c in row]
-            except (ValueError, OverflowError, ParseError) as ve:
-                log.warning("Failed to read Excel row: %s", ve)
-
     def ingest(self, file_path: Uri, entity: EntityProxy):
         entity.schema = model["Workbook"]
         self.ooxml_extract_metadata(file_path, entity)
-
-        if self.settings.calamine:
-            return self.calamine_extract_sheets(file_path, entity)
-
-        # Pass a file handle rather than the path: openpyxl only accepts files
-        # whose extension is one of .xlsx/.xlsm/.xltx/.xltm when given a path,
-        # but skips that check for file-like objects. Files can reach us without
-        # a correct extension (e.g. extracted from an archive or named by
-        # content hash), so we hand it an open handle instead.
-        with open(file_path, "rb") as fh:
-            try:
-                # "controls whether cells with formulae have either the formula
-                # (default) or the value stored the last time Excel read the
-                # sheet"
-                book = load_workbook(fh, read_only=True, data_only=True)
-            except Exception as err:
-                raise ProcessingException("Invalid Excel file: %s" % err) from err
-
-            try:
-                for name in book.sheetnames:
-                    sheet = book[name]
-                    if not hasattr(sheet, "rows"):
-                        log.warning("Cannot parse chart sheet: %s", name)
-                        continue
-                    table = self.manager.make_entity("Table", parent=entity)
-                    table.make_id(entity.id, name)
-                    table.set("title", name)
-                    # Emit a partial table fragment with parent reference and
-                    # name early, so that we don't have orphan fragments in case
-                    # of an error in the middle of processing.
-                    # See https://github.com/alephdata/ingest-file/issues/171
-                    self.manager.emit_entity(table, fragment="initial")
-                    log.debug("Sheet: %s", name)
-                    row_count = self.emit_row_tuples(table, self.generate_rows(sheet))
-                    if row_count == 0:
-                        table.set("processingError", EMPTY_SHEET_MSG)
-                        table.set("processingStatus", self.manager.STATUS_FAILURE)
-                    self.manager.emit_entity(table)
-            except Exception as err:
-                raise ProcessingException("Cannot read Excel file: %s" % err) from err
-            finally:
-                book.close()
-
+        self.calamine_extract_sheets(file_path, entity)
         self.ingest_embedded(file_path, parent=entity)
 
     @classmethod

@@ -31,9 +31,7 @@ format:
 format-check:
 	black --check .
 
-# The suite runs twice, once per storage backend. The calamine extraction
-# backend is covered within each run: the tabular suite re-runs itself with the
-# flag toggled (see CalamineTabularIngestorTest).
+# The suite runs twice, once per storage backend.
 test: build-test test-store test-lakehouse
 
 # no build prerequisite: CI runs these against an image loaded by buildx

@@ -31,12 +31,6 @@ class Settings(OpenAlephSettings):
     soffice_bin: str = "/usr/bin/libreoffice"
     """Path to the LibreOffice/soffice binary"""
 
-    tika_fallback: bool = False
-    """Use Apache Tika as a text extraction fallback"""
-
-    calamine: bool = True
-    """Use the Rust calamine implementation (python-calamine) for spreadsheets"""
-
     lakehouse_flush_size: int = 10_000
     """Size cap until when the journal should be flushed to parquet"""
 

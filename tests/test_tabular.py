@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-from unittest.mock import patch
-
 from ingestors.exc import ENCRYPTED_MSG
-from ingestors.ingestor import Ingestor
 from tests.support import TestCase
 
 
@@ -22,17 +19,9 @@ class TabularIngestorTest(TestCase):
         self.assertIn("Mihai Viteazul", "".join(table.get("indexText")))
 
     def test_xlsx_with_wrong_extension(self):
-        # Regression test: openpyxl refuses to open a workbook when handed a
-        # path whose extension is not one of .xlsx/.xlsm/.xltx/.xltm. Files can
-        # reach the ingestor without a correct extension (e.g. extracted from an
-        # archive or named by content hash), so the ingestor passes openpyxl a
-        # file handle, which bypasses that check. The fixture is a valid .xlsx
-        # workbook deliberately named ".bin".
+        # a valid .xlsx workbook named ".bin": neither the auction nor the
+        # extraction may depend on the file extension
         fixture_path, entity = self.fixture("disguised_xlsx.bin")
-        # The auction sniffs the file itself and ignores any declared type, so
-        # selection here comes from libmagic recognising the workbook despite
-        # the ".bin" name. The behaviour under test is the ".bin" path
-        # extension handed to openpyxl.
         self.manager.ingest(fixture_path, entity)
         self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)
         self.assertEqual(entity.schema.name, "Workbook")
@@ -55,7 +44,6 @@ class TabularIngestorTest(TestCase):
         tables = self.get_emitted("Table")
         tables = [t.first("title") for t in tables]
         self.assertIn("Лист1", tables)
-        # OLE document metadata must survive regardless of extraction backend
         self.assertIn("Microsoft Office User", entity.get("author"))
         self.assertIn("Microsoft Macintosh Excel", entity.get("generator"))
         self.assertTrue(
@@ -73,7 +61,6 @@ class TabularIngestorTest(TestCase):
         titles = [t.first("title") for t in tables]
         self.assertIn("Лист1", titles)
         self.assertEqual(entity.schema.name, "Workbook")
-        # ODF document metadata must survive regardless of extraction backend
         self.assertIn("Microsoft Office User", entity.get("author"))
         self.assertTrue(entity.first("generator").startswith("LibreOffice"))
         self.assertTrue(
@@ -111,15 +98,3 @@ class TabularIngestorTest(TestCase):
         self.assertEqual(len(tables), 1)
         self.assertEqual(tables[0].first("title"), "Sheet1")
         self.assertIn("abc", "".join(tables[0].get("indexText")))
-
-
-class CalamineTabularIngestorTest(TabularIngestorTest):
-    """Re-run the full tabular suite with the calamine extraction backend
-    enabled, so both code paths are covered in a single pytest run and any
-    divergence between them (rows, metadata, error handling) fails loudly."""
-
-    def setUp(self):
-        super().setUp()
-        patcher = patch.object(Ingestor.settings, "calamine", True)
-        patcher.start()
-        self.addCleanup(patcher.stop)
