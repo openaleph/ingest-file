@@ -176,17 +176,15 @@ pytest -s tests/test_doc.py::TestClass::test_method -xvs
 
 Settings managed via `ingestors/settings.py` using Pydantic. Environment variables prefixed with `INGESTORS_`:
 
-- `INGESTORS_CONVERT_TIMEOUT` - LibreOffice conversion timeout (default: 300s)
-- `INGESTORS_UNOSERVER_URI` - Convert through this unoserver listener
-  (`ghcr.io/openaleph/ingest-file-unoserver`, built from the `unoserver` stage of
-  `Dockerfile.base`). Unset, every worker thread starts its own listener on first
-  use and keeps it (`InlineUnoserver` in `support/convert.py`, like tika-python's
-  inline server). Either way an unreachable or unstartable listener falls back to
-  spawning LibreOffice per document. `localhost` means "shared filesystem" (paths
-  are sent), any other host gets the bytes. Listeners run LibreOffice on jemalloc
-  (`LD_PRELOAD`, `libjemalloc2` in the base image): on glibc's malloc a kept
-  LibreOffice grows with every document. Spawning reuses a profile per concurrent
-  conversion (`SpawnProfiles`), a fresh one makes LibreOffice start twice
+- `INGESTORS_CONVERT_TIMEOUT` - LibreOffice conversion timeout (default: 300s).
+  Office documents go through a unoserver listener per worker thread, started on
+  first use and kept (`InlineUnoserver` in `support/convert.py`, like
+  tika-python's inline server); it shares the filesystem, so it is handed paths.
+  An unreachable or unstartable listener falls back to spawning LibreOffice per
+  document. Listeners run LibreOffice on jemalloc (`LD_PRELOAD`, `libjemalloc2`
+  in the base image): on glibc's malloc a kept LibreOffice grows with every
+  document. Spawning reuses a profile per concurrent conversion
+  (`SpawnProfiles`), a fresh one makes LibreOffice start twice
 - `INGESTORS_LAKEHOUSE_FLUSH_SIZE` - Emitted entities after which the cli producer
   flushes the lakehouse journal to parquet (default: 10000)
 - `INGESTORS_CRAWL_THREADS` - Threads hashing and storing files while `ingestors

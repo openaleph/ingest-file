@@ -54,9 +54,6 @@ services:
       - /data:mode=777
     environment:
       <<: *ingest-env
-      # convert office documents through the unoserver services below instead
-      # of a listener per worker thread
-      # INGESTORS_UNOSERVER_URI: http://unoserver-lb:2003
     volumes:
       - "./ingestors:/ingestors/ingestors"
       - "./data:/ingestors/data"
@@ -67,29 +64,6 @@ services:
         condition: service_healthy
       tika:
         condition: service_healthy
-
-  # optional persistent libreoffice listener. It converts one document at a
-  # time, so scale it to the number of concurrent workers.
-  unoserver:
-    image: ghcr.io/openaleph/ingest-file-unoserver:main
-    profiles:
-      - unoserver
-    # unoserver exits with status 0 after a conversion timeout, so `on-failure`
-    # would leave it down
-    restart: unless-stopped
-    tmpfs:
-      - /tmp:mode=777
-
-  # hands each conversion to an idle unoserver replica and queues while all are
-  # busy.
-  unoserver-lb:
-    image: haproxy:lts-alpine
-    profiles:
-      - unoserver
-    restart: unless-stopped
-    configs:
-      - source: unoserver-lb
-        target: /usr/local/etc/haproxy/haproxy.cfg
 
   test-ingest-file:
     build:
@@ -138,24 +112,3 @@ configs:
           </params>
         </server>
       </properties>
-      
-  unoserver-lb:
-    content: |
-      defaults
-        mode tcp
-        timeout connect 5s
-        # a conversion may take up to the worker's INGESTORS_CONVERT_TIMEOUT
-        timeout client 300s
-        timeout server 300s
-        # how long a conversion waits for an idle replica
-        timeout queue 60s
-
-      resolvers docker
-        nameserver dns 127.0.0.11:53
-
-      listen unoserver
-        bind :2003
-        balance leastconn
-        # a slot for each address docker's dns returns for `unoserver` (up to
-        # 16), each taking one conversion at a time
-        server-template uno 1-16 unoserver:2003 resolvers docker init-addr none maxconn 1
