@@ -1,18 +1,26 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
+import subprocess
 import threading
+import time
 import unittest
 import xmlrpc.client
 from tempfile import mkdtemp
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+from followthemoney import model
+
 from ingestors.exc import ProcessingException
 from ingestors.support.convert import (
+    JEMALLOC_CONF,
     LISTENER_GRACE,
     DocumentConvertSupport,
     InlineUnoserver,
+    SpawnProfiles,
+    UnoserverUnavailable,
+    run_soffice,
 )
 
 FIXTURE = os.path.join(os.path.dirname(__file__), "fixtures", "doc.doc")
@@ -46,6 +54,13 @@ def fake_start(listener, timeout):
 def write_pdf(inpath, indata, outpath, *rest):
     """A local listener's `convert`: it writes the PDF to the given path."""
     with open(outpath, "wb") as fh:
+        fh.write(b"%PDF-1.4 fake")
+
+
+def spawn_pdf(cmd, timeout):
+    """`run_soffice`: LibreOffice writes the PDF into its --outdir."""
+    outdir = cmd[cmd.index("--outdir") + 1]
+    with open(os.path.join(outdir, "doc.pdf"), "wb") as fh:
         fh.write(b"%PDF-1.4 fake")
 
 
@@ -182,6 +197,39 @@ class UnoserverConvertTest(unittest.TestCase):
         which.assert_called_once()
         self.assertEqual(support._document_to_pdf_spawn.call_count, 2)
 
+    @patch("ingestors.support.convert.shutil.which", return_value="/bin/unoserver")
+    def test_listener_runs_on_jemalloc(self, which):
+        """On glibc's malloc a listener's LibreOffice keeps what it frees, and
+        grows with every document. It inherits the environment from unoserver."""
+        exited = FakeProcess()
+        exited.returncode = 1
+        cases = (
+            ("libjemalloc.so.2", {}, "libjemalloc.so.2"),
+            # the image preloads libgomp for the worker, which stays
+            (
+                "libjemalloc.so.2",
+                {"LD_PRELOAD": "libgomp.so.1"},
+                "libjemalloc.so.2 libgomp.so.1",
+            ),
+            (None, {}, None),
+        )
+        for library, environ, preload in cases:
+            with (
+                patch("ingestors.support.convert.find_library", return_value=library),
+                patch("subprocess.Popen", return_value=exited) as popen,
+                patch.dict(os.environ, environ),
+            ):
+                if "LD_PRELOAD" not in environ:
+                    os.environ.pop("LD_PRELOAD", None)
+                with self.assertRaises(UnoserverUnavailable):
+                    InlineUnoserver().start(5)
+            env = popen.call_args.kwargs["env"]
+            if library is None:
+                self.assertIsNone(env)  # inherited as it is
+            else:
+                self.assertEqual(env["LD_PRELOAD"], preload)
+                self.assertEqual(env["MALLOC_CONF"], JEMALLOC_CONF)
+
     @patch.object(InlineUnoserver, "start", autospec=True, side_effect=fake_start)
     def test_wedged_listener_is_replaced(self, start):
         """A listener that stops answering falls back to spawning for this
@@ -232,3 +280,64 @@ class UnoserverConvertTest(unittest.TestCase):
         out = support._document_to_pdf(self.tmpdir, FIXTURE, "entity", timeout=60)
         with open(out, "rb") as fh:
             self.assertTrue(fh.read(5).startswith(b"%PDF-"))
+
+
+class SpawnConvertTest(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = mkdtemp()
+        self.entity = model.make_entity("Document")
+        self.entity.make_id("doc")
+        self.support = make_support(None)
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+
+    @patch("ingestors.support.convert.run_soffice", side_effect=spawn_pdf)
+    def test_profile_is_used_and_kept(self, run):
+        """LibreOffice gets its profile option as it is, without the quotes a
+        shell would strip, and the profile is kept for the next document."""
+        for _ in range(2):
+            out = self.support._document_to_pdf_spawn(
+                self.tmpdir, FIXTURE, self.entity, 5
+            )
+            with open(out, "rb") as fh:
+                self.assertEqual(fh.read(), b"%PDF-1.4 fake")
+        first, second = (call.args[0][1] for call in run.call_args_list)
+        self.assertEqual(first, second)
+        prefix = "-env:UserInstallation=file://"
+        self.assertTrue(first.startswith(prefix))
+        self.assertTrue(os.path.isdir(first.removeprefix(prefix)))
+
+    def test_profile_is_not_shared_at_once(self):
+        """LibreOffice hands its document to another one running on the same
+        profile, and some of those get lost."""
+        with SpawnProfiles.borrow() as first, SpawnProfiles.borrow() as second:
+            self.assertNotEqual(first, second)
+        with SpawnProfiles.borrow() as again:
+            self.assertIn(again, (first, second))
+
+    def test_timeout_kills_libreoffice(self):
+        """`soffice` is a wrapper: killing only it on a timeout leaves the
+        actual LibreOffice running."""
+        child = os.path.join(self.tmpdir, "child")
+        # a wrapper whose LibreOffice, a child of its own, never finishes
+        cmd = ["sh", "-c", 'sleep 60 & echo $! > "$0"; wait', child]
+        with self.assertRaises(subprocess.TimeoutExpired):
+            run_soffice(cmd, 1)
+        with open(child) as fh:
+            pid = int(fh.read())
+        deadline = time.monotonic() + 5
+        while running(pid) and time.monotonic() < deadline:
+            time.sleep(0.1)
+        self.assertFalse(running(pid))
+
+
+def running(pid):
+    """Whether the process exists and isn't a zombie: in a container nothing
+    may reap the orphaned child once it's dead. It may also be reaped between
+    opening its stat and reading it."""
+    try:
+        with open(f"/proc/{pid}/stat") as fh:
+            return fh.read().rsplit(")", 1)[1].split()[0] != "Z"
+    except (FileNotFoundError, ProcessLookupError):
+        return False

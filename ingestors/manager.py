@@ -118,7 +118,9 @@ class Manager:
 
     MAGIC = magic.Magic(mime=True)
 
-    def __init__(self, app: App, dataset: str, context: dict[str, Any]):
+    def __init__(
+        self, app: App, dataset: str, context: dict[str, Any], collect: bool = True
+    ):
         self.settings = Settings()
         self.app = app
         self.dataset = dataset
@@ -126,6 +128,7 @@ class Manager:
         self.context = context
         self.ns = Namespace(self.context["namespace"])
         self.work_path = ensure_path(mkdtemp(prefix="ingestor-"))
+        self.collect = collect
         self.emitted = MemoryStore()
         self.archive = get_archive(self.dataset)
 
@@ -168,6 +171,8 @@ class Manager:
         fragment = stringify(fragment) or DEFAULT_FRAGMENT
         for part, part_fragment in split_placement(entity, fragment):
             self.writer.put(part, part_fragment, origin=origin)
+        if not self.collect:
+            return
         with self.emitted.writer() as bulk:
             if self.settings.procrastinate_dehydrate_entities:
                 bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
@@ -214,15 +219,11 @@ class Manager:
         with self.app.open():
             defer.ingest(self.app, self.dataset, [entity], **self.context)
 
-    def store(
-        self, file_path: Path, mime_type: str | None = None, origin: str = OP_INGEST
-    ):
+    def store(self, file_path: Path, mime_type: str | None = None):
         file_path = ensure_path(file_path)
         mime_type = normalize_mimetype(mime_type)
         if file_path is not None and file_path.is_file():
-            return self.archive.archive_file(
-                file_path, mime_type=mime_type, origin=origin
-            )
+            return self.archive.archive_file(file_path, mime_type=mime_type)
 
     def load(self, content_hash, file_name=None):
         # log.info("Local archive name: %s", file_name)

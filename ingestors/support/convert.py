@@ -1,14 +1,16 @@
 import atexit
 import logging
 import os
-import pathlib
 import shutil
+import signal
 import socket
 import subprocess
 import tempfile
 import threading
 import time
 import xmlrpc.client
+from contextlib import contextmanager
+from ctypes.util import find_library
 from urllib.parse import urlsplit
 from uuid import uuid4
 
@@ -30,6 +32,10 @@ LISTENER_START_TIMEOUT = 60
 # client waits this much longer, so it gets that answer rather than giving up
 # first and converting the same stuck document once more by spawning
 LISTENER_GRACE = 30
+# glibc's malloc keeps the heap LibreOffice frees after a document, so the
+# running listeners grow with every convert call; jemalloc, set up like this,
+# frees it up.
+JEMALLOC_CONF = "background_thread:true,dirty_decay_ms:1000,muzzy_decay_ms:0"
 
 
 class UnoserverUnavailable(Exception):
@@ -101,7 +107,13 @@ class InlineUnoserver:
             raise UnoserverUnavailable("unoserver is not installed")
         port, uno_port = free_ports(2)
         self.uri = f"http://127.0.0.1:{port}"
-        log.info("Starting inline unoserver on %s", self.uri)
+        # LibreOffice inherits it through unoserver. Ahead of what the worker
+        # preloads already (the image has libgomp)
+        env, jemalloc = None, find_library("jemalloc")
+        if jemalloc is not None:
+            preload = " ".join(filter(None, (jemalloc, os.getenv("LD_PRELOAD"))))
+            env = {**os.environ, "LD_PRELOAD": preload, "MALLOC_CONF": JEMALLOC_CONF}
+        log.info("Starting inline unoserver on %s (jemalloc: %s)", self.uri, jemalloc)
         self.process = subprocess.Popen(
             [
                 executable,
@@ -115,6 +127,7 @@ class InlineUnoserver:
                 str(timeout),
             ],
             stdin=subprocess.DEVNULL,
+            env=env,
         )
         with self._lock:
             self._running.add(self)
@@ -161,6 +174,55 @@ class InlineUnoserver:
 
 
 atexit.register(InlineUnoserver.stop_all)
+
+
+class SpawnProfiles:
+    """LibreOffice profiles for spawning, each used by one conversion at a time
+    and kept for the next ones. LibreOffice starts itself a second time once it
+    has set up a fresh profile, which more than doubles a short conversion; and
+    it hands its document to a LibreOffice already running on the same
+    profile, which loses some of them."""
+
+    _free: list[str] = []
+    _lock = threading.Lock()
+
+    @classmethod
+    @contextmanager
+    def borrow(cls):
+        with cls._lock:
+            profile = cls._free.pop() if cls._free else None
+        if profile is None:
+            profile = tempfile.mkdtemp(prefix="soffice-profile-")
+        try:
+            yield profile
+        finally:
+            with cls._lock:
+                cls._free.append(profile)
+
+    @classmethod
+    def remove_all(cls):
+        with cls._lock:
+            profiles, cls._free = cls._free, []
+        for profile in profiles:
+            shutil.rmtree(profile, ignore_errors=True)
+
+
+atexit.register(SpawnProfiles.remove_all)
+
+
+def run_soffice(cmd, timeout):
+    """Run LibreOffice to its end. `soffice` is a wrapper that runs the actual
+    LibreOffice as its child: unless the whole process group is killed on a
+    timeout, LibreOffice keeps running, and keeps its profile busy."""
+    process = subprocess.Popen(cmd, start_new_session=True)
+    try:
+        process.wait(timeout)
+    except BaseException:
+        os.killpg(process.pid, signal.SIGKILL)
+        process.wait()
+        raise
+    if process.returncode != 0:
+        raise subprocess.CalledProcessError(process.returncode, cmd)
 
 
 class _TimeoutTransport(xmlrpc.client.Transport):
@@ -296,41 +358,36 @@ class DocumentConvertSupport(CacheSupport, TempFileSupport):
     def _document_to_pdf_spawn(
         self, unique_tmpdir, file_path, entity, timeout=settings.convert_timeout
     ):
-        """Converts an office document to PDF by spawning a fresh LibreOffice
-        process per document."""
+        """Converts an office document to PDF by spawning a LibreOffice process
+        per document."""
         file_name = entity_filename(entity)
         log.info("Converting [%s] to PDF", entity)
 
-        # a fresh directory per call: the PDF is found by listing it, and two
-        # LibreOffice processes on one profile hand their work to each other
-        work_dir = tempfile.mkdtemp(dir=unique_tmpdir)
-        pdf_output_dir = os.path.join(work_dir, "out")
-        libreoffice_profile_dir = os.path.join(work_dir, "profile")
-        pathlib.Path(pdf_output_dir).mkdir(parents=True)
-        pathlib.Path(libreoffice_profile_dir).mkdir(parents=True)
-
-        cmd = [
-            settings.soffice_bin,
-            '"-env:UserInstallation=file://{}"'.format(libreoffice_profile_dir),
-            "--nologo",
-            "--headless",
-            "--nocrashreport",
-            "--nodefault",
-            "--norestore",
-            "--nolockcheck",
-            "--invisible",
-            "--convert-to",
-            "pdf",
-            "--outdir",
-            pdf_output_dir,
-            file_path,
-        ]
+        # a fresh directory per call: the PDF is found by listing it
+        pdf_output_dir = tempfile.mkdtemp(dir=unique_tmpdir)
         try:
-            log.info(f"Starting LibreOffice: {cmd} with timeout {timeout}")
-            try:
-                subprocess.run(cmd, timeout=timeout, check=True)
-            except Exception as e:
-                raise ProcessingException("Could not be converted to PDF") from e
+            with SpawnProfiles.borrow() as profile:
+                cmd = [
+                    settings.soffice_bin,
+                    "-env:UserInstallation=file://{}".format(profile),
+                    "--nologo",
+                    "--headless",
+                    "--nocrashreport",
+                    "--nodefault",
+                    "--norestore",
+                    "--nolockcheck",
+                    "--invisible",
+                    "--convert-to",
+                    "pdf",
+                    "--outdir",
+                    pdf_output_dir,
+                    file_path,
+                ]
+                log.info(f"Starting LibreOffice: {cmd} with timeout {timeout}")
+                try:
+                    run_soffice(cmd, timeout)
+                except Exception as e:
+                    raise ProcessingException("Could not be converted to PDF") from e
 
             for file_name in os.listdir(pdf_output_dir):
                 if not file_name.endswith(".pdf"):
