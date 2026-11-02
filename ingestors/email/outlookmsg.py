@@ -1,18 +1,33 @@
 import logging
-from msglite import Message
-from olefile import isOleFile
-from normality import stringify
-from followthemoney import model
 from email.utils import parsedate_to_datetime
 
-from ingestors.ingestor import Ingestor
-from ingestors.support.email import EmailSupport, EmailIdentity
-from ingestors.support.temp import TempFileSupport
-from ingestors.support.ole import OLESupport
+from followthemoney import model
+from msglite import Message
+from normality import stringify
+from olefile import isOleFile
+
 from ingestors.exc import ProcessingException
+from ingestors.ingestor import Ingestor
+from ingestors.support.email import EmailIdentity, EmailSupport
+from ingestors.support.ole import OLESupport
+from ingestors.support.temp import TempFileSupport
 
 log = logging.getLogger(__name__)
 RTF_MIME = "application/rtf"
+
+
+def parse_field(entity, label, func, default=None):
+    """Read a lazily parsed msglite field, tolerating a malformed message.
+
+    msglite builds recipients and attachments on access and raises on a
+    property stream it cannot parse (an unknown property type makes
+    create_prop return None). One broken stream should not fail the message.
+    """
+    try:
+        return func()
+    except Exception:
+        log.exception("[%r] Cannot parse %s", entity, label)
+        return default
 
 
 class OutlookMsgIngestor(Ingestor, EmailSupport, OLESupport, TempFileSupport):
@@ -82,7 +97,7 @@ class OutlookMsgIngestor(Ingestor, EmailSupport, OLESupport, TempFileSupport):
             log.warning("Could not parse date: %s", msg.date)
 
         # sender name and email
-        sender = self.get_identities(msg.sender)
+        sender = self.get_identities(parse_field(entity, "sender", lambda: msg.sender))
         self.apply_identities(entity, sender, "emitters", "sender")
 
         # received by
@@ -91,20 +106,21 @@ class OutlookMsgIngestor(Ingestor, EmailSupport, OLESupport, TempFileSupport):
         )
         self.apply_identities(entity, sender, "emitters")
 
-        froms = self.get_identities(msg.getStringField("1046"))
-        self.apply_identities(entity, froms, "emitters", "from")
+        froms = self.get_identities(msg.getStringField("1046"))  # codespell:ignore
+        self.apply_identities(entity, froms, "emitters", "from")  # codespell:ignore
 
-        tos = self.get_identities(msg.to)
+        tos = self.get_identities(parse_field(entity, "To", lambda: msg.to))
         self.apply_identities(entity, tos, "recipients", "to")
 
-        ccs = self.get_identities(msg.cc)
+        ccs = self.get_identities(parse_field(entity, "CC", lambda: msg.cc))
         self.apply_identities(entity, ccs, "recipients", "cc")
 
-        bccs = self.get_identities(msg.bcc)
+        bccs = self.get_identities(parse_field(entity, "BCC", lambda: msg.bcc))
         self.apply_identities(entity, bccs, "recipients", "bcc")
 
         self.resolve_message_ids(entity)
-        for attachment in msg.attachments:
+        attachments = parse_field(entity, "attachments", lambda: msg.attachments, [])
+        for attachment in attachments:
             if attachment.type == "msg":
                 child = self.manager.make_entity("Email", parent=entity)
                 child.make_id(entity.id, attachment.data.prefix)
