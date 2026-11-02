@@ -21,8 +21,10 @@ def define_env(env):
         if cls.__name__ != "IgnoreIngestor":
             mimetypes.update(map(parse_mimetype, cls.MIME_TYPES))
 
-    env.variables["ingestors"] = extensions
-    env.variables["mimetypes"] = map(make_mtype, mimetypes)
+    env.variables["ingestors"] = sorted(extensions, key=lambda c: c.__name__)
+    env.variables["mimetypes"] = sorted(
+        map(make_mtype, mimetypes), key=lambda m: m["name"]
+    )
 
     @env.macro
     def cli_reference() -> str:

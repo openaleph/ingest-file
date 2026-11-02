@@ -69,6 +69,8 @@ plugins:
   - autorefs
   - macros:
       module_name: mkdocs_env
+      on_undefined: strict
+      on_error_fail: true
   - mkdocstrings:
       default_handler: python
       handlers:
@@ -85,10 +87,10 @@ nav:
   - pipeline.md
   - versioning.md
   - Reference:
-      - Mime types: ./reference/mime.md
-      - Command line: ./reference/cli.md
-      - Settings: ./reference/settings.md
-      - Ingestors: ./reference/ingestors.md
+      - Mime types: reference/mime.md
+      - Command line: reference/cli.md
+      - Settings: reference/settings.md
+      - Ingestors: reference/ingestors.md
   - OpenAleph:
       - About: https://openaleph.org/
       - User Guide: https://openaleph.org/docs
