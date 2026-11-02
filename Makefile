@@ -68,5 +68,5 @@ dev:
 	python3 -m pip install -q -r requirements-dev.txt
 
 documentation:
-	mkdocs build
+	zensical build --clean
 	putfs sync --overwrite ./site putfs://static.darc.zone/openaleph.org/docs/lib/ingest-file
