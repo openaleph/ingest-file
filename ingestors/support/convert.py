@@ -3,7 +3,6 @@
 import atexit
 import logging
 import os
-import re
 import shutil
 import signal
 import socket
@@ -22,6 +21,7 @@ from prometheus_client import Counter
 from ingestors.exc import ProcessingException
 from ingestors.settings import Settings
 from ingestors.support.cache import CacheSupport
+from ingestors.support.shell import forward_output
 from ingestors.support.temp import TempFileSupport
 
 log = logging.getLogger(__name__)
@@ -37,10 +37,6 @@ LISTENER_GRACE = 30
 # running listeners grow with every convert call; jemalloc, set up like this,
 # frees it up.
 JEMALLOC_CONF = "background_thread:true,dirty_decay_ms:1000,muzzy_decay_ms:0"
-# `LEVEL:logger:message`, python's default logging format, which is what
-# unoserver leaves its records in
-LOG_LINE = re.compile(r"(DEBUG|INFO|WARNING|ERROR|CRITICAL):[\w.]*:(.*)", re.DOTALL)
-LOG_LEVELS = logging.getLevelNamesMapping()
 
 
 class UnoserverUnavailable(Exception):
@@ -58,19 +54,6 @@ def free_ports(count):
     finally:
         for sock in sockets:
             sock.close()
-
-
-def forward_logs(stream, uri):
-    """Log what a listener and its LibreOffice write. Also drains the pipe,
-    which they would otherwise fill up and block on."""
-    with stream:
-        for line in stream:
-            line = line.rstrip()
-            if not line:
-                continue
-            match = LOG_LINE.fullmatch(line)
-            level, message = match.groups() if match else ("INFO", line)
-            log.log(LOG_LEVELS[level], "unoserver %s: %s", uri, message)
 
 
 class InlineUnoserver:
@@ -149,12 +132,7 @@ class InlineUnoserver:
             bufsize=1,
             env=env,
         )
-        threading.Thread(
-            target=forward_logs,
-            args=(self.process.stdout, self.uri),
-            name=f"unoserver-logs-{port}",
-            daemon=True,
-        ).start()
+        forward_output(self.process.stdout, f"unoserver {self.uri}", log)
         with self._lock:
             self._running.add(self)
         # it binds its port before LibreOffice is connected, but only answers
@@ -236,7 +214,16 @@ atexit.register(SpawnProfiles.remove_all)
 def run_soffice(cmd, timeout):
     """Run LibreOffice to its end. `soffice` only wraps it, so a timeout kills
     the whole process group: otherwise LibreOffice lives on, profile and all."""
-    process = subprocess.Popen(cmd, start_new_session=True)
+    process = subprocess.Popen(
+        cmd,
+        start_new_session=True,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        errors="replace",
+    )
+    forward_output(process.stdout, "libreoffice", log)
     try:
         process.wait(timeout)
     except BaseException:
