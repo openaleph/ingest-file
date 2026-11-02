@@ -4,6 +4,8 @@ x-ingest-env: &ingest-env
   LOG_FORMAT: TEXT # TEXT or JSON
   PYTHONWARNINGS: "ignore"
   TYPER_STANDARD_TRACEBACK: True
+  TIKA_SERVER_ENDPOINT: http://tika:9998
+  TIKA_CLIENT_ONLY: 1
 
 services:
   postgres:
@@ -58,24 +60,8 @@ services:
   #   depends_on:
   #     - postgres
 
-  # only started by the unoserver pass, which points the worker at it
-  unoserver:
-    image: ${UNOSERVER_IMAGE:-ghcr.io/openaleph/ingest-file-unoserver:main}
-    tmpfs:
-      - /tmp:mode=777
-    # the port is bound before libreoffice is up, `info` only answers after
-    healthcheck:
-      test:
-        - CMD
-        - /usr/bin/python3
-        - -c
-        - import xmlrpc.client; xmlrpc.client.ServerProxy('http://127.0.0.1:2003').info()
-      interval: 2s
-      timeout: 5s
-      retries: 30
-
   analyze:
-    image: ghcr.io/dataresearchcenter/ftm-analyze:main
+    image: ghcr.io/openaleph/ftm-analyze:main
     command: procrastinate worker -q analyze --concurrency 8 --one-shot
     environment:
       <<: *ingest-env
@@ -83,6 +69,14 @@ services:
       - /tmp:mode=777
     depends_on:
       - postgres
+
+  tika:
+    image: apache/tika:3.3.1.0
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9998"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
 
   ingest-file:
     image: ${INGEST_IMAGE:-ghcr.io/openaleph/ingest-file:main}
@@ -111,4 +105,6 @@ services:
       redis:
         condition: service_started
       analyze:
+        condition: service_started
+      tika:
         condition: service_started

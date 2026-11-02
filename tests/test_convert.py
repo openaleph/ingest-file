@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import io
 import os
 import shutil
 import subprocess
@@ -7,7 +8,6 @@ import time
 import unittest
 import xmlrpc.client
 from tempfile import mkdtemp
-from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from followthemoney import model
@@ -31,6 +31,7 @@ class FakeProcess:
 
     def __init__(self):
         self.returncode = None
+        self.stdout = io.StringIO()
 
     def poll(self):
         return self.returncode
@@ -64,12 +65,10 @@ def spawn_pdf(cmd, timeout):
         fh.write(b"%PDF-1.4 fake")
 
 
-def make_support(uri, timeout=5):
-    """A bare DocumentConvertSupport: the unoserver code path only needs
-    settings and a temp dir, no manager or cache."""
-    support = DocumentConvertSupport.__new__(DocumentConvertSupport)
-    support.settings = SimpleNamespace(unoserver_uri=uri, convert_timeout=timeout)
-    return support
+def make_support():
+    """A bare DocumentConvertSupport: the unoserver code path only needs a temp
+    dir, no manager or cache."""
+    return DocumentConvertSupport.__new__(DocumentConvertSupport)
 
 
 class UnoserverConvertTest(unittest.TestCase):
@@ -84,33 +83,25 @@ class UnoserverConvertTest(unittest.TestCase):
         InlineUnoserver._local = threading.local()
         shutil.rmtree(self.tmpdir)
 
-    def test_remote_uri_sends_bytes_and_writes_result(self):
-        support = make_support("http://unoserver:2003")
-        proxy = MagicMock()
-        proxy.convert.return_value = xmlrpc.client.Binary(b"%PDF-1.4 fake")
-        with patch("xmlrpc.client.ServerProxy", return_value=proxy):
-            out = support._document_to_pdf(self.tmpdir, FIXTURE, "entity", timeout=5)
-        args = proxy.convert.call_args[0]
-        self.assertIsNone(args[0])  # inpath unused for remote listeners
-        self.assertIsInstance(args[1], bytes)  # indata carries the document
-        self.assertIsNone(args[2])  # outpath unused, PDF comes back as bytes
-        self.assertEqual(args[3], "pdf")
-        with open(out, "rb") as fh:
-            self.assertEqual(fh.read(), b"%PDF-1.4 fake")
-
-    def test_local_uri_passes_paths(self):
-        support = make_support("http://localhost:2003")
+    @patch.object(InlineUnoserver, "start", autospec=True, side_effect=fake_start)
+    def test_listener_is_passed_paths(self, start):
+        """The listener shares the worker's filesystem: it reads the document
+        and writes the PDF itself, nothing is copied over the wire."""
+        support = make_support()
         proxy = MagicMock()
         proxy.convert.side_effect = write_pdf
         with patch("xmlrpc.client.ServerProxy", return_value=proxy):
             out = support._document_to_pdf(self.tmpdir, FIXTURE, "entity", timeout=5)
         args = proxy.convert.call_args[0]
         self.assertEqual(args[0], os.path.abspath(FIXTURE))  # inpath, shared fs
-        self.assertIsNone(args[1])  # no bytes copied over the wire
+        self.assertIsNone(args[1])  # no bytes
         self.assertEqual(args[2], out)
+        with open(out, "rb") as fh:
+            self.assertEqual(fh.read(), b"%PDF-1.4 fake")
 
-    def test_unreachable_listener_falls_back_to_spawn(self):
-        support = make_support("http://unoserver:2003")
+    @patch.object(InlineUnoserver, "start", autospec=True, side_effect=fake_start)
+    def test_unreachable_listener_falls_back_to_spawn(self, start):
+        support = make_support()
         support._document_to_pdf_spawn = MagicMock(return_value="spawned.pdf")
         proxy = MagicMock()
         proxy.convert.side_effect = ConnectionRefusedError("refused")
@@ -119,10 +110,11 @@ class UnoserverConvertTest(unittest.TestCase):
         self.assertEqual(out, "spawned.pdf")
         support._document_to_pdf_spawn.assert_called_once()
 
-    def test_conversion_fault_fails_without_fallback(self):
+    @patch.object(InlineUnoserver, "start", autospec=True, side_effect=fake_start)
+    def test_conversion_fault_fails_without_fallback(self, start):
         # A document LibreOffice cannot convert fails the same through any
         # invocation path; retrying via spawn would just fail slower.
-        support = make_support("http://unoserver:2003")
+        support = make_support()
         support._document_to_pdf_spawn = MagicMock()
         proxy = MagicMock()
         proxy.convert.side_effect = xmlrpc.client.Fault(1, "Cannot open document")
@@ -131,10 +123,11 @@ class UnoserverConvertTest(unittest.TestCase):
                 support._document_to_pdf(self.tmpdir, FIXTURE, "entity", timeout=5)
         support._document_to_pdf_spawn.assert_not_called()
 
-    def test_output_path_unique_per_call(self):
+    @patch.object(InlineUnoserver, "start", autospec=True, side_effect=fake_start)
+    def test_output_path_unique_per_call(self, start):
         # listeners outlive a conversion: two calls with the same directory
         # must never write to, or pick up, the same file
-        support = make_support("http://localhost:2003")
+        support = make_support()
         proxy = MagicMock()
         proxy.convert.side_effect = write_pdf
         with patch("xmlrpc.client.ServerProxy", return_value=proxy):
@@ -143,10 +136,10 @@ class UnoserverConvertTest(unittest.TestCase):
         self.assertNotEqual(first, second)
 
     @patch.object(InlineUnoserver, "start", autospec=True, side_effect=fake_start)
-    def test_no_uri_uses_thread_listener(self, start):
-        """Without a configured uri, the thread's own listener is started on
-        the first conversion and kept for the next ones."""
-        support = make_support(None)
+    def test_thread_listener_is_kept(self, start):
+        """The thread's listener is started on its first conversion and kept
+        for the next ones."""
+        support = make_support()
         support._document_to_pdf_spawn = MagicMock()
         proxy = MagicMock()
         proxy.convert.side_effect = write_pdf
@@ -189,7 +182,7 @@ class UnoserverConvertTest(unittest.TestCase):
     def test_listener_start_failure_spawns(self, which):
         """A listener that can't be started isn't tried again for every
         document, the thread spawns LibreOffice instead."""
-        support = make_support(None)
+        support = make_support()
         support._document_to_pdf_spawn = MagicMock(return_value="spawned.pdf")
         for _ in range(2):
             out = support._document_to_pdf(self.tmpdir, FIXTURE, "entity", 5)
@@ -201,8 +194,6 @@ class UnoserverConvertTest(unittest.TestCase):
     def test_listener_runs_on_jemalloc(self, which):
         """On glibc's malloc a listener's LibreOffice keeps what it frees, and
         grows with every document. It inherits the environment from unoserver."""
-        exited = FakeProcess()
-        exited.returncode = 1
         cases = (
             ("libjemalloc.so.2", {}, "libjemalloc.so.2"),
             # the image preloads libgomp for the worker, which stays
@@ -214,6 +205,10 @@ class UnoserverConvertTest(unittest.TestCase):
             (None, {}, None),
         )
         for library, environ, preload in cases:
+            # a listener of its own per case: the one that forwards its logs
+            # closes its output at EOF
+            exited = FakeProcess()
+            exited.returncode = 1
             with (
                 patch("ingestors.support.convert.find_library", return_value=library),
                 patch("subprocess.Popen", return_value=exited) as popen,
@@ -234,7 +229,7 @@ class UnoserverConvertTest(unittest.TestCase):
     def test_wedged_listener_is_replaced(self, start):
         """A listener that stops answering falls back to spawning for this
         document, and is replaced for the next one."""
-        support = make_support(None)
+        support = make_support()
         support._document_to_pdf_spawn = MagicMock(return_value="spawned.pdf")
         proxy = MagicMock()
         proxy.convert.side_effect = TimeoutError("timed out")
@@ -253,7 +248,7 @@ class UnoserverConvertTest(unittest.TestCase):
         "integration: needs unoserver and LibreOffice (the docker image)",
     )
     def test_integration_inline_listener(self):
-        support = make_support(None, timeout=60)
+        support = make_support()
         support._document_to_pdf_spawn = MagicMock(side_effect=AssertionError)
         pids = set()
         for _ in range(2):
@@ -271,23 +266,13 @@ class UnoserverConvertTest(unittest.TestCase):
         self.assertTrue(os.path.getsize(out) > 0)
         self.assertNotEqual(listener.process.pid, pid)
 
-    @unittest.skipUnless(
-        os.environ.get("INGESTORS_UNOSERVER_URI"),
-        "integration: set INGESTORS_UNOSERVER_URI to a running unoserver",
-    )
-    def test_integration_real_unoserver(self):
-        support = make_support(os.environ["INGESTORS_UNOSERVER_URI"], timeout=60)
-        out = support._document_to_pdf(self.tmpdir, FIXTURE, "entity", timeout=60)
-        with open(out, "rb") as fh:
-            self.assertTrue(fh.read(5).startswith(b"%PDF-"))
-
 
 class SpawnConvertTest(unittest.TestCase):
     def setUp(self):
         self.tmpdir = mkdtemp()
         self.entity = model.make_entity("Document")
         self.entity.make_id("doc")
-        self.support = make_support(None)
+        self.support = make_support()
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
