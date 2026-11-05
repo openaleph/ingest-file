@@ -24,18 +24,8 @@ class Settings(OpenAlephSettings):
     convert_timeout: int = 300
     """Headless libreoffice document convert timeout in seconds"""
 
-    unoserver_uri: str | None = None
-    """URI of a running unoserver XML-RPC listener
-    to convert office documents to PDF with."""
-
     soffice_bin: str = "/usr/bin/libreoffice"
     """Path to the LibreOffice/soffice binary"""
-
-    tika_fallback: bool = False
-    """Use Apache Tika as a text extraction fallback"""
-
-    calamine: bool = True
-    """Use the Rust calamine implementation (python-calamine) for spreadsheets"""
 
     lakehouse_flush_size: int = 10_000
     """Size cap until when the journal should be flushed to parquet"""

@@ -1,6 +1,6 @@
 [project]
 name = "ingestors"
-version = "5.4.0-rc3"
+version = "5.4.0-rc4"
 description = "Ingestors extract the contents of mixed unstructured documents into structured (followthemoney) data. "
 authors = [
     { name = "Friedrich Lindenberg", email = "friedrich@pudo.org" },
@@ -14,8 +14,8 @@ dependencies = [
     # base dependencies
     "banal (>=1.1.2,<2.0.0)",
     "normality (>=3.1.0,<4.0.0)",
-    "followthemoney (>=4.11.0,<5.0.0)",
-    "ftmq (>=5.2.0,<6.0.0)",
+    "followthemoney (>=4.11.2,<5.0.0)",
+    "ftmq (>=5.3.2,<6.0.0)",
     "pyicu (>=2.15.3,<3.0.0)",
     # ingest dependencies
     "dbf (>=0.99.11,<0.100.0)",
@@ -23,8 +23,6 @@ dependencies = [
     "python-magic (>=0.4.27,<0.5.0)",
     "py7zr (>=1.0.0,<2.0.0)",
     "rarfile (>=4.2,<5.0)",
-    "xlrd (>=2.0.2,<3.0.0)",
-    "openpyxl (>=3.1.5,<4.0.0)",
     "odfpy (>=1.4.1,<2.0.0)",
     "faust-cchardet (>=2.1.19,<3.0.0)",
     "lxml[html-clean] (>=6.0.2,<7.0.0)",
@@ -42,11 +40,14 @@ dependencies = [
     "python-calamine (>=0.7.0,<0.8.0)",
     # servicelayer extras requirements
     "boto3 (>=1.11.9,<2.0.0)",
-    "openaleph-procrastinate (>=5.3.4,<6.0.0)",
-    "openaleph-servicelayer (>=1.25.0,<2.0.0)",
-    "ftm-lakehouse[postgres] (>=0.8.4,<0.9.0)",
+    "openaleph-procrastinate (>=5.4.0,<6.0.0)",
+    "openaleph-servicelayer (>=1.26.0,<2.0.0)",
+    "ftm-lakehouse[postgres] (>=0.10.0,<0.11.0)",
     "tesserocr (>=2.11.0,<3.0.0)",
 ]
+
+[project.optional-dependencies]
+http = ["fastapi (>=0.120.0,<1.0.0)", "granian (>=2.0.0,<3.0.0)"]
 
 [project.scripts]
 ingestors = "ingestors.cli:cli"
@@ -109,11 +110,8 @@ ruff = "^0.11.13"
 pytest-env = "^1.1.5"
 memray = "^1.17.2"
 fakeredis = "<2.31"
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
+zensical = "^0.0.74"
+mkdocstrings-python = "^2.0.9"
 mkdocs = "^1.6.1"
 mkdocs-material = "^9.8.0"
 mkdocs-macros-plugin = "^1.5.0"
@@ -123,8 +121,10 @@ mkdocs-typer2 = "^0.4.1"
 pymdown-extensions = "^12.3"
 putfs = "^0.6.2"
 
+[tool.poetry.group.docs]
+optional = true
+
 [tool.pytest_env]
 DEBUG = 1
 PROCRASTINATE_DB_URI = "sqlite:///:memory:"
 TIKA_PATH = "./contrib"
-INGESTORS_TIKA_FALLBACK = 1

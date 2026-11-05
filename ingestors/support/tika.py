@@ -76,7 +76,8 @@ class TikaSupport(CacheSupport, TempFileSupport):
     ):
         parsed = unpack.from_file(parent_file.open("rb"))
         attachments = parsed.get("attachments") or {}
-        log.info(f"Tika extracted {len(attachments.items())} attachments.")
+        if len(attachments.items()):
+            log.info(f"Tika extracted {len(attachments.items())} attachments.")
         for name, data in attachments.items():
             log.debug(f"Analyzing attachment: {name}")
             if not data:

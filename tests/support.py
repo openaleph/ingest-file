@@ -11,6 +11,7 @@ from ftm_lakehouse.repository.factories import clear_caches as clear_lakehouse_c
 from ftmq.store.fragments.loader import DEFAULT_FRAGMENT
 from normality import stringify
 from openaleph_procrastinate.repository import get_archive, get_entity_store
+from openaleph_procrastinate.tasks import unpack_entities
 from openaleph_procrastinate.util import make_file_entity
 from procrastinate.testing import InMemoryConnector
 from servicelayer import settings as sls
@@ -115,6 +116,17 @@ class TestCase(unittest.TestCase):
 
     def assertSuccess(self, entity):
         self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)
+
+    def deferred_entities(self, queue: str) -> list[dict]:
+        return [
+            entity
+            for job in app.connector.jobs.values()
+            if job["queue_name"] == queue
+            for entity in unpack_entities(job["args"]["payload"]["entities"])
+        ]
+
+    def deferred_schemata(self, queue: str) -> set[str]:
+        return {e["schema"] for e in self.deferred_entities(queue)}
 
     def tearDown(self) -> None:
         # clean up processing queue

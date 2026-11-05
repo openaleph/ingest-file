@@ -8,7 +8,7 @@ from followthemoney import EntityProxy, StatementEntity, model, registry
 from followthemoney.namespace import Namespace
 from ftm_lakehouse import get_documents, get_entities
 from ftm_lakehouse.core.conventions import tag
-from ftm_lakehouse.operation import ExportKind, export
+from ftm_lakehouse.operation import export
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.repository import get_archive
 from openaleph_procrastinate.util import make_file_entity
@@ -76,7 +76,7 @@ class IngestPathTest(TestCase):
         # validation happens before anything is stored
         self.assertEqual(list(self.dataset.iterate()), [])
 
-    def test_ingest_path_incremental(self):
+    def test_ingest_path_resume(self):
         """Files the documents crawl export lists are neither stored nor queued
         again. They are matched by their path below the crawl root, so a file
         of the same name in another folder is still new."""
@@ -84,13 +84,14 @@ class IngestPathTest(TestCase):
         root.joinpath("top.txt").write_text("top")
         if not Settings().lakehouse:
             with self.assertRaises(ValueError):
-                ingest_path(TEST_DATASET, root, incremental=True)
+                ingest_path(TEST_DATASET, root, resume=True)
             self.assertEqual(list(self.dataset.iterate()), [])
             return
 
         ingest_path(TEST_DATASET, root)
-        get_entities(TEST_DATASET).flush()
-        export(TEST_DATASET, ExportKind.documents)
+        repo = get_entities(TEST_DATASET)
+        repo.flush()
+        export(TEST_DATASET, repo.uri)
         crawled = {
             document.relative_path: document.id
             for document in get_documents(TEST_DATASET).stream(tag.CRAWL_ORIGIN)
@@ -108,9 +109,9 @@ class IngestPathTest(TestCase):
                 Manager, "queue_entity", autospec=True, side_effect=Manager.queue_entity
             ) as queue,
         ):
-            ingest_path(TEST_DATASET, root, incremental=True)
+            ingest_path(TEST_DATASET, root, resume=True)
             # a single file is looked up against its parent directory
-            ingest_path(TEST_DATASET, root.joinpath("top.txt"), incremental=True)
+            ingest_path(TEST_DATASET, root.joinpath("top.txt"), resume=True)
 
         # the crawled files are still in the dataset, but not crawled again:
         # neither queued for ingest nor stored, only the new files are
@@ -243,17 +244,6 @@ class AnalyzeDeferTest(TestCase):
     sits in: running the `ingest` task has to leave a job on the analyze queue.
     Both stages defer into the `InMemoryConnector`, where the jobs sit until it
     is reset per test."""
-
-    def deferred_entities(self, queue: str) -> list[dict]:
-        return [
-            entity
-            for job in app.connector.jobs.values()
-            if job["queue_name"] == queue
-            for entity in job["args"]["payload"]["entities"]
-        ]
-
-    def deferred_schemata(self, queue: str) -> set[str]:
-        return {e["schema"] for e in self.deferred_entities(queue)}
 
     def ingest_fixture(self, name: str) -> None:
         path = Path(__file__).parent / "fixtures" / name

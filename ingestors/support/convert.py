@@ -1,3 +1,5 @@
+"""Inlined UnoServer per thread, borrowed from how tika-python does it"""
+
 import atexit
 import logging
 import os
@@ -11,7 +13,6 @@ import time
 import xmlrpc.client
 from contextlib import contextmanager
 from ctypes.util import find_library
-from urllib.parse import urlsplit
 from uuid import uuid4
 
 from followthemoney.helpers import entity_filename
@@ -20,12 +21,12 @@ from prometheus_client import Counter
 from ingestors.exc import ProcessingException
 from ingestors.settings import Settings
 from ingestors.support.cache import CacheSupport
+from ingestors.support.shell import forward_output
 from ingestors.support.temp import TempFileSupport
 
 log = logging.getLogger(__name__)
 settings = Settings()
 
-LOCAL_HOSTS = ("localhost", "127.0.0.1", "::1")
 # unoserver waits 7 seconds before it listens, and LibreOffice has to come up
 LISTENER_START_TIMEOUT = 60
 # an inline listener kills a conversion after the convert timeout itself; the
@@ -39,8 +40,8 @@ JEMALLOC_CONF = "background_thread:true,dirty_decay_ms:1000,muzzy_decay_ms:0"
 
 
 class UnoserverUnavailable(Exception):
-    """The unoserver listener cannot be reached, started, or is wedged past
-    the conversion timeout. Callers degrade to the LibreOffice spawn path."""
+    """A listener cannot be reached, started, or is wedged past the conversion
+    timeout. Callers spawn LibreOffice instead."""
 
 
 def free_ports(count):
@@ -56,14 +57,11 @@ def free_ports(count):
 
 
 class InlineUnoserver:
-    """A unoserver listener owned by one worker thread, used when no
-    `INGESTORS_UNOSERVER_URI` is configured: started on the thread's first
-    conversion and kept for the next ones, like tika-python keeps its server.
-    unoserver converts one document at a time, so each thread gets a listener
-    of its own (own ports, own LibreOffice profile) instead of queueing behind
-    a shared one. A listener that exited, e.g. after a conversion timeout, is
-    started again; one that fails to start is not tried again in this thread,
-    which then spawns LibreOffice per document."""
+    """A unoserver listener per worker thread, started on its first conversion
+    and kept for the next ones. unoserver converts one document at a time, so
+    threads get a listener of their own (own ports, own LibreOffice profile).
+    One that exited is started again, one that fails to start makes this thread
+    spawn LibreOffice per document."""
 
     _local = threading.local()
     _running: set["InlineUnoserver"] = set()
@@ -127,8 +125,14 @@ class InlineUnoserver:
                 str(timeout),
             ],
             stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            errors="replace",
+            bufsize=1,
             env=env,
         )
+        forward_output(self.process.stdout, f"unoserver {self.uri}", log)
         with self._lock:
             self._running.add(self)
         # it binds its port before LibreOffice is connected, but only answers
@@ -157,8 +161,7 @@ class InlineUnoserver:
 
     @classmethod
     def stop_orphaned(cls):
-        """Stop the listeners of threads that ended, e.g. with the executor of
-        an event loop that finished: nothing would use them again."""
+        """Stop the listeners of threads that ended: nothing uses them again."""
         with cls._lock:
             listeners = [x for x in cls._running if not x.thread.is_alive()]
         for listener in listeners:
@@ -177,11 +180,9 @@ atexit.register(InlineUnoserver.stop_all)
 
 
 class SpawnProfiles:
-    """LibreOffice profiles for spawning, each used by one conversion at a time
-    and kept for the next ones. LibreOffice starts itself a second time once it
-    has set up a fresh profile, which more than doubles a short conversion; and
-    it hands its document to a LibreOffice already running on the same
-    profile, which loses some of them."""
+    """LibreOffice profiles for spawning, one per concurrent conversion and kept
+    for the next ones. A fresh profile makes LibreOffice start a second time, a
+    profile in use makes it hand the document over, which loses some."""
 
     _free: list[str] = []
     _lock = threading.Lock()
@@ -211,10 +212,18 @@ atexit.register(SpawnProfiles.remove_all)
 
 
 def run_soffice(cmd, timeout):
-    """Run LibreOffice to its end. `soffice` is a wrapper that runs the actual
-    LibreOffice as its child: unless the whole process group is killed on a
-    timeout, LibreOffice keeps running, and keeps its profile busy."""
-    process = subprocess.Popen(cmd, start_new_session=True)
+    """Run LibreOffice to its end. `soffice` only wraps it, so a timeout kills
+    the whole process group: otherwise LibreOffice lives on, profile and all."""
+    process = subprocess.Popen(
+        cmd,
+        start_new_session=True,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        errors="replace",
+    )
+    forward_output(process.stdout, "libreoffice", log)
     try:
         process.wait(timeout)
     except BaseException:
@@ -226,8 +235,8 @@ def run_soffice(cmd, timeout):
 
 
 class _TimeoutTransport(xmlrpc.client.Transport):
-    """xmlrpc.client has no timeout support; a hung LibreOffice behind the
-    listener must not block the worker forever."""
+    """xmlrpc.client has no timeout support, and a hung listener must not block
+    the worker forever."""
 
     def __init__(self, timeout):
         super().__init__()
@@ -272,22 +281,18 @@ class DocumentConvertSupport(CacheSupport, TempFileSupport):
     def _document_to_pdf(
         self, unique_tmpdir, file_path, entity, timeout=settings.convert_timeout
     ):
-        """Converts an office document to PDF through a unoserver listener:
-        the configured one, else this thread's own (`InlineUnoserver`)."""
-        uri, client_timeout, listener = self.settings.unoserver_uri, timeout, None
-        if not uri:
-            listener = InlineUnoserver.for_thread()
-            uri = listener.ensure(timeout)
-            client_timeout = timeout + LISTENER_GRACE
+        """Converts an office document to PDF through this thread's unoserver
+        listener (`InlineUnoserver`), spawning LibreOffice if there is none."""
+        listener = InlineUnoserver.for_thread()
+        uri = listener.ensure(timeout)
         if uri:
             try:
                 return self._document_to_pdf_unoserver(
-                    uri, unique_tmpdir, file_path, entity, client_timeout
+                    uri, unique_tmpdir, file_path, entity, timeout + LISTENER_GRACE
                 )
             except UnoserverUnavailable as exc:
-                if listener is not None:
-                    # it died or is wedged: the next document gets a fresh one
-                    listener.stop()
+                # it died or is wedged: the next document gets a fresh one
+                listener.stop()
                 log.warning(
                     "unoserver unavailable (%s), falling back to LibreOffice spawn",
                     exc,
@@ -297,42 +302,30 @@ class DocumentConvertSupport(CacheSupport, TempFileSupport):
     def _document_to_pdf_unoserver(
         self, uri, unique_tmpdir, file_path, entity, timeout
     ):
-        """Convert through a persistent unoserver listener (XML-RPC, unoserver
-        API v3) instead of paying a LibreOffice process start per document.
+        """Convert through this thread's listener (XML-RPC, unoserver API v3).
 
-        One attempt, no retries: connection failures and timeouts raise
-        UnoserverUnavailable so the caller degrades to the spawn path for
-        this document only — a wedged or busy listener must never queue work
-        behind it (see the convert-document history, alephdata/ingest-file#395).
-        Conversion errors for broken/encrypted documents raise
-        ProcessingException without touching the spawn path, since the spawn
-        would fail on those all the same, just slower.
+        One attempt, no retries (alephdata/ingest-file#395): connection
+        failures and timeouts raise UnoserverUnavailable, so the caller spawns
+        LibreOffice for this document; a conversion error raises
+        ProcessingException, as the spawn would fail on it too.
         """
         log.info("Converting [%s] to PDF via unoserver", entity)
         # a name of its own for every call: listeners outlive a conversion, and
         # the spawn fallback may run in the same directory right after
         out_file = os.path.join(unique_tmpdir, f"{uuid4().hex}.pdf")
-        # A listener on localhost shares our filesystem: hand it paths and
-        # let it read/write directly. A remote listener gets the bytes over
-        # XML-RPC and returns the PDF the same way.
-        local = urlsplit(uri).hostname in LOCAL_HOSTS
-        inpath = os.path.abspath(str(file_path)) if local else None
-        indata = None
-        if not local:
-            with open(file_path, "rb") as fh:
-                indata = fh.read()
         proxy = xmlrpc.client.ServerProxy(
             uri, allow_none=True, transport=_TimeoutTransport(timeout)
         )
         try:
             # convert(inpath, indata, outpath, convert_to, filtername,
             #         filter_options, update_index, infiltername, password)
-            # `password` needs unoserver >= 3.5 (the listener image ships
-            # 3.7), older servers fault on the 9th argument.
-            result = proxy.convert(
-                inpath,
-                indata,
-                out_file if local else None,
+            # the listener shares our filesystem, so it is handed paths and
+            # reads/writes them itself. `password` needs unoserver >= 3.5 (the
+            # image ships 3.7), older ones fault on the 9th argument.
+            proxy.convert(
+                os.path.abspath(str(file_path)),
+                None,
+                out_file,
                 "pdf",
                 None,
                 [],
@@ -344,12 +337,6 @@ class DocumentConvertSupport(CacheSupport, TempFileSupport):
             raise ProcessingException("Could not be converted to PDF") from exc
         except OSError as exc:
             raise UnoserverUnavailable(str(exc)) from exc
-        if not local:
-            data = result.data if result is not None else None
-            if not data:
-                raise ProcessingException("Could not be converted to PDF")
-            with open(out_file, "wb") as fh:
-                fh.write(data)
         if not os.path.exists(out_file) or os.stat(out_file).st_size == 0:
             raise ProcessingException("Could not be converted to PDF")
         log.info(f"Successfully converted {out_file} via unoserver")

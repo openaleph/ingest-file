@@ -9,6 +9,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 3. Touch only what you must. Clean up only your own mess.
 4. Define success criteria. Loop until verified.
 
+### Docs and comments
+
+- Keep docstrings and docs short, only the essentials; the audience is developers. No reasoning essays. Inline comments only where the code would surprise otherwise. Docstrings carry Args / Returns only for public API documented in `docs/` (rendered via mkdocstrings, see `docs/reference/`); keep their `Example(s):` sections.
+- No section banners (`# --- ... ---`, `// --- ... ---`) in code or tests: a comment explains surprising code, it doesn't divide a file.
+- Never use em-dashes in prose (docstrings, comments, docs, commit messages, PR text). Use a normal hyphen (`-`) or restructure the sentence.
+- In `docs/` markdown prose, keep each paragraph on a single line (do not hard-wrap; one line per paragraph, separated by blank lines).
+
 ## Environment
 
 Use `poetry run <command>` for Python commands run on the host.
@@ -169,18 +176,15 @@ poetry run pytest -s tests/test_doc.py::TestClass::test_method -xvs
 
 Settings managed via `ingestors/settings.py` using Pydantic. Environment variables prefixed with `INGESTORS_`:
 
-- `INGESTORS_CONVERT_TIMEOUT` - LibreOffice conversion timeout (default: 300s)
-- `INGESTORS_UNOSERVER_URI` - Convert through this unoserver listener
-  (`ghcr.io/openaleph/ingest-file-unoserver`, built from the `unoserver` stage of
-  `Dockerfile.base`). Unset, every worker thread starts its own listener on first
-  use and keeps it (`InlineUnoserver` in `support/convert.py`, like tika-python's
-  inline server). Either way an unreachable or unstartable listener falls back to
-  spawning LibreOffice per document. `localhost` means "shared filesystem" (paths
-  are sent), any other host gets the bytes. Listeners run LibreOffice on jemalloc
-  (`LD_PRELOAD`, `libjemalloc2` in the base image): on glibc's malloc a kept
-  LibreOffice grows with every document. Spawning reuses a profile per concurrent
-  conversion (`SpawnProfiles`), a fresh one makes LibreOffice start twice
-- `INGESTORS_TIKA_FALLBACK` - Enable Apache Tika fallback for unknown formats
+- `INGESTORS_CONVERT_TIMEOUT` - LibreOffice conversion timeout (default: 300s).
+  Office documents go through a unoserver listener per worker thread, started on
+  first use and kept (`InlineUnoserver` in `support/convert.py`, like
+  tika-python's inline server); it shares the filesystem, so it is handed paths.
+  An unreachable or unstartable listener falls back to spawning LibreOffice per
+  document. Listeners run LibreOffice on jemalloc (`LD_PRELOAD`, `libjemalloc2`
+  in the base image): on glibc's malloc a kept LibreOffice grows with every
+  document. Spawning reuses a profile per concurrent conversion
+  (`SpawnProfiles`), a fresh one makes LibreOffice start twice
 - `INGESTORS_LAKEHOUSE_FLUSH_SIZE` - Emitted entities after which the cli producer
   flushes the lakehouse journal to parquet (default: 10000)
 - `INGESTORS_CRAWL_THREADS` - Threads hashing and storing files while `ingestors
