@@ -67,4 +67,4 @@ dev:
 
 documentation:
 	zensical build --clean
-	putfs sync --delete ./site putfs://static.darc.zone/openaleph.org/docs/lib/ingest-file
+	putfs sync --delete ./site putfs://static.darc.zone/darc.li/docs/ingest-file

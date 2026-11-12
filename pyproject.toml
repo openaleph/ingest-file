@@ -14,7 +14,7 @@ dependencies = [
     # base dependencies
     "banal (>=1.1.2,<2.0.0)",
     "normality (>=3.1.0,<4.0.0)",
-    "followthemoney (>=4.11.2,<5.0.0)",
+    "followthemoney (>=4.11.3,<5.0.0)",
     "ftmq (>=5.3.2,<6.0.0)",
     "pyicu (>=2.15.3,<3.0.0)",
     # ingest dependencies
