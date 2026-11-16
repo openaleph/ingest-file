@@ -2,6 +2,8 @@ x-ingest-env: &ingest-env
   OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
   FTM_FRAGMENTS_URI: postgresql://ingest:ingest@postgres/ingest
   LAKEHOUSE_JOURNAL_URI: postgresql://ingest:ingest@postgres/ingest
+  TIKA_SERVER_ENDPOINT: http://tika:9998
+  TIKA_CLIENT_ONLY: 1
   LOG_FORMAT: TEXT # TEXT or JSON
   PYTHONWARNINGS: "ignore"
   TYPER_STANDARD_TRACEBACK: True
@@ -29,8 +31,7 @@ services:
       retries: 30
 
   tika:
-    # not `latest`, that is Tika 4.x. 3.3.1.0 is the newest 3.x image, one patch
-    # behind the jar the Dockerfile bakes in (no 3.3.2 image is published)
+    # not `latest`, that is Tika 4.x.
     image: apache/tika:3.3.1.0
     # appended to the image entrypoint `java ... TikaServerCli -h 0.0.0.0`
     command: ["-c", "/tika-config.xml"]
@@ -83,9 +84,6 @@ services:
     volumes:
       - "./ingestors:/ingestors/ingestors"
       - "./tests:/ingestors/tests"
-    # both backends talk to postgres: the fragments store, the lakehouse journal
-    # and, either way, the tags cache. `run` brings it up for us, so `make
-    # test-*` works without a preceding `make services` (CI relies on that).
     depends_on:
       redis:
         condition: service_healthy
@@ -95,10 +93,6 @@ services:
         condition: service_healthy
 
 configs:
-  # Tika parses in one forked JVM, and a watchdog restarts it when a parse
-  # exceeds taskTimeoutMillis or runs out of memory, failing every request in
-  # flight. Concurrent parses share the heap: size -Xmx for the sum of the
-  # `procrastinate worker --concurrency` of all ingest workers
   tika-config:
     content: |
       <?xml version="1.0" encoding="UTF-8"?>

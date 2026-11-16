@@ -60,8 +60,6 @@ RUN pip3 install --no-cache-dir --no-deps -e .
 
 COPY tests ./tests
 
-RUN chown -R app:app /ingestors
-
 ENV DEBUG=1
 
 CMD ["pytest", "tests"]
