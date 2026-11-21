@@ -2258,20 +2258,18 @@ name = "ftm-lakehouse"
 version = "0.10.1"
 description = "Data standard, storage and retrieval for structured and unstructured FollowTheMoney data"
 optional = false
-python-versions = "<3.15,>=3.12"
+python-versions = ">=3.12,<3.15"
 groups = ["main"]
-files = [
-    {file = "ftm_lakehouse-0.10.1-py3-none-any.whl", hash = "sha256:2805355b2ec6578be43f9047ef81bd85fa06be7938356c67c5487b629c8e4f9f"},
-    {file = "ftm_lakehouse-0.10.1.tar.gz", hash = "sha256:b502c35d2a028dff590437b34825ea0e1b4ccb1a5f20956dd59044a563d2fb35"},
-]
+files = []
+develop = false
 
 [package.dependencies]
-adbc-driver-postgresql = {version = ">=1.12.0,<2.0.0", optional = true, markers = "extra == \"postgres\""}
+adbc-driver-postgresql = {version = ">=1.12.0,<2.0.0", optional = true}
 anystore = ">=1.5.7,<2.0.0"
 followthemoney = ">=4.11.2,<5.0.0"
 ftmq = {version = ">=5.3.2,<6.0.0", extras = ["lake"]}
 httpx = ">=0.28.1,<0.29.0"
-psycopg = {version = ">=3.2,<4", extras = ["binary"], optional = true, markers = "extra == \"postgres\""}
+psycopg = {version = ">=3.2,<4", extras = ["binary"], optional = true}
 zfs-agent = ">=0.0.1,<0.0.2"
 
 [package.extras]
@@ -2281,6 +2279,12 @@ gcs = ["gcsfs (>2024.2.0)"]
 http = ["aiohttp (!=4.0.0a0,!=4.0.0a1)"]
 postgres = ["adbc-driver-postgresql (>=1.12.0,<2.0.0)", "psycopg[binary] (>=3.2,<4)"]
 s3 = ["s3fs (>2024.2.0)"]
+
+[package.source]
+type = "git"
+url = "https://github.com/openaleph/ftm-lakehouse.git"
+reference = "HEAD"
+resolved_reference = "2054bdd85555506e5b528bd6a35517d3de3a82be"
 
 [[package]]
 name = "ftmq"
@@ -7774,4 +7778,4 @@ http = ["fastapi", "granian"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.15"
-content-hash = "fcb14482e6c02cf14d5b2ae6cc7950684689efb9acab7c834932574ecd50c7c9"
+content-hash = "f2c174c6c55520b9719b7b772fd98c349daa049f45353f7a87f132c481bf963e"
