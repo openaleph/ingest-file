@@ -44,6 +44,7 @@ dependencies = [
     "openaleph-servicelayer (>=1.26.0,<2.0.0)",
     "ftm-lakehouse[postgres] @ git+https://github.com/openaleph/ftm-lakehouse.git",
     "tesserocr (>=2.11.0,<3.0.0)",
+    "procrastinate (<3.12)",
 ]
 
 [project.optional-dependencies]

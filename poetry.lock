@@ -4783,29 +4783,27 @@ dev = ["build", "bump2version", "mypy", "pytest", "pytest-cov", "ruff", "wheel"]
 
 [[package]]
 name = "procrastinate"
-version = "3.12.0"
+version = "3.11.0"
 description = "Postgres-based distributed task processing library"
 optional = false
-python-versions = ">=3.11"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "procrastinate-3.12.0-py3-none-any.whl", hash = "sha256:14c28c3d24bf77d4a15dfcd8053c7db4a671011eefab337e666ce69290d33932"},
-    {file = "procrastinate-3.12.0.tar.gz", hash = "sha256:7dc95c31fb5fa9e6d2d5d6dd9f94b54d069d7f788f6ac14f70d95348fd0ca2dc"},
+    {file = "procrastinate-3.11.0-py3-none-any.whl", hash = "sha256:97e143ad84c149ad115147b375d6478d871243e40d1db353deb4fe7a4619128d"},
+    {file = "procrastinate-3.11.0.tar.gz", hash = "sha256:ab1a374f842e38043ea229d874af107c90c767dabd2e837322328ab425525433"},
 ]
 
 [package.dependencies]
 asgiref = "*"
 attrs = "*"
-croniter = ">=6.1"
+croniter = "*"
 packaging = "*"
 psycopg = {version = "*", extras = ["pool"]}
 python-dateutil = "*"
 typing-extensions = "*"
-tzdata = "*"
 
 [package.extras]
 aiopg = ["aiopg", "psycopg2-binary"]
-alembic = ["alembic"]
 django = ["django (>=2.2)"]
 psycopg2 = ["psycopg2-binary"]
 sphinx = ["sphinx"]
@@ -7771,4 +7769,4 @@ http = ["fastapi", "granian"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.15"
-content-hash = "f2c174c6c55520b9719b7b772fd98c349daa049f45353f7a87f132c481bf963e"
+content-hash = "c431eeb60626da8df8c05e2095a7cd62249f6ea848306de8df8c7d34939f8a35"
