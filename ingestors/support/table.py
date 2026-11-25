@@ -1,5 +1,7 @@
 import csv
 import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
 from io import StringIO
 from itertools import chain
 
@@ -18,6 +20,26 @@ from ingestors.support.temp import TempFileSupport
 log = logging.getLogger(__name__)
 
 _MISSING = object()
+
+
+@contextmanager
+def _calamine_errors(message: str) -> Iterator[None]:
+    """Turn calamine failures into `ProcessingException`. Malformed records make
+    the Rust crate panic, which pyo3 raises as `pyo3_runtime.PanicException`: it
+    derives from `BaseException` and its module cannot be imported, so it is
+    recognised by name."""
+    try:
+        yield
+    except PasswordError as err:
+        raise ProcessingException(ENCRYPTED_MSG) from err
+    except CalamineError as err:
+        raise ProcessingException("%s: %s" % (message, err)) from err
+    except BaseException as err:
+        cls = type(err)
+        if (cls.__module__, cls.__qualname__) != ("pyo3_runtime", "PanicException"):
+            raise
+        raise ProcessingException("%s: %s" % (message, err)) from err
+
 
 # Flush a text fragment once it holds this many rows or characters. The size cap
 # matters because `EntityProxy.add` silently drops a value that would push the
@@ -138,13 +160,9 @@ class CalamineSpreadsheetSupport(TableSupport):
 
     def calamine_extract_sheets(self, file_path: Uri, entity: EntityProxy) -> None:
         log.info(f"Calamine extract: [{repr(entity)}]: {self.__class__.__name__}")
-        try:
+        with _calamine_errors("Invalid workbook"):
             workbook = CalamineWorkbook.from_path(str(file_path))
-        except PasswordError as err:
-            raise ProcessingException(ENCRYPTED_MSG) from err
-        except CalamineError as err:
-            raise ProcessingException("Invalid workbook: %s" % err) from err
-        try:
+        with _calamine_errors("Cannot read workbook"):
             for name in workbook.sheet_names:
                 sheet = workbook.get_sheet_by_name(name)
                 table = self.manager.make_entity("Table", parent=entity)
@@ -163,5 +181,3 @@ class CalamineSpreadsheetSupport(TableSupport):
                     table.set("processingError", EMPTY_SHEET_MSG)
                     table.set("processingStatus", self.manager.STATUS_FAILURE)
                 self.manager.emit_entity(table)
-        except CalamineError as err:
-            raise ProcessingException("Cannot read workbook: %s" % err) from err

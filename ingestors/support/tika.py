@@ -1,4 +1,5 @@
 import logging
+import tarfile
 from io import BytesIO
 from pathlib import PosixPath
 from typing import Any
@@ -7,7 +8,8 @@ import olefile
 from followthemoney import EntityProxy
 from normality import collapse_spaces, safe_filename
 from oletools.oleobj import OleNativeStream
-from tika import parser, unpack
+from tika import parser
+from tika.tika import parse1
 
 from ingestors.exc import ProcessingException
 from ingestors.support.cache import CacheSupport
@@ -17,6 +19,12 @@ log = logging.getLogger(__name__)
 
 OLE_MAGIC = b"\xd0\xcf\x11\xe0"
 # https://www.loc.gov/preservation/digital/formats/fdd/fdd000392.shtml
+
+# `parse1` resolves its option through this mapping, but evaluates the
+# `services["all"]` fallback eagerly, so both keys have to be there
+UNPACK_SERVICES = {"unpack": "/unpack/all", "all": "/unpack/all"}
+# the metadata and plain text members of the archive, which we don't use
+UNPACK_EXTRAS = ("__METADATA__", "__TEXT__")
 
 
 def _unwrap_ole_package(data: bytes) -> tuple[str, bytes] | None:
@@ -42,6 +50,36 @@ def _unwrap_ole_package(data: bytes) -> tuple[str, bytes] | None:
     except Exception as exc:
         log.warning("Failed to unpack OLE: %s", exc)
         return None
+
+
+def _unpack_tika(file_path: PosixPath) -> dict[str, bytes]:
+    """Embedded documents Tika extracts from a file, by name. tika-python's
+    `unpack.from_file` is not used: it ignores the response status and raises a
+    KeyError on the empty archive a failed parse returns."""
+    with file_path.open("rb") as fh:
+        status, body = parse1(
+            "unpack",
+            fh,
+            responseMimeType="application/x-tar",
+            services=UNPACK_SERVICES,
+            rawResponse=True,
+        )
+    if status != 200:
+        raise ProcessingException(f"Tika server returned status {status}")
+    attachments: dict[str, bytes] = {}
+    if not body:
+        return attachments
+    try:
+        with tarfile.open(fileobj=BytesIO(body)) as tar:
+            for member in tar.getmembers():
+                if member.name in UNPACK_EXTRAS or not member.isfile():
+                    continue
+                member_fh = tar.extractfile(member)
+                if member_fh is not None:
+                    attachments[member.name] = member_fh.read()
+    except tarfile.TarError as err:
+        raise ProcessingException("Tika returned an invalid archive: %s" % err) from err
+    return attachments
 
 
 class TikaSupport(CacheSupport, TempFileSupport):
@@ -74,10 +112,9 @@ class TikaSupport(CacheSupport, TempFileSupport):
     def ingest_embedded(
         self, parent_file: PosixPath, parent: EntityProxy | None = None
     ):
-        parsed = unpack.from_file(parent_file.open("rb"))
-        attachments = parsed.get("attachments") or {}
-        if len(attachments.items()):
-            log.info(f"Tika extracted {len(attachments.items())} attachments.")
+        attachments = _unpack_tika(parent_file)
+        if attachments:
+            log.info(f"Tika extracted {len(attachments)} attachments.")
         for name, data in attachments.items():
             log.debug(f"Analyzing attachment: {name}")
             if not data:
