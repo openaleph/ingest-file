@@ -59,6 +59,7 @@ class AudioIngestor(Ingestor, TimestampSupport, TranscriptionSupport):
         except Exception as ex:
             raise ProcessingException(f"Could not read audio: {ex}") from ex
         try:
+            entity = self.manager.ns.apply(entity)
             self.transcribe(self.manager.dataset, entity, self.manager.context)
         except Exception as ex:
             log.error(f"Could not queue audio for transcription: {ex}")
