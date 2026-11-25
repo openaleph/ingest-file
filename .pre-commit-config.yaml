@@ -76,7 +76,7 @@ repos:
       - id: poetry-lock
 
   - repo: https://github.com/python-poetry/poetry-plugin-export
-    rev: 1.10.1
+    rev: 1.10.2
     hooks:
       - id: poetry-export
         args: ["--without-hashes", "--with", "main", "--extras", "http", "-o", "requirements.txt"]
