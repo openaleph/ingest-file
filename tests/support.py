@@ -7,22 +7,33 @@ import unittest
 from tempfile import mkdtemp
 
 from followthemoney import StatementEntity
-from ftmq.store.fragments import get_fragments
+from ftm_lakehouse.repository.factories import clear_caches as clear_lakehouse_caches
+from ftmq.store.fragments.loader import DEFAULT_FRAGMENT
+from normality import stringify
+from openaleph_procrastinate.repository import get_archive, get_entity_store
+from openaleph_procrastinate.tasks import unpack_entities
 from openaleph_procrastinate.util import make_file_entity
 from procrastinate.testing import InMemoryConnector
 from servicelayer import settings as sls
 from servicelayer.archive.util import ensure_path
 from servicelayer.tags import Tags
 
-from ingestors.manager import OP_INGEST, Manager, get_archive
+from ingestors.manager import Manager, split_placement
+from ingestors.settings import OP_INGEST, Settings
 from ingestors.tasks import app
 
 TEST_DATASET = "test"
 
 
-def emit_entity(self, entity, fragment=None):
+def emit_entity(self, entity, fragment=None, origin=OP_INGEST):
+    """Stand-in for `Manager.emit_entity` that records what was emitted and,
+    unlike the real one, leaves the entity ids un-namespaced so the tests can
+    look them up by the id they made. The fragment is coerced and the placement
+    split off the same way the manager does it, the backends take it as-is."""
     self.entities.append(entity)
-    self.writer.put(entity.to_dict(), fragment=fragment)
+    fragment = stringify(fragment) or DEFAULT_FRAGMENT
+    for part, part_fragment in split_placement(entity, fragment):
+        self.writer.put(part, part_fragment, origin=origin)
     with self.emitted.writer() as bulk:
         bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
 
@@ -30,26 +41,45 @@ def emit_entity(self, entity, fragment=None):
 class TestCase(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = mkdtemp()
-        # clear cached func calls
+        # the lakehouse backend takes its location from `LAKEHOUSE_URI` (the
+        # repositories no longer accept an explicit uri), so point it at an
+        # isolated directory per test. `TEST_LAKEHOUSE_URI` keeps the escape
+        # hatch for running the suite against a shared location.
+        os.environ["LAKEHOUSE_URI"] = (
+            os.environ.get("TEST_LAKEHOUSE_URI") or self.tmp_dir
+        )
+        # clear cached func calls, they are keyed on the dataset (resp. the
+        # dataset uri) only and would otherwise hand back stores pointing at a
+        # previous test's tmp dir. `get_entity_store` is deliberately uncached
+        # upstream, so there is nothing to clear for it.
         get_archive.cache_clear()
-        get_fragments.cache_clear()
+        clear_lakehouse_caches()
         # Force tests to use fake configuration
         self.assertIsInstance(app.connector, InMemoryConnector)
+        # `App.run_worker` registers a notification listener bound to the loop
+        # that `asyncio.run` closes on its way out. The connector is module
+        # level, so without a reset the next test would dispatch onto that dead
+        # loop and fail with "Event loop is closed". Also isolates the job table.
+        app.connector.reset()
         sls.REDIS_URL = None
         sls.ARCHIVE_TYPE = "file"
         sls.ARCHIVE_PATH = self.tmp_dir
         os.environ["FTM_STORE_URI"] = f"sqlite:///{self.tmp_dir}/ftm.store"
         sls.TAGS_DATABASE_URI = os.environ["FTM_STORE_URI"]
-        Tags("ingest_cache").delete()
+        # `CacheSupport` resolves the tags db from the ingestors settings, not
+        # from `sls`, so clearing the default would leave the real cache (and
+        # e.g. the pdf conversion hashes in it) in place between tests
+        Tags("ingest_cache", uri=Settings().tags_database_uri).delete()
         self.manager = Manager(app, TEST_DATASET, {"namespace": "test"})
         self.manager.emit_entity = types.MethodType(emit_entity, self.manager)
         self.manager.entities = []
-        self.dataset = self.manager.db
+        self.dataset = get_entity_store(self.manager.dataset)
+        self.dataset.delete()
 
     def fixture(self, fixture_path):
         """Returns a fixture path and a dummy entity"""
         # clear out entities
-        self.manager.db.delete()
+        self.dataset.delete()
         self.manager.entities = []
         cur_path = ensure_path(__file__).parent
         cur_path = cur_path.joinpath("fixtures")
@@ -68,11 +98,12 @@ class TestCase(unittest.TestCase):
         return path, entity
 
     def get_emitted(self, schema=None):
-        entities = list(self.manager.db.iterate())
+        entities = list(sorted(self.dataset.iterate(), key=lambda e: e.id))
         # test dehydrated emitted:
         emitted = self.manager.get_emitted()
-        equal = {e.id for e in entities} == {e.id for e in emitted}
-        if not equal:
+        try:
+            assert {e.id for e in entities} == {e.id for e in emitted}
+        except AssertionError:
             # special case of directory test: the child file is emitted in
             # another manager instance, but the Folder entity is there:
             assert len({e.id for e in entities} & {e.id for e in emitted}) == 1
@@ -81,10 +112,21 @@ class TestCase(unittest.TestCase):
         return entities
 
     def get_emitted_by_id(self, id):
-        return self.manager.db.get(id)
+        return self.dataset.get(id)
 
     def assertSuccess(self, entity):
         self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)
+
+    def deferred_entities(self, queue: str) -> list[dict]:
+        return [
+            entity
+            for job in app.connector.jobs.values()
+            if job["queue_name"] == queue
+            for entity in unpack_entities(job["args"]["payload"]["entities"])
+        ]
+
+    def deferred_schemata(self, queue: str) -> set[str]:
+        return {e["schema"] for e in self.deferred_entities(queue)}
 
     def tearDown(self) -> None:
         # clean up processing queue

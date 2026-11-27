@@ -54,9 +54,6 @@ class IgnoreIngestor(Ingestor):
 
     @classmethod
     def match(cls, file_path, entity):
-        for file_size in entity.get("fileSize"):
-            if int(file_size) == 0:
-                return cls.SCORE * 100
         for file_name in entity.get("fileName"):
             if file_name in cls.NAMES:
                 return cls.SCORE

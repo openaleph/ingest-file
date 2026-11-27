@@ -1,3 +1,12 @@
+x-ingest-env: &ingest-env
+  OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
+  FTM_FRAGMENTS_URI: postgresql://ingest:ingest@postgres/ingest
+  LOG_FORMAT: TEXT # TEXT or JSON
+  PYTHONWARNINGS: "ignore"
+  TYPER_STANDARD_TRACEBACK: True
+  TIKA_SERVER_ENDPOINT: http://tika:9998
+  TIKA_CLIENT_ONLY: 1
+
 services:
   postgres:
     image: postgres:17
@@ -13,8 +22,9 @@ services:
   redis:
     image: redis:alpine
 
+  # minio no longer publishes images, this is pigsty's community build
   minio:
-    image: quay.io/minio/minio
+    image: docker.io/pgsty/silo:latest
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -26,6 +36,18 @@ services:
     tmpfs:
       - /data:mode=777
 
+  # creates the bucket once minio answers. `mc alias set` fails until then, and
+  # without the alias `mc mb minio/openaleph` would make a local directory
+  minio-init:
+    image: docker.io/pgsty/silo:latest
+    command:
+      - sh
+      - -c
+      - |
+        until mc alias set minio http://minio:9000 openaleph openaleph; do sleep 1; done
+        mc mb --ignore-existing --region eu-central-1 minio/openaleph
+    depends_on:
+      - minio
 
   # geocode:
   #   image: ghcr.io/openaleph/ftm-geocode
@@ -39,18 +61,25 @@ services:
   #     - postgres
 
   analyze:
-    image: ghcr.io/dataresearchcenter/ftm-analyze:main
+    image: ghcr.io/openaleph/ftm-analyze:main
     command: procrastinate worker -q analyze --concurrency 8 --one-shot
     environment:
-      OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
-      FTM_FRAGMENTS_URI: postgresql://ingest:ingest@postgres/ingest
+      <<: *ingest-env
     tmpfs:
       - /tmp:mode=777
     depends_on:
       - postgres
 
+  tika:
+    image: apache/tika:3.3.1.0
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9998"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
   ingest-file:
-    image: ghcr.io/openaleph/ingest-file:feat-procrastinate
+    image: ${INGEST_IMAGE:-ghcr.io/openaleph/ingest-file:main}
     command: procrastinate worker -q ingest --concurrency 8 --one-shot
     hostname: ingest
     tmpfs:
@@ -58,15 +87,24 @@ services:
     volumes:
       - ../tests/fixtures:/fixtures
     environment:
-      OPENALEPH_DB_URI: postgresql://ingest:ingest@postgres/ingest
-      FTM_FRAGMENTS_URI: postgresql://ingest:ingest@postgres/ingest
+      <<: *ingest-env
       ARCHIVE_TYPE: s3
       ARCHIVE_BUCKET: openaleph
       ARCHIVE_ENDPOINT_URL: http://minio:9000
+      FSSPEC_S3_ENDPOINT_URL: http://minio:9000
       AWS_ACCESS_KEY_ID: openaleph
       AWS_SECRET_ACCESS_KEY: openaleph
+      LAKEHOUSE_URI: s3://openaleph
+      LAKEHOUSE_JOURNAL_URI: postgresql://ingest:ingest@postgres/ingest
+      OPENALEPH_LAKEHOUSE: 0
     depends_on:
-      - minio
-      - postgres
-      - redis
-      - analyze
+      minio-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      analyze:
+        condition: service_started
+      tika:
+        condition: service_started

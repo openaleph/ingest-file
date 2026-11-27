@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .support import TestCase
+from tests.support import TestCase
 
 
 class CSVIngestorTest(TestCase):
@@ -8,7 +8,7 @@ class CSVIngestorTest(TestCase):
         self.manager.ingest(fixture_path, entity)
         self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)
         self.assertTrue(entity.has("csvHash"))
-        self.assertEqual(int(entity.first("rowCount")), 257)
+        self.assertEqual(int(entity.first("rowCount")), 256)
 
     def test_inconsistent_columns_csv(self):
         fixture_path, entity = self.fixture("inconsistent_columns.csv")
@@ -22,4 +22,4 @@ class CSVIngestorTest(TestCase):
         self.manager.ingest(fixture_path, entity)
         self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)
         self.assertTrue(entity.has("csvHash"))
-        self.assertEqual(int(entity.first("rowCount")), 22)
+        self.assertEqual(int(entity.first("rowCount")), 21)

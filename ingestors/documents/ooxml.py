@@ -3,11 +3,12 @@ import tempfile
 from followthemoney import model
 
 from ingestors.ingestor import Ingestor
-from ingestors.support.pdf import PDFSupport
 from ingestors.support.ooxml import OOXMLSupport
+from ingestors.support.pdf import PDFSupport
+from ingestors.support.tika import TikaSupport
 
 
-class OfficeOpenXMLIngestor(Ingestor, OOXMLSupport, PDFSupport):
+class OfficeOpenXMLIngestor(Ingestor, OOXMLSupport, PDFSupport, TikaSupport):
     """Office/Word document ingestor class.
 
     Converts the document to PDF and extracts the text.
@@ -44,7 +45,12 @@ class OfficeOpenXMLIngestor(Ingestor, OOXMLSupport, PDFSupport):
         with tempfile.TemporaryDirectory() as unique_tmpdir:
             # TODO - write to logs the case in which the context manager can't delete these dirs
             pdf_path = self.document_to_pdf(unique_tmpdir, file_path, entity)
-            self.pdf_alternative_extract(entity, pdf_path, self.manager)
+            # `document_to_pdf` already archived it and set `pdfHash`
+            self.pdf_alternative_extract(
+                entity, pdf_path, self.manager, checksum=entity.first("pdfHash")
+            )
+
+        self.ingest_embedded(file_path, parent=entity)
 
     @classmethod
     def match(cls, file_path, entity):

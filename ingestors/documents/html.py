@@ -1,8 +1,8 @@
 from followthemoney import model
 
 from ingestors.ingestor import Ingestor
-from ingestors.support.html import HTMLSupport
 from ingestors.support.encoding import EncodingSupport
+from ingestors.support.html import HTMLSupport
 
 
 class HTMLIngestor(Ingestor, EncodingSupport, HTMLSupport):

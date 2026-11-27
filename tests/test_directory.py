@@ -1,4 +1,4 @@
-from ingestors.manager import OP_INGEST
+from ingestors.settings import OP_INGEST
 from tests.support import TestCase
 
 

@@ -16,6 +16,12 @@ Because ingest-file uses a lot of dependencies, the best way to use it _out of t
 
     docker pull ghcr.io/openaleph/ingest-file
 
+The image also contains the HTTP api (`ingestors/api.py`: upload files into a dataset as a batch, poll the batch, make the lakehouse dataset).
+
+    docker run -p 8000:8000 ghcr.io/openaleph/ingest-file granian --interface asgi --host 0.0.0.0 ingestors.api:app
+
+It needs `OPENALEPH_LAKEHOUSE=1`, serves its documentation at `/` and has no authentication.
+
 ### Debian / Ubuntu
 
 For debian-like (linux) system, it is possible to install all dependencies locally so that docker is not needed. This is especially useful for rapid development / testing.
@@ -112,6 +118,19 @@ Run the setup command to initialize the database:
 openaleph-procrastinate init-db
 ```
 
+### LibreOffice listener (unoserver)
+
+Office documents are converted to PDF with LibreOffice, through a [unoserver](https://github.com/unoconv/unoserver) listener that keeps LibreOffice running between documents. Starting LibreOffice for every document instead costs a second or more per document before any work is done.
+
+Every worker thread starts a listener of its own the first time it converts a document, and keeps it for the next ones. It listens on free ports on `127.0.0.1`, has its own LibreOffice profile, and is handed file paths.
+
+- Starting a listener takes about 6 seconds, once per thread. It is started again when it has exited, e.g. after a conversion ran into `INGESTORS_CONVERT_TIMEOUT`.
+- Each listener keeps a LibreOffice process in memory, so a worker holds as many of them as jobs it runs at once (`procrastinate worker --concurrency`). They are stopped when the worker exits.
+- If a thread's listener can't be started at all, that thread spawns LibreOffice per document instead, and logs a warning once.
+- If a listener stops answering, the worker logs a warning and falls back to spawning LibreOffice for that document, and the listener is replaced for the next one. A document LibreOffice can't convert fails right away, as spawning would fail the same way.
+
+The docker image has unoserver installed. Elsewhere, it has to be installed for the Python that has LibreOffice's `uno` bindings, see `Dockerfile.base`.
+
 ## Redis
 
 
@@ -121,6 +140,86 @@ Accepts any valid redis url (including a password). If `REDIS_URL` is not set, a
 ```bash
 REDIS_URL=redis://localhost
 ```
+
+## Apache Tika
+
+[Apache Tika](https://tika.apache.org/) extracts the files embedded in office documents (docx, xlsx, ods) and is the text extraction fallback for file types no ingestor handles. ingest-file talks to it via [tika-python](https://github.com/chrismattmann/tika-python), which reads its configuration from environment variables at import time.
+
+### Inline (default)
+
+Without further configuration, tika-python starts a Tika server itself, inside the worker on `localhost:9998`, the first time it is needed. This needs Java and the server jar (`tika-server.jar`) in `TIKA_PATH`:
+
+- The docker image ships the jar in `/ingestors/contrib` and sets `TIKA_PATH` accordingly, nothing is downloaded at runtime.
+- Otherwise it is downloaded from Maven Central on first use, into `TIKA_PATH` (default: the system temp directory).
+
+Since tika-python 3.4.0 the jar is verified against a digest pinned in tika-python for its own `TIKA_VERSION` (set `TIKA_SERVER_JAR_SHA512` for any other jar), a cached jar that doesn't match is replaced, and the checksum file next to the jar is ignored. A jar the process does not own, or that is group- or world-writable, is refused outright, so it has to belong to the uid the worker runs as.
+
+The inline server is a child process of whichever worker started it, and it keeps running after that worker exits.
+
+### Server (recommended for production)
+
+Run Tika as a service of its own and point the workers to it:
+
+```bash
+TIKA_SERVER_ENDPOINT=http://tika:9998
+TIKA_CLIENT_ONLY=1
+```
+
+`TIKA_CLIENT_ONLY` makes tika-python use the endpoint as it is. Without it, tika-python still tries to start a server of its own if the endpoint is on `localhost` (e.g. a sidecar container that isn't ready yet), and it drops any path from the endpoint url. Any non-empty value enables it, `0` and `false` too, so unset it to go back to the inline server.
+
+With docker compose (as in this repository's `docker-compose.yml`):
+
+```yaml
+services:
+  tika:
+    # pin a 3.x release: tika-python is used with Tika 3, `latest` is Tika 4
+    image: apache/tika:3.3.1.0
+    command: ["-c", "/tika-config.xml"]
+    configs:
+      - source: tika-config
+        target: /tika-config.xml
+    healthcheck:
+      # the image has neither curl nor wget
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9998"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  ingest-file:
+    environment:
+      TIKA_SERVER_ENDPOINT: http://tika:9998
+      TIKA_CLIENT_ONLY: 1
+    depends_on:
+      tika:
+        condition: service_healthy
+
+configs:
+  # the parse timeout and the memory of the Tika server
+  tika-config:
+    content: |
+      <?xml version="1.0" encoding="UTF-8"?>
+      <properties>
+        <server>
+          <params>
+            <taskTimeoutMillis>300000</taskTimeoutMillis>
+            <forkedJvmArgs>
+              <arg>-Xmx2g</arg>
+            </forkedJvmArgs>
+          </params>
+        </server>
+      </properties>
+```
+
+### Concurrency and sizing
+
+One Tika server handles many requests at once: every worker thread in a parse (`procrastinate worker --concurrency`) is one concurrent request, and all of them run in the same forked JVM. That has two consequences:
+
+- Size the heap (`forkedJvmArgs`) for the sum of the concurrency of all workers using the server, not for a single file.
+- When a parse runs out of memory or exceeds `taskTimeoutMillis`, the server restarts that JVM, and every request in flight fails with it, not only the offending one. For embedded files, the ingest task then fails and is retried by the task queue; the text fallback marks the file as failed (`processingStatus`) instead, without a retry.
+
+For more throughput or isolation, run several Tika containers behind a load balancer, or one per worker (as a sidecar on `localhost`, where `TIKA_CLIENT_ONLY=1` is essential).
+
+tika-python gives up on a request after 60 seconds, even if the server is still parsing. Very large files can hit this limit before the server's own `taskTimeoutMillis`.
 
 ## Debug mode
 

@@ -33,13 +33,13 @@ repos:
       - id: absolufy-imports
 
   - repo: https://github.com/pycqa/isort
-    rev: 9.0.0a3
+    rev: 10.0.0b3
     hooks:
       - id: isort
         args: ["--profile", "black"]
 
   - repo: https://github.com/psf/black
-    rev: 26.5.1
+    rev: 26.10.1
     hooks:
       - id: black
 
@@ -48,11 +48,11 @@ repos:
     hooks:
       - id: pyproject-flake8
         additional_dependencies: [flake8-bugbear]
-        args: ["--extend-ignore", "E203, E501, W503"]
+        args: ["--extend-ignore", "E203, E501, E704, W503"]
         exclude: (test_[\w]+\.py|\.csv|\.json|\.lock)$
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.2
+    rev: v2.4.3
     hooks:
       - id: codespell
         exclude: (tests/.*|\.lock)$
@@ -70,16 +70,16 @@ repos:
       - id: rst-inline-touching-normal
 
   - repo: https://github.com/python-poetry/poetry
-    rev: 2.4.1
+    rev: 2.5.1
     hooks:
       - id: poetry-check
       - id: poetry-lock
 
   - repo: https://github.com/python-poetry/poetry-plugin-export
-    rev: 1.10.0
+    rev: 1.10.2
     hooks:
       - id: poetry-export
-        args: ["--without-hashes", "--with", "main", "-o", "requirements.txt"]
+        args: ["--without-hashes", "--with", "main", "--extras", "http", "-o", "requirements.txt"]
       - id: poetry-export
         args:
           ["--without-hashes", "--only", "dev", "-o", "requirements-dev.txt"]

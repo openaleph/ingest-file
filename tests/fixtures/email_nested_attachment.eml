@@ -1,0 +1,33 @@
+Subject: Outer message
+From: sender@example.org
+To: recipient@example.org
+Date: Wed, 26 Aug 2026 09:00:00 +0000
+Message-ID: <outerboundary@example.org>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="outerboundary"
+
+--outerboundary
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Body of Outer message.
+
+--outerboundary
+Content-Type: message/rfc822
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="inner.eml"
+MIME-Version: 1.0
+
+U3ViamVjdDogSW5uZXIgbWVzc2FnZQpGcm9tOiBzZW5kZXJAZXhhbXBsZS5vcmcKVG86IHJlY2lw
+aWVudEBleGFtcGxlLm9yZwpEYXRlOiBXZWQsIDI2IEF1ZyAyMDI2IDA5OjAwOjAwICswMDAwCk1l
+c3NhZ2UtSUQ6IDxpbm5lcmJvdW5kYXJ5QGV4YW1wbGUub3JnPgpNSU1FLVZlcnNpb246IDEuMApD
+b250ZW50LVR5cGU6IG11bHRpcGFydC9taXhlZDsgYm91bmRhcnk9ImlubmVyYm91bmRhcnkiCgot
+LWlubmVyYm91bmRhcnkKQ29udGVudC1UeXBlOiB0ZXh0L3BsYWluOyBjaGFyc2V0PSJ1dGYtOCIK
+Q29udGVudC1UcmFuc2Zlci1FbmNvZGluZzogN2JpdAoKQm9keSBvZiBJbm5lciBtZXNzYWdlLgoK
+LS1pbm5lcmJvdW5kYXJ5CkNvbnRlbnQtVHlwZTogaW1hZ2UvcG5nCkNvbnRlbnQtVHJhbnNmZXIt
+RW5jb2Rpbmc6IGJhc2U2NApDb250ZW50LURpc3Bvc2l0aW9uOiBhdHRhY2htZW50OyBmaWxlbmFt
+ZT0iaW1hZ2UwMDEucG5nIgpNSU1FLVZlcnNpb246IDEuMAoKaVZCT1J3MEtHZ29BQUFBTlNVaEVV
+Z0FBQUFFQUFBQUJDQVlBQUFBZkZjU0pBQUFBRFVsRVFWUjQybVA4ejhCUUR3QUVoUUdBaEttTQpJ
+UUFBQUFCSlJVNUVya0pnZ2c9PQoKLS1pbm5lcmJvdW5kYXJ5LS0K
+
+--outerboundary--

@@ -1,6 +1,8 @@
 from openaleph_procrastinate.settings import OpenAlephSettings
 from pydantic_settings import SettingsConfigDict
 
+OP_INGEST = "ingest"
+
 
 class Settings(OpenAlephSettings):
     """
@@ -22,11 +24,14 @@ class Settings(OpenAlephSettings):
     convert_timeout: int = 300
     """Headless libreoffice document convert timeout in seconds"""
 
-    tika_fallback: bool = False
-    """Use Apache Tika as a text extraction fallback"""
+    soffice_bin: str = "/usr/bin/libreoffice"
+    """Path to the LibreOffice/soffice binary"""
 
-    kreuzberg: bool = False
-    """Use kreuzberg.dev implementation for supported file types"""
+    lakehouse_flush_size: int = 10_000
+    """Size cap until when the journal should be flushed to parquet"""
+
+    crawl_threads: int = 1
+    """Crawl parallelization, worth raising if archive storage is over the network"""
 
     @property
     def tags_database_uri(self) -> str:

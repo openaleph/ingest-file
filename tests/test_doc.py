@@ -19,7 +19,7 @@ class DocumentIngestorTest(TestCase):
         self.manager.ingest(fixture_path, entity)
 
         self.assertEqual(len(self.get_emitted()), 3)
-        self.assertEqual(len(list(self.dataset.iterate(entity_id=entity.id))), 1)
+        self.assertEqual(len(list(self.dataset.iterate(entity_ids=entity.id))), 1)
         self.assertTrue(
             any(
                 "The Level 3 Bookmark" in x
@@ -71,3 +71,12 @@ class DocumentIngestorTest(TestCase):
             self.manager.entities[0].first("bodyText"),
         )
         self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)
+
+    def test_image_not_duplicated_across_pages(self):
+        fixture_path, entity = self.fixture("test_image.docx")
+        self.manager.ingest(fixture_path, entity)
+        self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)
+        pages = self.get_emitted("Page")
+        page2 = next(p for p in pages if p.first("index") == "2")
+        self.assertEqual(len(pages), 2)
+        self.assertNotIn("ingest-file", page2.first("bodyText"))

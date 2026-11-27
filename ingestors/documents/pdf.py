@@ -1,8 +1,8 @@
 import logging
 
+from ingestors.exc import ENCRYPTED_MSG, ProcessingException, UnauthorizedError
 from ingestors.ingestor import Ingestor
 from ingestors.support.pdf import PDFSupport
-from ingestors.exc import ProcessingException, UnauthorizedError, ENCRYPTED_MSG
 
 log = logging.getLogger(__name__)
 

@@ -47,6 +47,7 @@ class VideoIngestor(Ingestor, TimestampSupport, TranscriptionSupport):
         except Exception as ex:
             raise ProcessingException("Could not read video: %r", ex) from ex
         try:
+            entity = self.manager.ns.apply(entity)
             self.transcribe(self.manager.dataset, entity, self.manager.context)
         except Exception as ex:
             log.error(f"Could not queue audio for transcription: {ex}")

@@ -1,41 +1,72 @@
 import logging
 from datetime import datetime
-from functools import cache
+from pathlib import Path
 from tempfile import mkdtemp
 from timeit import default_timer
-from typing import Any
+from typing import Any, Generator
 
 import magic
 from banal import ensure_list
-from followthemoney import StatementEntity, model
+from followthemoney import EntityProxy, StatementEntity, model
 from followthemoney.helpers import entity_filename
 from followthemoney.namespace import Namespace
-from ftmq.store.fragments import get_fragments
+from ftmq.store.fragments.loader import DEFAULT_FRAGMENT
 from ftmq.store.fragments.utils import safe_fragment
 from ftmq.store.memory import MemoryStore
-from ftmq.util import make_entity as make_statement_entity
+from ftmq.util import ensure_entity
 from normality import stringify
 from openaleph_procrastinate import defer
 from openaleph_procrastinate.app import App
+from openaleph_procrastinate.repository import get_archive, get_entity_store
 from openaleph_procrastinate.util import make_file_entity
 from prometheus_client import Counter, Histogram
 from rigour.mime import normalize_mimetype
-from servicelayer.archive import init_archive
-from servicelayer.archive.archive import Archive
 from servicelayer.archive.util import ensure_path
 from servicelayer.extensions import get_extensions
 
 from ingestors import __version__
 from ingestors.directory import DirectoryIngestor
-from ingestors.exc import ENCRYPTED_MSG, ProcessingException
+from ingestors.email.olm import MIME as OPF_MESSAGE_MIME
+from ingestors.exc import EMPTY_MSG, ENCRYPTED_MSG, ProcessingException
 from ingestors.ingestor import Ingestor
 from ingestors.misc.tika import TikaIngestor
-from ingestors.settings import Settings
+from ingestors.settings import OP_INGEST, Settings
 from ingestors.util import filter_text, remove_directory
 
 log = logging.getLogger(__name__)
 
-OP_INGEST = "ingest"
+# Marker types ingest-file puts on children of its own to route them to a
+# specific ingestor. libmagic cannot produce them – an OLM message is just an
+# xml file, and the child carries no file name to match on either – so they are
+# the one kind of declared mimeType `Manager.auction` must not overrule.
+ROUTING_MIME_TYPES = frozenset([OPF_MESSAGE_MIME])
+
+# Where a file sits. Identical files in several folders are one entity, emitted
+# once per folder, so these must not share the fragment of the file properties.
+PLACEMENT_PROPS = ("parent", "ancestors")
+
+
+def split_placement(
+    entity: EntityProxy, fragment: str
+) -> Generator[tuple[EntityProxy, str], None, None]:
+    """Split an emission into the entity without its placement, written under
+    `fragment`, and its parent/ancestors, written under a fragment of their own
+    per distinct placement. Both backends supersede per fragment, so a copy in
+    another folder adds its parent instead of replacing the previous one, while
+    re-emitting the same copy still replaces its own."""
+    placement = sorted(
+        {v for prop in PLACEMENT_PROPS for v in entity.get(prop, quiet=True)}
+    )
+    if not placement:
+        yield entity, fragment
+        return
+    main = entity.clone()
+    stub = entity.clone()
+    for prop in list(entity.properties):
+        (main if prop in PLACEMENT_PROPS else stub).pop(prop)
+    yield main, fragment
+    yield stub, safe_fragment(" ".join(placement))
+
 
 INGESTIONS_SUCCEEDED = Counter(
     "ingestfile_ingestions_succeeded_total",
@@ -76,18 +107,6 @@ INGESTED_BYTES = Counter(
 )
 
 
-@cache
-def get_archive() -> Archive:
-    from servicelayer import settings
-
-    return init_archive(
-        archive_type=settings.ARCHIVE_TYPE,
-        path=settings.ARCHIVE_PATH,
-        bucket=settings.ARCHIVE_BUCKET,
-        publication_bucket=settings.PUBLICATION_BUCKET,
-    )
-
-
 class Manager:
     """Handles the lifecycle of an ingestor. This can be subclassed to embed it
     into a larger processing framework."""
@@ -99,20 +118,19 @@ class Manager:
 
     MAGIC = magic.Magic(mime=True)
 
-    def __init__(self, app: App, dataset: str, context: dict[str, Any]):
+    def __init__(
+        self, app: App, dataset: str, context: dict[str, Any], collect: bool = True
+    ):
         self.settings = Settings()
         self.app = app
         self.dataset = dataset
-        self.db = get_fragments(
-            dataset, OP_INGEST, database_uri=self.settings.fragments_uri
-        )
-        self.writer = self.db.bulk()
+        self.writer = get_entity_store(self.dataset)
         self.context = context
         self.ns = Namespace(self.context["namespace"])
         self.work_path = ensure_path(mkdtemp(prefix="ingestor-"))
+        self.collect = collect
         self.emitted = MemoryStore()
-        self.archive = get_archive()
-        self.error = None
+        self.archive = get_archive(self.dataset)
 
     def make_entity(self, schema, parent=None):
         schema = model.get(schema)
@@ -140,17 +158,27 @@ class Manager:
             "mutable": False,
         }
 
-    def emit_entity(self, entity, fragment=None):
+    def emit_entity(
+        self,
+        entity: EntityProxy,
+        fragment: str | None = None,
+        origin: str = OP_INGEST,
+    ):
         entity = self.ns.apply(entity)
-        self.writer.put(entity.to_dict(), fragment)
+        # the repositories hand the fragment through to the backend as-is, so
+        # non-string keys (e.g. a row or component index) have to be coerced
+        # here – the lakehouse writes it into a string arrow column
+        fragment = stringify(fragment) or DEFAULT_FRAGMENT
+        for part, part_fragment in split_placement(entity, fragment):
+            self.writer.put(part, part_fragment, origin=origin)
+        if not self.collect:
+            return
         with self.emitted.writer() as bulk:
             if self.settings.procrastinate_dehydrate_entities:
                 bulk.add_entity(make_file_entity(entity, StatementEntity, quiet=True))
             else:
                 # the memory store needs a StatementEntity, not an EntityProxy
-                bulk.add_entity(
-                    make_statement_entity(entity.to_dict(), StatementEntity)
-                )
+                bulk.add_entity(ensure_entity(entity, StatementEntity))
 
     def emit_text_fragment(self, entity, texts, fragment):
         texts = [t for t in ensure_list(texts) if filter_text(t)]
@@ -161,11 +189,15 @@ class Manager:
             self.emit_entity(doc, fragment=safe_fragment(fragment))
 
     def auction(self, file_path, entity) -> type[Ingestor]:
-        if not entity.has("mimeType"):
-            if file_path.is_dir():
-                entity.add("mimeType", DirectoryIngestor.MIME_TYPE)
-                return DirectoryIngestor
-            entity.add("mimeType", self.MAGIC.from_file(file_path.as_posix()))
+        if file_path.is_dir():
+            entity.set("mimeType", DirectoryIngestor.MIME_TYPE)
+            return DirectoryIngestor
+
+        # The ingestor that wins decides the entity's schema, so it has to be a
+        # function of the file instead of the `mimeType` prop. Therefore sniff
+        # the bytes and let it overrule what a mail header or a crawler claimed.
+        if not ROUTING_MIME_TYPES.intersection(entity.get("mimeType")):
+            entity.set("mimeType", self.MAGIC.from_file(file_path.as_posix()))
 
         if "application/encrypted" in entity.get("mimeType"):
             raise ProcessingException(ENCRYPTED_MSG)
@@ -177,17 +209,14 @@ class Manager:
                 best_score = score
                 best_cls = cls
         if best_cls is None:
-            if self.settings.tika_fallback:
-                best_cls = TikaIngestor
-            else:
-                raise ProcessingException("Format not supported")
+            best_cls = TikaIngestor
         return best_cls
 
     def queue_entity(self, entity):
         with self.app.open():
             defer.ingest(self.app, self.dataset, [entity], **self.context)
 
-    def store(self, file_path, mime_type=None):
+    def store(self, file_path: Path, mime_type: str | None = None):
         file_path = ensure_path(file_path)
         mime_type = normalize_mimetype(mime_type)
         if file_path is not None and file_path.is_file():
@@ -237,6 +266,13 @@ class Manager:
         ingestor_name = None
 
         try:
+            # Handle zero-byte files before auction. Resolve mimeType
+            # then raise so the emitted entity keeps its file properties.
+            if file_size == 0:
+                if not entity.has("mimeType"):
+                    entity.add("mimeType", self.MAGIC.from_file(file_path.as_posix()))
+                raise ProcessingException(EMPTY_MSG)
+
             ingestor_class = self.auction(file_path, entity)
             ingestor_name = ingestor_class.__name__
             log.info(f"Ingestor [{repr(entity)}]: {ingestor_name}")
@@ -256,8 +292,6 @@ class Manager:
             log.exception(f"[{repr(entity)}] Failed to process: {pexc}")
             INGESTIONS_FAILED.labels(ingestor=ingestor_name).inc()
             entity.set("processingError", stringify(pexc))
-            # tell procrastinate we had an error
-            self.error = stringify(pexc)
         finally:
             self.finalize(entity)
 
@@ -272,7 +306,8 @@ class Manager:
 
     def close(self):
         self.writer.flush()
+        self.writer.close()
         remove_directory(self.work_path)
 
     def get_emitted(self) -> list[StatementEntity]:
-        return list(self.emitted.iterate(dataset="default"))
+        return list(self.emitted.iterate())

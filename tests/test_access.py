@@ -1,4 +1,4 @@
-from .support import TestCase
+from tests.support import TestCase
 
 
 class AccessIngestorTest(TestCase):
@@ -13,4 +13,4 @@ class AccessIngestorTest(TestCase):
         table0 = tables[0]
         self.assertEqual(table0.first("title"), "Authors")
         self.assertTrue(table0.has("csvHash"))
-        self.assertEqual(int(table0.first("rowCount")), 4)
+        self.assertEqual(int(table0.first("rowCount")), 3)

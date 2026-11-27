@@ -1,14 +1,18 @@
 import csv
 import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
+from io import StringIO
 from itertools import chain
 
+from anystore.types import Uri
 from followthemoney import EntityProxy
 from followthemoney.types import registry
 from followthemoney.util import sanitize_text
-from kreuzberg import ExtractionResult
+from python_calamine import CalamineError, CalamineWorkbook, PasswordError
 from rigour.mime.types import CSV
 
-from ingestors.exc import ProcessingException
+from ingestors.exc import EMPTY_SHEET_MSG, ENCRYPTED_MSG, ProcessingException
 from ingestors.manager import Manager
 from ingestors.support.encoding import EncodingSupport
 from ingestors.support.temp import TempFileSupport
@@ -18,6 +22,34 @@ log = logging.getLogger(__name__)
 _MISSING = object()
 
 
+@contextmanager
+def _calamine_errors(message: str) -> Iterator[None]:
+    """Turn calamine failures into `ProcessingException`. Malformed records make
+    the Rust crate panic, which pyo3 raises as `pyo3_runtime.PanicException`: it
+    derives from `BaseException` and its module cannot be imported, so it is
+    recognised by name."""
+    try:
+        yield
+    except PasswordError as err:
+        raise ProcessingException(ENCRYPTED_MSG) from err
+    except CalamineError as err:
+        raise ProcessingException("%s: %s" % (message, err)) from err
+    except BaseException as err:
+        cls = type(err)
+        if (cls.__module__, cls.__qualname__) != ("pyo3_runtime", "PanicException"):
+            raise
+        raise ProcessingException("%s: %s" % (message, err)) from err
+
+
+# Flush a text fragment once it holds this many rows or characters. The size cap
+# matters because `EntityProxy.add` silently drops a value that would push the
+# entity over `registry.text.total_size` (30M characters): as one CSV blob a
+# fragment is all-or-nothing, where the old list of cell values merely lost its
+# tail. It also bounds how much of the table is buffered in memory.
+FRAGMENT_ROWS = 10_000
+FRAGMENT_CHARS = 5 * 1024 * 1024
+
+
 class TableSupport(EncodingSupport, TempFileSupport):
     """Handle creating rows from an ingestor."""
 
@@ -25,7 +57,7 @@ class TableSupport(EncodingSupport, TempFileSupport):
 
     def _emit_value_rows(self, table, value_rows, headers):
         """Write rows of raw cell values (each aligned to ``headers``) to a CSV
-        and emit table metadata.
+        and emit table metadata. Chunks of csv are emitted as text fragments.
 
         Shared core for the dict- and tuple-based entry points: it sanitises
         cells, skips fully-empty rows, streams chunked text fragments and sets
@@ -34,38 +66,52 @@ class TableSupport(EncodingSupport, TempFileSupport):
         sanitize = sanitize_text
         csv_path = self.make_work_file(table.id)
         row_count = 0
-        cell_values: set[str] = set()
+        cell_count = 0
+        fragment_rows = 0
+        fragment_buffer = StringIO()
+
+        def flush_fragment():
+            self.manager.emit_text_fragment(
+                table, fragment_buffer.getvalue(), row_count
+            )
+            log.info(
+                "Table emit [%s]: %s cells from %s rows ...",
+                table,
+                cell_count,
+                row_count,
+            )
+            fragment_buffer.seek(0)
+            fragment_buffer.truncate(0)
+
         with open(csv_path, "w", encoding=self.DEFAULT_ENCODING) as fp:
             csv_writer = csv.writer(fp, dialect="unix")
+            csv_fragment = csv.writer(
+                fragment_buffer, dialect="unix", quoting=csv.QUOTE_MINIMAL
+            )
             for raw in value_rows:
                 values = [sanitize(v) or "" for v in raw]
                 if not any(values):
                     continue
+                cell_count += len(values)
                 csv_writer.writerow(values)
-                cell_values.update(values)
+                csv_fragment.writerow(values)
                 row_count += 1
-                if row_count % 10000 == 0:
-                    log.info(
-                        "Table emit [%s]: %s cell values from %s rows ...",
-                        table,
-                        len(cell_values),
-                        row_count,
-                    )
-                    self.manager.emit_text_fragment(table, list(cell_values), row_count)
-                    cell_values = set()
+                fragment_rows += 1
+                if (
+                    fragment_rows >= FRAGMENT_ROWS
+                    or fragment_buffer.tell() >= FRAGMENT_CHARS
+                ):
+                    flush_fragment()
+                    cell_count = 0
+                    fragment_rows = 0
         if row_count > 0:
-            if len(cell_values):
-                self.manager.emit_text_fragment(table, list(cell_values), row_count)
-                log.info(
-                    "Table emit [%s]: %s cell values from %s rows ...",
-                    table,
-                    len(cell_values),
-                    row_count,
-                )
+            if cell_count:
+                flush_fragment()
             csv_hash = self.manager.store(csv_path, mime_type=CSV)
             table.set("csvHash", csv_hash)
-        table.set("rowCount", row_count + 1)
+        table.set("rowCount", row_count)
         table.set("columns", registry.json.pack(headers))
+        return row_count
 
     def emit_row_dicts(self, table, rows, headers=None):
         rows = iter(rows)
@@ -96,35 +142,29 @@ class TableSupport(EncodingSupport, TempFileSupport):
         return self._emit_value_rows(table, value_rows, headers)
 
 
-class KreuzbergSpreadsheetSupport(TableSupport):
-    """Kreuzberg implementation for xls[x] spreadsheets"""
+class CalamineSpreadsheetSupport(TableSupport):
+    """Spreadsheet extraction via python-calamine, a binding to the Rust
+    `calamine` crate. Reads xls, xlsx, xlsb and ods with content-based format
+    detection."""
 
-    def kreuzberg_extract_sheets(
-        self, result: ExtractionResult, entity: EntityProxy
-    ) -> None:
-        sheet_names = result.metadata.get("sheet_names")
-        if not sheet_names:
-            log.warning(
-                f"No sheets in Workbook `{entity.id}` ({entity.first('contentHash')})"
-            )
+    def calamine_generate_rows(self, sheet):
+        # start is None for empty sheets, where iter_rows() panics
+        # (python-calamine 0.7.0)
+        if sheet.start is None:
             return
-        # kreuzberg emits one table per non-empty sheet (empty sheets are
-        # skipped), so the number of tables can be smaller than sheet_count.
-        # Each table's `page_number` is the 1-based index of its source sheet,
-        # which recovers the correct name regardless of any empty sheets.
-        if not result.tables:
-            log.warning(
-                f"No tables extracted from Workbook `{entity.id}` "
-                f"({entity.first('contentHash')})"
-            )
-        try:
-            for position, sheet_table in enumerate(result.tables):
-                index = sheet_table.page_number or position + 1
-                name = (
-                    sheet_names[index - 1]
-                    if index <= len(sheet_names)
-                    else f"Sheet {index}"
-                )
+        # iter_rows() is lazy but trims leading empty columns; left-pad to
+        # keep absolute column positions.
+        padding = [None] * sheet.start[1]
+        for row in sheet.iter_rows():
+            yield padding + list(row) if padding else row
+
+    def calamine_extract_sheets(self, file_path: Uri, entity: EntityProxy) -> None:
+        log.info(f"Calamine extract: [{repr(entity)}]: {self.__class__.__name__}")
+        with _calamine_errors("Invalid workbook"):
+            workbook = CalamineWorkbook.from_path(str(file_path))
+        with _calamine_errors("Cannot read workbook"):
+            for name in workbook.sheet_names:
+                sheet = workbook.get_sheet_by_name(name)
                 table = self.manager.make_entity("Table", parent=entity)
                 table.make_id(entity.id, name)
                 table.set("title", name)
@@ -134,8 +174,10 @@ class KreuzbergSpreadsheetSupport(TableSupport):
                 # See https://github.com/alephdata/ingest-file/issues/171
                 self.manager.emit_entity(table, fragment="initial")
                 log.debug("Sheet: %s", name)
-                self.emit_row_tuples(table, sheet_table.cells)
-                if table.has("csvHash"):
-                    self.manager.emit_entity(table)
-        except Exception as err:
-            raise ProcessingException("Cannot read Excel file: %s" % err) from err
+                row_count = self.emit_row_tuples(
+                    table, self.calamine_generate_rows(sheet)
+                )
+                if row_count == 0:
+                    table.set("processingError", EMPTY_SHEET_MSG)
+                    table.set("processingStatus", self.manager.STATUS_FAILURE)
+                self.manager.emit_entity(table)

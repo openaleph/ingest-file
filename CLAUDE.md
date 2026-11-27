@@ -1,0 +1,220 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Rules
+
+1. Don’t assume. Don’t hide confusion. Surface tradeoffs.
+2. Minimum code that solves the problem. Nothing speculative.
+3. Touch only what you must. Clean up only your own mess.
+4. Define success criteria. Loop until verified.
+
+### Docs and comments
+
+- Keep docstrings and docs short, only the essentials; the audience is developers. No reasoning essays. Inline comments only where the code would surprise otherwise. Docstrings carry Args / Returns only for public API documented in `docs/` (rendered via mkdocstrings, see `docs/reference/`); keep their `Example(s):` sections.
+- No section banners (`# --- ... ---`, `// --- ... ---`) in code or tests: a comment explains surprising code, it doesn't divide a file.
+- Never use em-dashes in prose (docstrings, comments, docs, commit messages, PR text). Use a normal hyphen (`-`) or restructure the sentence.
+- In `docs/` markdown prose, keep each paragraph on a single line (do not hard-wrap; one line per paragraph, separated by blank lines).
+
+## Environment
+
+Use `poetry run <command>` for Python commands run on the host.
+
+## Project Overview
+
+**ingest-file** extracts structured information from diverse file types (documents, spreadsheets, emails, archives, media) and formats them as Follow the Money (FtM) entities for import into OpenAleph. It preserves folder hierarchies across directories, compressed archives, and emails.
+
+## Build and Development Commands
+
+```bash
+# Install dependencies
+poetry install --with dev --all-extras
+
+# Setup pre-commit hooks
+poetry run pre-commit install
+
+# Build Docker containers (one multi-stage Dockerfile: deps -> source -> runtime/test)
+make build
+
+# Start services (Postgres, Redis) and enter shell
+make services
+make shell
+
+# Run tests (in virtualenv, not Docker). The suite picks its storage
+# backend from `OPENALEPH_LAKEHOUSE`, unset means the legacy stores
+poetry run pytest -s tests/
+OPENALEPH_LAKEHOUSE=1 poetry run pytest -s tests/
+
+# Run the containerised suite against both storage backends
+make test              # both
+make test-store        # OPENALEPH_LAKEHOUSE=0
+make test-lakehouse    # OPENALEPH_LAKEHOUSE=1
+
+# Code quality
+make format          # Auto-format with Black
+make format-check    # Check formatting
+make lint            # Lint with Ruff
+
+# Run pre-commit on all files
+poetry run pre-commit run --all-files
+```
+
+### CLI Usage (inside Docker shell)
+
+```bash
+# Debug a file (useful during development)
+ingestors debug /path/to/file
+
+# Ingest a file into a dataset
+ingestors ingest -d dataset /path/to/file
+```
+
+### Release Workflow
+
+```bash
+git pull --rebase
+make build
+make test
+poetry run bump2version {patch,minor,major}
+git push
+```
+
+## Architecture
+
+### Plugin System
+
+Ingestors are registered as entry points in `pyproject.toml` under `[project.entry-points."ingestors"]`. The system uses an auction-based selection mechanism where each ingestor scores its ability to handle a file, and the highest-scoring ingestor wins.
+
+### Core Components
+
+- **`Manager` (manager.py)**: Central orchestrator handling file type detection, ingestor selection (auction), entity lifecycle, and storage. It holds `self.archive` and `self.writer`, both obtained from `openaleph_procrastinate.repository` so it never talks to a concrete backend
+- **`Ingestor` (ingestor.py)**: Base class all ingestors inherit from. Key attributes: `MIME_TYPES`, `EXTENSIONS`, `SCORE`
+- **Support mixins (`support/*.py`)**: Reusable extraction logic (PDFSupport, OCRSupport, TableSupport, etc.) composed into ingestors
+
+### Storage Backends
+
+Files and entities are reached through `openaleph_procrastinate.repository`, which
+puts the legacy stores (servicelayer archive + FtM fragments) and the ftm-lakehouse
+behind the same `Archive` / `EntityStore` protocols. `OPENALEPH_LAKEHOUSE` picks one;
+nothing in this repo branches on it except where the two genuinely differ:
+
+- `get_archive(dataset)` is cached, `get_entity_store(dataset, origin)` deliberately
+  is not (the stores buffer writes and sync tasks run in a thread pool)
+- Fragments must be strings — the lakehouse writes them into an Arrow string column —
+  so `Manager.emit_entity` coerces them with `stringify`
+- Both backends supersede per fragment (legacy per row, the lakehouse per property on
+  merge), and identical files in several folders are one entity emitted once per
+  folder. So `emit_entity` writes `parent`/`ancestors` under a fragment of their own
+  per placement (`split_placement`), otherwise only the last copy's parent survives
+- The lakehouse takes entities from the job payload rather than re-fetching them, so
+  `OpenAlephSettings` forces `procrastinate_dehydrate_entities` off when it is active
+- Content hashes differ between the backends: servicelayer uses sha1, the lakehouse
+  sha256
+- Jobs flush the lakehouse journal to parquet through the task wrapper in
+  `openaleph-procrastinate` (`OPENALEPH_LAKEHOUSE_FLUSH_THRESHOLD`). The cli
+  producer (`CrawlManager` in `ingestors/tasks.py`) does it itself every
+  `INGESTORS_LAKEHOUSE_FLUSH_SIZE` emitted entities and on close – with the
+  default in-memory journal nothing else can – and does not keep what it emits
+  in memory (`Manager(collect=False)`); the legacy store is unaffected
+
+### Ingestor Pattern
+
+```python
+class MyIngestor(Ingestor, SomeSupport):
+    MIME_TYPES = ["application/x-something"]
+    EXTENSIONS = ["ext"]
+    SCORE = 3  # Higher scores win auction
+
+    def ingest(self, file_path, entity):
+        # Extract data, populate entity
+        pass
+```
+
+### Key Directories
+
+- `ingestors/documents/` - Document formats (PDF, HTML, Office, etc.)
+- `ingestors/tabular/` - Spreadsheets and databases (CSV, Excel, SQLite, etc.)
+- `ingestors/email/` - Email formats (PST, MSG, MBOX, etc.)
+- `ingestors/packages/` - Archives (ZIP, RAR, TAR, 7z, etc.)
+- `ingestors/media/` - Images, audio, video
+- `ingestors/support/` - Mixin classes for shared functionality
+- `tests/fixtures/` - Test files for various formats
+
+## Testing
+
+Tests use `unittest.TestCase` with a custom `TestCase` base class in `tests/support.py`:
+
+```python
+class MyTest(TestCase):
+    def test_something(self):
+        path, entity = self.fixture("sample.pdf")  # Load from tests/fixtures/
+        self.manager.ingest(path, entity)
+        self.assertSuccess(entity)
+
+        entities = self.get_emitted()  # Get all emitted FtM entities
+```
+
+`self.dataset` is the `EntityStore` for the test dataset, so reads go through the
+active backend (`self.dataset.iterate(entity_ids=...)`, `self.dataset.get(id)`).
+`setUp` points `LAKEHOUSE_URI` at a fresh tmp dir per test and clears the cached
+factories; set `TEST_LAKEHOUSE_URI` to run the suite against a shared location
+instead. Tests that only hold for one backend guard on `Settings().lakehouse`.
+
+Run tests:
+```bash
+# Run all tests
+poetry run pytest -s tests/
+
+# Run specific test file
+poetry run pytest -s tests/test_doc.py -xvs
+
+# Run specific test
+poetry run pytest -s tests/test_doc.py::TestClass::test_method -xvs
+```
+
+## Configuration
+
+Settings managed via `ingestors/settings.py` using Pydantic. Environment variables prefixed with `INGESTORS_`:
+
+- `INGESTORS_CONVERT_TIMEOUT` - LibreOffice conversion timeout (default: 300s).
+  Office documents go through a unoserver listener per worker thread, started on
+  first use and kept (`InlineUnoserver` in `support/convert.py`, like
+  tika-python's inline server); it shares the filesystem, so it is handed paths.
+  An unreachable or unstartable listener falls back to spawning LibreOffice per
+  document. Listeners run LibreOffice on jemalloc (`LD_PRELOAD`, `libjemalloc2`
+  in the base image): on glibc's malloc a kept LibreOffice grows with every
+  document. Spawning reuses a profile per concurrent conversion
+  (`SpawnProfiles`), a fresh one makes LibreOffice start twice
+- `INGESTORS_LAKEHOUSE_FLUSH_SIZE` - Emitted entities after which the cli producer
+  flushes the lakehouse journal to parquet (default: 10000)
+- `INGESTORS_CRAWL_THREADS` - Threads hashing and storing files while `ingestors
+  ingest` crawls a directory (default: 1). Emitting and queueing stay on the
+  main thread. Measured 2026-10-03 against a local archive: 4 and 20 threads
+  were ~2x slower than sequential for 200 B and 256 KB files alike, the store
+  work is python under the GIL. Meant for a remote archive, where a store
+  waits on the network – not measured
+
+Inherited from OpenAleph (`OpenAlephSettings` in `openaleph-procrastinate`):
+- `OPENALEPH_DB_URI` - Postgres connection
+- `OPENALEPH_LAKEHOUSE` - Use the ftm-lakehouse storage backend instead of servicelayer
+  archive + ftm fragments; the switch and both implementations live upstream in
+  `openaleph_procrastinate.repository`, the suite runs both ways
+
+Backend specific, read by the libraries themselves:
+- `FTM_STORE_URI` / `FTM_FRAGMENTS_URI` - FtM fragments database (legacy backend)
+- `ARCHIVE_TYPE`, `ARCHIVE_PATH` - servicelayer file storage (legacy backend)
+- `LAKEHOUSE_URI` / `LAKEHOUSE_JOURNAL_URI` - Lakehouse storage location and journal
+  (the repositories resolve them themselves, they take no explicit uri). The journal
+  uri goes to `create_engine` as-is, so Postgres has to be spelled
+  `postgresql+psycopg://` — we only ship psycopg 3. It defaults to an in-memory
+  sqlite, which is invisible to any other process
+- `TEST_LAKEHOUSE_URI` - Test-only: run against this location instead of a per-test
+  tmp dir
+
+Read by tika-python, on import:
+- `TIKA_SERVER_ENDPOINT` / `TIKA_CLIENT_ONLY` - Use an external Tika server (the
+  `tika` service in docker-compose). Without `TIKA_CLIENT_ONLY` tika-python starts the
+  jar in `TIKA_PATH` itself, and downloads it if missing. Any non-empty value enables
+  client-only mode, `"0"` too
+- `TIKA_PATH` - The Dockerfile bakes `tika-server.jar` + `.md5` into `/ingestors/contrib`;
+  pytest sets `./contrib`, relative to the working directory

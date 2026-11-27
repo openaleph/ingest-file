@@ -1,16 +1,88 @@
 import logging
+import tarfile
 from io import BytesIO
+from pathlib import PosixPath
 from typing import Any
 
-from normality import collapse_spaces
+import olefile
+from followthemoney import EntityProxy
+from normality import collapse_spaces, safe_filename
+from oletools.oleobj import OleNativeStream
 from tika import parser
+from tika.tika import parse1
 
+from ingestors.exc import ProcessingException
 from ingestors.support.cache import CacheSupport
+from ingestors.support.temp import TempFileSupport
 
 log = logging.getLogger(__name__)
 
+OLE_MAGIC = b"\xd0\xcf\x11\xe0"
+# https://www.loc.gov/preservation/digital/formats/fdd/fdd000392.shtml
 
-class TikaSupport(CacheSupport):
+# `parse1` resolves its option through this mapping, but evaluates the
+# `services["all"]` fallback eagerly, so both keys have to be there
+UNPACK_SERVICES = {"unpack": "/unpack/all", "all": "/unpack/all"}
+# the metadata and plain text members of the archive, which we don't use
+UNPACK_EXTRAS = ("__METADATA__", "__TEXT__")
+
+
+def _unwrap_ole_package(data: bytes) -> tuple[str, bytes] | None:
+    """Extract (filename, bytes) from an OLE Package (Ole10Native stream).
+    Returns None if data is not an OLE container or has no Package stream.
+    Spec: https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oleds/cc825ec3-f0ed-4023-97f6-13c323ac1172
+    """  # noqa: B950
+    if data[:4] != OLE_MAGIC:
+        return None
+    try:
+        with olefile.OleFileIO(BytesIO(data)) as ole:
+            ole10_streams = [
+                e for e in ole.listdir() if e and e[-1] == "\x01Ole10Native"
+            ]
+            entry = ole10_streams[0] if ole10_streams else None
+            if entry is None:
+                return None
+            raw = ole.openstream(entry).read()
+        obj = OleNativeStream(raw)
+        if not obj.filename or not obj.data:
+            return None
+        return obj.filename, obj.data
+    except Exception as exc:
+        log.warning("Failed to unpack OLE: %s", exc)
+        return None
+
+
+def _unpack_tika(file_path: PosixPath) -> dict[str, bytes]:
+    """Embedded documents Tika extracts from a file, by name. tika-python's
+    `unpack.from_file` is not used: it ignores the response status and raises a
+    KeyError on the empty archive a failed parse returns."""
+    with file_path.open("rb") as fh:
+        status, body = parse1(
+            "unpack",
+            fh,
+            responseMimeType="application/x-tar",
+            services=UNPACK_SERVICES,
+            rawResponse=True,
+        )
+    if status != 200:
+        raise ProcessingException(f"Tika server returned status {status}")
+    attachments: dict[str, bytes] = {}
+    if not body:
+        return attachments
+    try:
+        with tarfile.open(fileobj=BytesIO(body)) as tar:
+            for member in tar.getmembers():
+                if member.name in UNPACK_EXTRAS or not member.isfile():
+                    continue
+                member_fh = tar.extractfile(member)
+                if member_fh is not None:
+                    attachments[member.name] = member_fh.read()
+    except tarfile.TarError as err:
+        raise ProcessingException("Tika returned an invalid archive: %s" % err) from err
+    return attachments
+
+
+class TikaSupport(CacheSupport, TempFileSupport):
     def extract_tika(
         self, fh: BytesIO, cache_key: str | None = None
     ) -> dict[str, Any] | None:
@@ -18,15 +90,52 @@ class TikaSupport(CacheSupport):
         if cache_key:
             _cache_key = self.cache_key("tika", cache_key)
             result = self.tags.get(_cache_key)
-            if result is not None:
+            if result is not None and result.get("status") == 200:
                 log.info("Tika: cached result for checksum %s" % cache_key)
                 return result
 
         result = parser.from_file(fh)
         if isinstance(result, dict):
+            # tika-python doesn't raise on an error status, and with an empty
+            # body (e.g. a 503 while the server restarts) the result looks like
+            # a document without text – which must neither pass nor be cached
+            status = result.get("status")
+            if status != 200:
+                raise ProcessingException(f"Tika server returned status {status}")
             text = result.get("content")
             if text:
                 result["content"] = collapse_spaces(text)
             if _cache_key:
                 self.tags.set(_cache_key, result)
             return result
+
+    def ingest_embedded(
+        self, parent_file: PosixPath, parent: EntityProxy | None = None
+    ):
+        attachments = _unpack_tika(parent_file)
+        if attachments:
+            log.info(f"Tika extracted {len(attachments)} attachments.")
+        for name, data in attachments.items():
+            log.debug(f"Analyzing attachment: {name}")
+            if not data:
+                log.error(f"Attachment {name} has no data")
+                continue
+            unwrapped = _unwrap_ole_package(data)
+            if unwrapped is not None:
+                name, data = unwrapped
+                log.debug("Unwrapped OLE Package: %s", name)
+            file_name = safe_filename(name, default="embedded")
+            file_path = self.make_work_file(file_name)
+            with open(file_path, "wb") as fh:
+                fh.write(data)
+            # do not assign mime_type, hope the ingestor deduces it correctly
+            checksum = self.manager.store(file_path)
+            file_path.unlink()
+            child = self.manager.make_entity("Document", parent=parent)
+            child.make_id(name, checksum)
+            child.add("contentHash", checksum)
+            child.add("fileName", name)
+            log.info(
+                f"Queuing {name} with content hash {checksum} and parent {parent.id}"
+            )
+            self.manager.queue_entity(child)
