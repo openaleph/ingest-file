@@ -52,8 +52,7 @@ All configuration is done via environment variables. [pydantic-settings](https:/
 
 ### Archive
 
-The underlying file archive is implemented via [servicelayer](https://github.com/openaleph/servicelayer) and stores the source files via its SHA1 checksums in a path layout like `ab/cd/ef/abcdef...`.
-NOTE: This configuration is optional and has a working default.
+The underlying file archive is implemented via [servicelayer](https://github.com/openaleph/servicelayer) and stores the source files via its SHA1 checksums in a path layout like `ab/cd/ef/abcdef...`. The docker image stores them in `/data`, elsewhere `ARCHIVE_PATH` has to be set.
 
 #### Local directory
 
@@ -73,29 +72,26 @@ AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 ```
 
-### FollowTheMoney Store
+### FollowTheMoney store
 
-
-Per default, ingest-file writes Entity data to a local sqlite database:
-
-`sqlite:///followthemoney.store`
-
-For distributed production setup, configure a psql connection string:
+Per default, ingest-file writes entity data to an in-memory sqlite database, which is gone when the process ends. Set `FTM_STORE_URI` to keep it, in a sqlite file or, for a distributed production setup, in postgres:
 
 ```bash
+FTM_STORE_URI=sqlite:///followthemoney.store
+
+# or:
 FTM_STORE_URI=postgresql://user:password@host/database
 ```
 
 !!! warning
     Prior versions of `ingest-file` inferred the FtM store database uri from Aleph environment settings if it was not set explicitly. This behaviour has changed and the `FTM_STORE_URI` has to be set explicitly.
 
-NOTE: This configuration is optional and has a working default, but you
-will probably want to write the output to a location configured by you.
-
 ### Task queue
 
-NOTE: !!This configuration is NOT optional and has to be configured even for one-shot usage!!
 ingest-file uses [openaleph-procrastinate](https://openaleph.org/docs/lib/openaleph-procrastinate/) as a distributed task queue backend which is built on top of [procrastinate](https://procrastinate.readthedocs.io/en/stable/).
+
+!!! warning
+    The docker image needs a postgres database for the task queue, even for one-shot use: it sets `OPENALEPH_DB_URI=postgresql://aleph:aleph@postgres/aleph`, and a sqlite file doesn't work there. Outside docker the queue is in-memory by default, which only works in [debug mode](#debug-mode).
 
 Most importantly, the `procrastinate.App` has to be defined:
 
@@ -133,9 +129,7 @@ The docker image has unoserver installed. Elsewhere, it has to be installed for 
 
 ## Redis
 
-
-NOTE: This configuration is optional and has a working default.
-Accepts any valid redis url (including a password). If `REDIS_URL` is not set, an in-memory cache is used which doesn't persist.
+Accepts any valid redis url (including a password). If `REDIS_URL` is not set, an in-memory cache is used which doesn't persist. The docker image sets `REDIS_URL=redis://redis:6379/0`, so there it needs a redis service named `redis` or a `REDIS_URL` of your own.
 
 ```bash
 REDIS_URL=redis://localhost
@@ -223,12 +217,8 @@ tika-python gives up on a request after 60 seconds, even if the server is still 
 
 ## Debug mode
 
-NOTE: This configuration is optional and has a working default.
-For local development, testing or a quick one-shot usage, set this value to 1
+For local development, testing or a quick one-shot ingest, debug mode makes `ingestors ingest` process the queued tasks itself, without a worker, and print the entities:
 
 ```bash
 DEBUG=1
 ```
-
-
-
