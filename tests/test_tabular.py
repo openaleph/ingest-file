@@ -98,3 +98,21 @@ class TabularIngestorTest(TestCase):
         self.assertEqual(len(tables), 1)
         self.assertEqual(tables[0].first("title"), "Sheet1")
         self.assertIn("abc", "".join(tables[0].get("indexText")))
+
+    def test_malformed_xlsb_workbook(self):
+        """calamine panics when opening this file: that must fail the file, not
+        the job (the panic derives from BaseException)."""
+        fixture_path, entity = self.fixture("malformed_workbook.xlsb")
+        self.manager.ingest(fixture_path, entity)
+        err = entity.first("processingError")
+        self.assertIn("Invalid workbook", err)
+        self.assertEqual(entity.first("processingStatus"), "failure")
+
+    def test_malformed_xlsb_sheet(self):
+        """Same, but calamine panics while reading the rows, after the workbook
+        has been opened."""
+        fixture_path, entity = self.fixture("malformed_sheet.xlsb")
+        self.manager.ingest(fixture_path, entity)
+        err = entity.first("processingError")
+        self.assertIn("Cannot read workbook", err)
+        self.assertEqual(entity.first("processingStatus"), "failure")

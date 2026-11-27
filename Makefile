@@ -66,4 +66,4 @@ dev:
 
 documentation:
 	poetry run zensical build --clean
-	poetry run putfs sync --delete ./site putfs://static.darc.zone/openaleph.org/docs/lib/ingest-file
+	poetry run putfs sync --delete ./site putfs://static.darc.zone/darc.li/docs/ingest-file

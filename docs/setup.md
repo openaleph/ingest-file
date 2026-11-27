@@ -133,10 +133,12 @@ REDIS_URL=redis://localhost
 
 ### Inline (default)
 
-Without further configuration, tika-python starts a Tika server itself, inside the worker on `localhost:9998`, the first time it is needed. This needs Java, and the server jar (`tika-server.jar` plus its `.md5`) in `TIKA_PATH`:
+Without further configuration, tika-python starts a Tika server itself, inside the worker on `localhost:9998`, the first time it is needed. This needs Java and the server jar (`tika-server.jar`) in `TIKA_PATH`:
 
 - The docker image ships the jar in `/ingestors/contrib` and sets `TIKA_PATH` accordingly, nothing is downloaded at runtime.
-- Otherwise it is downloaded from Maven Central on first use, into `TIKA_PATH` (default: the system temp directory). It is only checked against the `.md5` next to it, so a jar that is already there is never updated when `TIKA_VERSION` changes.
+- Otherwise it is downloaded from Maven Central on first use, into `TIKA_PATH` (default: the system temp directory).
+
+Since tika-python 3.4.0 the jar is verified against a digest pinned in tika-python for its own `TIKA_VERSION` (set `TIKA_SERVER_JAR_SHA512` for any other jar), a cached jar that doesn't match is replaced, and the checksum file next to the jar is ignored. A jar the process does not own, or that is group- or world-writable, is refused outright, so it has to belong to the uid the worker runs as.
 
 The inline server is a child process of whichever worker started it, and it keeps running after that worker exits.
 
