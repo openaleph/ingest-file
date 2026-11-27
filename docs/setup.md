@@ -48,11 +48,12 @@ TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
 
 ## Configuration
 
-All configuration is set via environment variables. [pydantic-settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) is used to parse the settings, so a `.env` file can be used as well.
+All configuration is done via environment variables. [pydantic-settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) is used to parse the settings, so a `.env` file can be used as well.
 
 ### Archive
 
 The underlying file archive is implemented via [servicelayer](https://github.com/openaleph/servicelayer) and stores the source files via its SHA1 checksums in a path layout like `ab/cd/ef/abcdef...`.
+NOTE: This configuration is optional and has a working default.
 
 #### Local directory
 
@@ -72,7 +73,8 @@ AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 ```
 
-### FollowTheMoney store
+### FollowTheMoney Store
+
 
 Per default, ingest-file writes Entity data to a local sqlite database:
 
@@ -87,8 +89,12 @@ FTM_STORE_URI=postgresql://user:password@host/database
 !!! warning
     Prior versions of `ingest-file` inferred the FtM store database uri from Aleph environment settings if it was not set explicitly. This behaviour has changed and the `FTM_STORE_URI` has to be set explicitly.
 
+NOTE: This configuration is optional and has a working default, but you
+will probably want to write the output to a location configured by you.
+
 ### Task queue
 
+NOTE: !!This configuration is NOT optional and has to be configured even for one-shot usage!!
 ingest-file uses [openaleph-procrastinate](https://openaleph.org/docs/lib/openaleph-procrastinate/) as a distributed task queue backend which is built on top of [procrastinate](https://procrastinate.readthedocs.io/en/stable/).
 
 Most importantly, the `procrastinate.App` has to be defined:
@@ -106,6 +112,12 @@ OPENALEPH_DB_URI=postgresql://user:password@host/database
 OPENALEPH_PROCRASTINATE_DB_URI=postgresql://user:password@host/database
 ```
 
+Run the setup command to initialize the database:
+
+```bash
+openaleph-procrastinate init-db
+```
+
 ### LibreOffice listener (unoserver)
 
 Office documents are converted to PDF with LibreOffice, through a [unoserver](https://github.com/unoconv/unoserver) listener that keeps LibreOffice running between documents. Starting LibreOffice for every document instead costs a second or more per document before any work is done.
@@ -121,6 +133,8 @@ The docker image has unoserver installed. Elsewhere, it has to be installed for 
 
 ## Redis
 
+
+NOTE: This configuration is optional and has a working default.
 Accepts any valid redis url (including a password). If `REDIS_URL` is not set, an in-memory cache is used which doesn't persist.
 
 ```bash
@@ -209,8 +223,12 @@ tika-python gives up on a request after 60 seconds, even if the server is still 
 
 ## Debug mode
 
-For local development, testing or a quick one-shot usage, this uses an in-memory store for the task queue (which will not persist)
+NOTE: This configuration is optional and has a working default.
+For local development, testing or a quick one-shot usage, set this value to 1
 
 ```bash
 DEBUG=1
 ```
+
+
+
