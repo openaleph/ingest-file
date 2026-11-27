@@ -34,6 +34,9 @@ class Settings(OpenAlephSettings):
     tika_fallback: bool = False
     """Use Apache Tika as a text extraction fallback"""
 
+    xfa_dpi: int = 200
+    """Resolution for XFA PDF forms before OCR"""
+
     calamine: bool = True
     """Use the Rust calamine implementation (python-calamine) for spreadsheets"""
 

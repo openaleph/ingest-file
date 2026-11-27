@@ -192,6 +192,20 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip3 wheel --no-binary=:all: --wheel-dir /wheels pyicu
 
 # ---------------------------------------------------------------------------
+# pdfium: pypdfium2's published wheels are built WITHOUT XFA/V8, so dynamic
+# XFA forms would only yield their "Please wait..." placeholder page. Build it
+# from source against the auto-fetched V8/XFA pdfium binary instead
+# (PDFIUM_PLATFORM=auto-v8). Isolated in its own stage so the fetch+build
+# caches separately and does not invalidate the pyicu wheel; `base` installs
+# the resulting wheel below.
+# ---------------------------------------------------------------------------
+FROM system AS pdfium
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+    PDFIUM_PLATFORM=auto-v8 pip3 wheel --no-binary pypdfium2 \
+    --wheel-dir /pdfium-wheels pypdfium2
+
+# ---------------------------------------------------------------------------
 # base: the published image
 # ---------------------------------------------------------------------------
 FROM system AS base
@@ -202,3 +216,11 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=bind,from=wheels,source=/wheels,target=/wheels \
     pip3 install /wheels/*.whl
+
+# The XFA-enabled pypdfium2 is installed here, in the base image, and is
+# deliberately NOT listed in requirements.txt: the `deps` stage installs that
+# with --no-deps, so leaving pypdfium2 out keeps it from pulling the plain
+# (no-XFA) PyPI wheel over this one.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=bind,from=pdfium,source=/pdfium-wheels,target=/pdfium-wheels \
+    pip3 install /pdfium-wheels/*.whl

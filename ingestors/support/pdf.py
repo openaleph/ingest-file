@@ -12,6 +12,7 @@ from lxml import etree
 from ingestors.exc import UnauthorizedError
 from ingestors.support.convert import DocumentConvertSupport
 from ingestors.support.ocr import OCRSupport
+from ingestors.support.xfa import is_xfa, render_xfa_to_pdf
 from ingestors.support.xml import XMLSupport
 
 log = logging.getLogger(__name__)
@@ -119,10 +120,39 @@ class PDFSupport(DocumentConvertSupport, OCRSupport, XMLSupport):
         return pdf_model
 
     def parse_and_ingest(self, file_path: str, entity, manager):
+        if self._is_xfa(file_path) and self._ingest_xfa(file_path, entity, manager):
+            return
         pdf_model: PdfModel = self.parse(file_path)
         self.extract_metadata(pdf_model, entity)
         self.extract_xmp_metadata(pdf_model, entity)
         self.extract_pages(pdf_model, entity, manager)
+
+    def _is_xfa(self, file_path: str) -> bool:
+        with fitz.open(file_path) as pdf_doc:
+            if pdf_doc.needs_pass:
+                raise UnauthorizedError
+            return is_xfa(pdf_doc)
+
+    def _ingest_xfa(self, file_path: str, entity, manager) -> bool:
+        """Render a dynamic XFA form to a flat, image-wrapped PDF and ingest
+        that instead. Returns False when rendering is unavailable (no XFA-
+        enabled pypdfium2) so the caller falls back to ordinary extraction;
+        that just yields the XFA placeholder page, but it is better than
+        failing the ingest outright.
+
+        Metadata still comes from the original document (via the original
+        parse), only the page text comes from the rendition -- the same split
+        the djvu path uses through `pdf_alternative_extract`.
+        """
+        temp_dir = self.make_empty_directory()
+        rendered = temp_dir.joinpath("xfa.pdf")
+        if not render_xfa_to_pdf(file_path, rendered, dpi=self.settings.xfa_dpi):
+            return False
+        pdf_model: PdfModel = self.parse(file_path)
+        self.extract_metadata(pdf_model, entity)
+        self.extract_xmp_metadata(pdf_model, entity)
+        self.pdf_alternative_extract(entity, str(rendered), manager)
+        return True
 
     def pdf_alternative_extract(
         self, entity, pdf_path: str, manager, checksum: str | None = None
